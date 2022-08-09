@@ -1,0 +1,24 @@
+{
+	"bin": {},
+	"dependencies": {},
+	"devDependencies": {
+		"typescript": "^4.4"
+	},
+	"license": "MIT",
+	"main": "./dist/lib/index.js",
+	"name": "@joelek/bonsai",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/joelek/bonsai.git"
+	},
+	"scripts": {
+		"build": "npm run codegen && npm run compile && npm run package",
+		"clean": "rm -rf ./build/ ./node_modules/",
+		"codegen": "",
+		"compile": "rm -rf ./build/* && npx tsc --build",
+		"package": "rm -rf ./dist/* && cp -r ./build/* ./dist/",
+		"preversion": "npm run build && git add ./",
+		"postversion": "git push && git push --tags"
+	},
+	"version": "0.0.0"
+}

@@ -1,0 +1,19 @@
+{
+	"compilerOptions": {
+		"composite": true,
+		"lib": [
+			"esnext"
+		],
+		"module": "commonjs",
+		"outDir": "./build/",
+		"rootDir": "./source/",
+		"strict": true,
+		"target": "esnext"
+	},
+	"include": [],
+	"references": [
+		{
+			"path": "./source/lib/"
+		}
+	]
+}

@@ -1,0 +1,299 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.computed = exports.state = exports.ObjectState = exports.ArrayState = exports.ReferenceState = exports.PrimitiveState = exports.AbstractState = void 0;
+class AbstractState {
+    observers;
+    notify(type, ...args) {
+        let observers = this.observers[type];
+        if (observers == null) {
+            return;
+        }
+        for (let index = 0; index < observers.length; index++) {
+            observers[index](...args);
+        }
+    }
+    constructor() {
+        this.observers = {};
+    }
+    compute(computer) {
+        let computed = state(computer(this.value()));
+        this.observe("update", (state) => {
+            computed.update(computer(state.value()));
+        });
+        return computed;
+    }
+    observe(type, observer) {
+        let observers = this.observers[type];
+        if (observers == null) {
+            this.observers[type] = observers = [];
+        }
+        observers.push(observer);
+        return () => {
+            this.unobserve(type, observer);
+        };
+    }
+    unobserve(type, observer) {
+        let observers = this.observers[type];
+        if (observers == null) {
+            return;
+        }
+        let index = observers.lastIndexOf(observer);
+        if (index < 0) {
+            return;
+        }
+        observers.splice(index, 1);
+        if (observers.length === 0) {
+            delete this.observers[type];
+        }
+    }
+}
+exports.AbstractState = AbstractState;
+;
+class PrimitiveState extends AbstractState {
+    lastValue;
+    constructor(lastValue) {
+        super();
+        this.lastValue = lastValue;
+    }
+    update(value) {
+        let updated = false;
+        if (value !== this.lastValue) {
+            this.lastValue = value;
+            updated = true;
+        }
+        if (updated) {
+            this.notify("update", this);
+        }
+        return updated;
+    }
+    value() {
+        return this.lastValue;
+    }
+}
+exports.PrimitiveState = PrimitiveState;
+;
+class ReferenceState extends AbstractState {
+    lastValue;
+    constructor(lastValue) {
+        super();
+        this.lastValue = lastValue;
+    }
+    update(valu) {
+        let updated = false;
+        if (valu !== this.lastValue) {
+            this.lastValue = valu;
+            updated = true;
+        }
+        if (updated) {
+            this.notify("update", this);
+        }
+        return updated;
+    }
+    value() {
+        return this.lastValue;
+    }
+}
+exports.ReferenceState = ReferenceState;
+;
+class ArrayState extends AbstractState {
+    elements;
+    updating;
+    onElementUpdate = () => {
+        if (!this.updating) {
+            this.notify("update", this);
+        }
+    };
+    constructor(elements) {
+        super();
+        this.elements = [...elements];
+        this.updating = false;
+        for (let index = 0; index < this.elements.length; index++) {
+            this.elements[index].observe("update", this.onElementUpdate);
+        }
+    }
+    [Symbol.iterator]() {
+        return this.elements[Symbol.iterator]();
+    }
+    append(item) {
+        this.insert(this.elements.length, item);
+    }
+    element(index) {
+        if (index < 0 || index >= this.elements.length) {
+            throw new Error(`Expected index to be within bounds!`);
+        }
+        return this.elements[index];
+    }
+    insert(index, item) {
+        if (index < 0 || index > this.elements.length) {
+            throw new Error(`Expected index to be within bounds!`);
+        }
+        let element = item instanceof AbstractState ? item : state(item);
+        this.elements.splice(index, 0, element);
+        element.observe("update", this.onElementUpdate);
+        this.notify("insert", element, index);
+        this.notify("update", this);
+    }
+    length() {
+        return this.elements.length;
+    }
+    mapDynamic(mapper) {
+        return this.mapStatic((state, index) => state.compute((value) => mapper(value)));
+    }
+    mapStatic(mapper) {
+        let that = state([]);
+        this.observe("insert", (state, index) => {
+            let mapped = mapper(state, index);
+            that.insert(index, mapped);
+        });
+        this.observe("remove", (state, index) => {
+            that.remove(index);
+        });
+        for (let index = 0; index < this.elements.length; index++) {
+            let element = this.elements[index];
+            let mapped = mapper(element, index);
+            that.append(mapped);
+        }
+        return that;
+    }
+    remove(index) {
+        if (index < 0 || index >= this.elements.length) {
+            throw new Error(`Expected index to be within bounds!`);
+        }
+        let element = this.elements[index];
+        this.elements.splice(index, 1);
+        element.unobserve("update", this.onElementUpdate);
+        if (true) {
+            this.notify("remove", element, index);
+        }
+        if (true) {
+            this.notify("update", this);
+        }
+    }
+    update(value) {
+        let updated = false;
+        try {
+            this.updating = true;
+            let length = Math.min(this.elements.length, value.length);
+            for (let index = 0; index < length; index++) {
+                if (this.elements[index].update(value[index])) {
+                    updated = true;
+                }
+            }
+            for (let index = this.elements.length - 1; index >= length; index--) {
+                this.remove(index);
+                updated = true;
+            }
+            for (let index = length; index < value.length; index++) {
+                this.append(value[index]);
+                updated = true;
+            }
+        }
+        finally {
+            this.updating = false;
+        }
+        if (updated) {
+            this.notify("update", this);
+        }
+        return updated;
+    }
+    value() {
+        let lastValue = [];
+        for (let index = 0; index < this.elements.length; index++) {
+            lastValue.push(this.elements[index].value());
+        }
+        return lastValue;
+    }
+}
+exports.ArrayState = ArrayState;
+;
+class ObjectState extends AbstractState {
+    members;
+    onMemberUpdate = () => {
+        this.notify("update", this);
+    };
+    constructor(members) {
+        super();
+        this.members = { ...members };
+        for (let key in this.members) {
+            this.members[key].observe("update", this.onMemberUpdate);
+        }
+    }
+    member(key) {
+        return this.members[key];
+    }
+    update(value) {
+        let changed = false;
+        for (let key in value) {
+            if (this.members[key].update(value[key])) {
+                changed = true;
+            }
+        }
+        if (changed) {
+            this.notify("update", this);
+        }
+        return changed;
+    }
+    value() {
+        let lastValue = {};
+        for (let key in this.members) {
+            lastValue[key] = this.members[key].value();
+        }
+        return lastValue;
+    }
+}
+exports.ObjectState = ObjectState;
+;
+function state(value) {
+    if (typeof value === "bigint") {
+        return new PrimitiveState(value);
+    }
+    if (typeof value === "boolean") {
+        return new PrimitiveState(value);
+    }
+    if (typeof value === "number") {
+        return new PrimitiveState(value);
+    }
+    if (typeof value === "string") {
+        return new PrimitiveState(value);
+    }
+    if (value === null) {
+        return new PrimitiveState(value);
+    }
+    if (value === undefined) {
+        return new PrimitiveState(value);
+    }
+    if (value instanceof Array) {
+        let elements = [];
+        for (let index = 0; index < value.length; index++) {
+            elements.push(state(value[index]));
+        }
+        return new ArrayState(elements);
+    }
+    if (value instanceof Object && value.constructor === Object) {
+        let members = {};
+        for (let key in value) {
+            members[key] = state(value[key]);
+        }
+        return new ObjectState(members);
+    }
+    if (value instanceof Object) {
+        return new ReferenceState(value);
+    }
+    throw new Error(`Expected code to be unreachable!`);
+}
+exports.state = state;
+;
+function computed(states, computer) {
+    let values = states.map((state) => state.value());
+    let computed = state(computer(...values));
+    for (let index = 0; index < states.length; index++) {
+        let state = states[index];
+        state.observe("update", (state) => {
+            values[index] = state.value();
+            computed.update(computer(...values));
+        });
+    }
+    return computed;
+}
+exports.computed = computed;
+;
