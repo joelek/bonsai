@@ -281,11 +281,15 @@ The elements of an array may be dynamically mapped into a new array through the 
 
 * The `mapper` argument must be used to specify how the existing element value should be mapped to the new element value.
 
+The element values of dynamically mapped arrays are initialized using the `mapper` and recomputed when updates are made to the elements of the original array. This is most often the desired behaviour.
+
 #### MapStatic
 
 The elements of an array may be statically mapped into a new array through the `mapStatic(mapper)` method.
 
 * The `mapper` argument must be used to specify how the existing element state should be mapped to the new element value or state.
+
+The element values of statically mapped arrays are initialized using the `mapper` but not recomputed when updates are made to the elements of the original array.
 
 #### Remove
 
