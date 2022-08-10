@@ -10,7 +10,7 @@ export type RecordValue = { [key: string]: Value; };
 
 export type DynamicMapper<A extends Value, B extends Value> = (value: A) => B;
 
-export type StaticMapper<A extends Value, B extends Value> = (state: State<A>, index: number) => B | State<B>;
+export type StaticMapper<A extends Value, B extends Value> = (state: State<A>) => B | State<B>;
 
 export type Observer<A extends any[]> = (...args: [...A]) => void;
 
@@ -211,13 +211,13 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 	}
 
 	mapDynamic<B extends Value>(mapper: DynamicMapper<A, B>): ArrayState<B> {
-		return this.mapStatic((state, index) => state.compute((value) => mapper(value)));
+		return this.mapStatic((state) => state.compute((value) => mapper(value)));
 	}
 
 	mapStatic<B extends Value>(mapper: StaticMapper<A, B>): ArrayState<B> {
 		let that = state([] as Array<B>);
 		this.observe("insert", (state, index) => {
-			let mapped = mapper(state, index);
+			let mapped = mapper(state);
 			that.insert(index, mapped);
 		});
 		this.observe("remove", (state, index) => {
@@ -225,7 +225,7 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 		});
 		for (let index = 0; index < this.elements.length; index++) {
 			let element = this.elements[index];
-			let mapped = mapper(element, index);
+			let mapped = mapper(element);
 			that.append(mapped);
 		}
 		return that;
