@@ -109,7 +109,7 @@ import { html, state } from "@joelek/bonsai";
 let model = state(["One", "Two"]); // State with type Array<string> is created.
 
 let ul = html.ul("my-list")
-	.nodes(model.map((state) => // State is mapped for each element in the array.
+	.nodes(model.mapStates((state) => // State is mapped for each element in the array.
 		html.li().nodes([state]) // State is implicitly bound to the child nodes.
 	));
 
