@@ -137,6 +137,36 @@ All three algoritms produce mutation sets that when applied update the fragment 
 </ul>
 ```
 
+### Reactive Components
+
+Bonsai can be used to create reactive web components by combining functional elements with interactive state.
+
+```ts
+import { html, state, State } from "@joelek/bonsai";
+
+const CLASS_NAME = "my-list";
+
+const STYLE =
+`
+	.${CLASS_NAME} {
+
+	}
+`;
+
+document.head.appendChild(html.style().nodes([STYLE]));
+
+function MyList(model: State<Array<string>>) {
+	return html.ul(CLASS_NAME)
+		.nodes(model.mapStates((state) =>
+			html.li().nodes([state])
+		));
+};
+
+let model = state<Array<string>>([]);
+document.body.appendChild(MyList(model));
+model.append("One");
+model.append("Two");
+```
 
 ## API
 
@@ -350,4 +380,3 @@ NB: This project targets TypeScript 4 in strict mode.
 ## Roadmap
 
 * Write unit tests.
-* Document suggested structure for web components.
