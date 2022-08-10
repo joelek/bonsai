@@ -275,21 +275,21 @@ An error is thrown when the index is out of bounds.
 
 The number of elements stored in the array may be retrieved through the `length()` method.
 
-#### MapDynamic
+#### MapValues
 
-The elements of an array may be dynamically mapped into a new array through the `mapDynamic(mapper)` method.
+The values of an array may be mapped into a new array through the `mapValues(mapper)` method.
 
-* The `mapper` argument must be used to specify how the existing element value should be mapped to the new element value.
+* The `mapper` argument must be used to specify how an existing value should be mapped to a new value.
 
-The element values of dynamically mapped arrays are initialized using the `mapper` and recomputed when updates are made to the elements of the original array. This is most often the desired behaviour.
+The states of value-mapped arrays are initialized using the `mapper` and recomputed when updates are made to the states of the original array. This is most often the desired behaviour.
 
-#### MapStatic
+#### MapStates
 
-The elements of an array may be statically mapped into a new array through the `mapStatic(mapper)` method.
+The states of an array may be mapped into a new array through the `mapStates(mapper)` method.
 
-* The `mapper` argument must be used to specify how the existing element state should be mapped to the new element value or state.
+* The `mapper` argument must be used to specify how an existing state should be mapped to the a new value or state.
 
-The element values of statically mapped arrays are initialized using the `mapper` but not recomputed when updates are made to the elements of the original array.
+The states of state-mapped arrays are initialized using the `mapper` but not recomputed when updates are made to the states of the original array.
 
 #### Remove
 
