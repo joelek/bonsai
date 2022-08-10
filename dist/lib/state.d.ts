@@ -9,8 +9,8 @@ export declare type Value = PrimitiveValue | ReferenceValue | Value[] | {
 export declare type RecordValue = {
     [key: string]: Value;
 };
-export declare type DynamicMapper<A extends Value, B extends Value> = (value: A) => B;
-export declare type StaticMapper<A extends Value, B extends Value> = (state: State<A>, index: number) => B | State<B>;
+export declare type StateMapper<A extends Value, B extends Value> = (state: State<A>) => B | State<B>;
+export declare type ValueMapper<A extends Value, B extends Value> = (value: A) => B;
 export declare type Observer<A extends any[]> = (...args: [...A]) => void;
 export declare type Computer<A extends Value, B extends Value> = (value: A) => B;
 export declare type CancellationToken = () => void;
@@ -69,8 +69,8 @@ export declare class ArrayState<A extends Value> extends AbstractState<Array<A>,
     element(index: number): State<A>;
     insert(index: number, item: A | State<A>): void;
     length(): number;
-    mapDynamic<B extends Value>(mapper: DynamicMapper<A, B>): ArrayState<B>;
-    mapStatic<B extends Value>(mapper: StaticMapper<A, B>): ArrayState<B>;
+    mapStates<B extends Value>(mapper: StateMapper<A, B>): ArrayState<B>;
+    mapValues<B extends Value>(mapper: ValueMapper<A, B>): ArrayState<B>;
     remove(index: number): void;
     update(value: Array<A>): boolean;
     value(): Array<A>;

@@ -136,13 +136,10 @@ class ArrayState extends AbstractState {
     length() {
         return this.elements.length;
     }
-    mapDynamic(mapper) {
-        return this.mapStatic((state, index) => state.compute((value) => mapper(value)));
-    }
-    mapStatic(mapper) {
+    mapStates(mapper) {
         let that = state([]);
         this.observe("insert", (state, index) => {
-            let mapped = mapper(state, index);
+            let mapped = mapper(state);
             that.insert(index, mapped);
         });
         this.observe("remove", (state, index) => {
@@ -150,10 +147,13 @@ class ArrayState extends AbstractState {
         });
         for (let index = 0; index < this.elements.length; index++) {
             let element = this.elements[index];
-            let mapped = mapper(element, index);
+            let mapped = mapper(element);
             that.append(mapped);
         }
         return that;
+    }
+    mapValues(mapper) {
+        return this.mapStates((state) => state.compute((value) => mapper(value)));
     }
     remove(index) {
         if (index < 0 || index >= this.elements.length) {
