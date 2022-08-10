@@ -120,8 +120,6 @@ A correct set of mutations is applied to the fragment when the state is updated 
 
 Consider the two examples below. One algorithm may consider the list as having been updated with an insert in between the two list items. Another algorithm may consider the second list item as having been removed and two new items as having been inserted. A third algorithm may consider the entire list as having been recreated.
 
-All three algoritms produce mutation sets that when applied update the fragment correctly. Although choosing the incorrect mutation set may have unintended side-effects that at best irritate the programmer and at worst break the end user experience.
-
 ```html
 <ul>
 	<li>One</li>
@@ -136,6 +134,8 @@ All three algoritms produce mutation sets that when applied update the fragment 
 	<li>Two</li>
 </ul>
 ```
+
+All three algoritms produce mutation sets that when applied update the fragment correctly. Although choosing the incorrect mutation set may have unintended side-effects that at best irritate the programmer and at worst break the end user experience.
 
 ### Reactive Components
 
