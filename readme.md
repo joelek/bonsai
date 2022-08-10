@@ -275,14 +275,6 @@ An error is thrown when the index is out of bounds.
 
 The number of elements stored in the array may be retrieved through the `length()` method.
 
-#### MapValues
-
-The values of an array may be mapped into a new array through the `mapValues(mapper)` method.
-
-* The `mapper` argument must be used to specify how an existing value should be mapped to a new value.
-
-The states of value-mapped arrays are initialized using the `mapper` and recomputed when updates are made to the states of the original array. This is most often the desired behaviour.
-
 #### MapStates
 
 The states of an array may be mapped into a new array through the `mapStates(mapper)` method.
@@ -290,6 +282,14 @@ The states of an array may be mapped into a new array through the `mapStates(map
 * The `mapper` argument must be used to specify how an existing state should be mapped to the a new value or state.
 
 The states of state-mapped arrays are initialized using the `mapper` but not recomputed when updates are made to the states of the original array.
+
+#### MapValues
+
+The values of an array may be mapped into a new array through the `mapValues(mapper)` method.
+
+* The `mapper` argument must be used to specify how an existing value should be mapped to a new value.
+
+The states of value-mapped arrays are initialized using the `mapper` and recomputed when updates are made to the states of the original array. This is most often the desired behaviour.
 
 #### Remove
 

@@ -8,9 +8,9 @@ export type Value = PrimitiveValue | ReferenceValue | Value[] | { [key: string]:
 
 export type RecordValue = { [key: string]: Value; };
 
-export type ValueMapper<A extends Value, B extends Value> = (value: A) => B;
-
 export type StateMapper<A extends Value, B extends Value> = (state: State<A>) => B | State<B>;
+
+export type ValueMapper<A extends Value, B extends Value> = (value: A) => B;
 
 export type Observer<A extends any[]> = (...args: [...A]) => void;
 
@@ -210,10 +210,6 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 		return this.elements.length;
 	}
 
-	mapValues<B extends Value>(mapper: ValueMapper<A, B>): ArrayState<B> {
-		return this.mapStates((state) => state.compute((value) => mapper(value)));
-	}
-
 	mapStates<B extends Value>(mapper: StateMapper<A, B>): ArrayState<B> {
 		let that = state([] as Array<B>);
 		this.observe("insert", (state, index) => {
@@ -229,6 +225,10 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 			that.append(mapped);
 		}
 		return that;
+	}
+
+	mapValues<B extends Value>(mapper: ValueMapper<A, B>): ArrayState<B> {
+		return this.mapStates((state) => state.compute((value) => mapper(value)));
 	}
 
 	remove(index: number): void {
