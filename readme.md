@@ -350,3 +350,4 @@ NB: This project targets TypeScript 4 in strict mode.
 ## Roadmap
 
 * Write unit tests.
+* Document suggested structure for web components.
