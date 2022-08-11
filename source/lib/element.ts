@@ -1,18 +1,18 @@
 import { ArrayState, AbstractState, State, CancellationToken, Value } from "./state";
 
-type Attribute = Value | State<Value>;
+export type Attribute = Value | State<Value>;
 
-type Attributes = {
+export type Attributes = {
 	[key: string]: Attribute;
 };
 
-type FunctionalElementListener<A extends Event, B extends Element> = (event: A, element: B) => void;
+export type FunctionalElementListener<A extends Event, B extends Element> = (event: A, element: B) => void;
 
-type FunctionalElementEventMap<A> = {
+export type FunctionalElementEventMap<A> = {
 	[B in keyof A]: Event;
 };
 
-type FunctionalElementListeners<A extends FunctionalElementEventMap<A>, B extends Element> = {
+export type FunctionalElementListeners<A extends FunctionalElementEventMap<A>, B extends Element> = {
 	[C in `on${keyof A & string}`]?: C extends `on${infer D extends keyof A & string}` ? FunctionalElementListener<A[D], FunctionalElement<A, B>> : never;
 };
 
@@ -44,7 +44,7 @@ const INSERT = Symbol();
 const REMOVE = Symbol();
 const UPDATE = Symbol();
 
-class FunctionalElementImplementation<A extends FunctionalElementEventMap<A>> extends Element {
+export class FunctionalElementImplementation<A extends FunctionalElementEventMap<A>> extends Element {
 	protected bindings?: { [key: string | symbol]: Array<CancellationToken | undefined> | undefined; };
 
 	protected unbind(key: string | symbol): void {
@@ -181,12 +181,12 @@ class FunctionalElementImplementation<A extends FunctionalElementEventMap<A>> ex
 	}
 };
 
-type FunctionalElement<A extends FunctionalElementEventMap<A>, B extends Element> = FunctionalElementImplementation<A> & B;
-type FunctionalElementFactory<A extends FunctionalElementEventMap<A>, B extends Element> = (classAttribute?: Attribute) => FunctionalElement<A, B>;
+export type FunctionalElement<A extends FunctionalElementEventMap<A>, B extends Element> = FunctionalElementImplementation<A> & B;
+export type FunctionalElementFactory<A extends FunctionalElementEventMap<A>, B extends Element> = (classAttribute?: Attribute) => FunctionalElement<A, B>;
 
-type Namespace = "http://www.w3.org/1999/xhtml" | "http://www.w3.org/2000/svg";
+export type Namespace = "http://www.w3.org/1999/xhtml" | "http://www.w3.org/2000/svg";
 
-function makeFunctionalElementFactory<A extends FunctionalElementEventMap<A>, B extends Element>(namespace: Namespace, tag: string): FunctionalElementFactory<A, B> {
+export function makeFunctionalElementFactory<A extends FunctionalElementEventMap<A>, B extends Element>(namespace: Namespace, tag: string): FunctionalElementFactory<A, B> {
 	let prototype = Object.create(Object.getPrototypeOf(document.createElementNS(namespace, tag)));
 	for (let [name, propertyDescriptor] of Object.entries(Object.getOwnPropertyDescriptors(FunctionalElementImplementation.prototype))) {
 		if (name === "constructor") {
@@ -202,9 +202,9 @@ function makeFunctionalElementFactory<A extends FunctionalElementEventMap<A>, B 
 	}
 };
 
-type FunctionalHTMLElement<A extends HTMLElement> = FunctionalElement<HTMLElementEventMap, A>;
-type FunctionalHTMLElementFactory<A extends HTMLElement> = FunctionalElementFactory<HTMLElementEventMap, A>;
-type FunctionalHTMLElementFactories = {
+export type FunctionalHTMLElement<A extends HTMLElement> = FunctionalElement<HTMLElementEventMap, A>;
+export type FunctionalHTMLElementFactory<A extends HTMLElement> = FunctionalElementFactory<HTMLElementEventMap, A>;
+export type FunctionalHTMLElementFactories = {
 	[A in keyof HTMLElementTagNameMap]: FunctionalHTMLElementFactory<HTMLElementTagNameMap[A]>;
 };
 
@@ -219,9 +219,9 @@ export const html = new Proxy({} as FunctionalHTMLElementFactories, {
 	}
 });
 
-type FunctionalSVGElement<A extends SVGElement> = FunctionalElement<SVGElementEventMap, A>;
-type FunctionalSVGElementFactory<A extends SVGElement> = FunctionalElementFactory<SVGElementEventMap, A>;
-type FunctionalSVGElementFactories = {
+export type FunctionalSVGElement<A extends SVGElement> = FunctionalElement<SVGElementEventMap, A>;
+export type FunctionalSVGElementFactory<A extends SVGElement> = FunctionalElementFactory<SVGElementEventMap, A>;
+export type FunctionalSVGElementFactories = {
 	[A in keyof SVGElementTagNameMap]: FunctionalSVGElementFactory<SVGElementTagNameMap[A]>;
 };
 
