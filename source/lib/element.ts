@@ -202,205 +202,22 @@ function makeFunctionalElementFactory<A extends FunctionalElementEventMap<A>, B 
 	}
 };
 
-const HTML_ELEMENT_TAG_NAMES = [
-	"a",
-	"abbr",
-	"address",
-	"area",
-	"article",
-	"aside",
-	"audio",
-	"b",
-	"base",
-	"bdi",
-	"bdo",
-	"blockquote",
-	"body",
-	"br",
-	"button",
-	"canvas",
-	"caption",
-	"cite",
-	"code",
-	"col",
-	"colgroup",
-	"data",
-	"datalist",
-	"dd",
-	"del",
-	"details",
-	"dfn",
-	"dialog",
-	"dir",
-	"div",
-	"dl",
-	"dt",
-	"em",
-	"embed",
-	"fieldset",
-	"figcaption",
-	"figure",
-	"font",
-	"footer",
-	"form",
-	"frame",
-	"frameset",
-	"h1",
-	"h2",
-	"h3",
-	"h4",
-	"h5",
-	"h6",
-	"head",
-	"header",
-	"hgroup",
-	"hr",
-	"html",
-	"i",
-	"iframe",
-	"img",
-	"input",
-	"ins",
-	"kbd",
-	"label",
-	"legend",
-	"li",
-	"link",
-	"main",
-	"map",
-	"mark",
-	"marquee",
-	"menu",
-	"meta",
-	"meter",
-	"nav",
-	"noscript",
-	"object",
-	"ol",
-	"optgroup",
-	"option",
-	"output",
-	"p",
-	"param",
-	"picture",
-	"pre",
-	"progress",
-	"q",
-	"rp",
-	"rt",
-	"ruby",
-	"s",
-	"samp",
-	"script",
-	"section",
-	"select",
-	"slot",
-	"small",
-	"source",
-	"span",
-	"strong",
-	"style",
-	"sub",
-	"summary",
-	"sup",
-	"table",
-	"tbody",
-	"td",
-	"template",
-	"textarea",
-	"tfoot",
-	"th",
-	"thead",
-	"time",
-	"title",
-	"tr",
-	"track",
-	"u",
-	"ul",
-	"var",
-	"video",
-	"wbr"
-] as (keyof HTMLElementTagNameMap)[];
-
 type FunctionalHTMLElement<A extends HTMLElement> = FunctionalElement<HTMLElementEventMap, A>;
 type FunctionalHTMLElementFactory<A extends HTMLElement> = FunctionalElementFactory<HTMLElementEventMap, A>;
 type FunctionalHTMLElementFactories = {
 	[A in keyof HTMLElementTagNameMap]: FunctionalHTMLElementFactory<HTMLElementTagNameMap[A]>;
 };
 
-export const html = (() => {
-	let factories = {} as FunctionalHTMLElementFactories;
-	for (let tag of HTML_ELEMENT_TAG_NAMES) {
-		factories[tag] = makeFunctionalElementFactory("http://www.w3.org/1999/xhtml", tag) as any;
+export const html = new Proxy({} as FunctionalHTMLElementFactories, {
+	get: (target, key) => {
+		let tag = key as keyof FunctionalHTMLElementFactories;
+		let factory = target[tag];
+		if (factory == null) {
+			factory = target[tag] = makeFunctionalElementFactory("http://www.w3.org/1999/xhtml", tag) as any
+		}
+		return factory;
 	}
-	return factories;
-})();
-
-const SVG_ELEMENT_TAG_NAMES = [
-	"a",
-	"animate",
-	"animateMotion",
-	"animateTransform",
-	"circle",
-	"clipPath",
-	"defs",
-	"desc",
-	"ellipse",
-	"feBlend",
-	"feColorMatrix",
-	"feComponentTransfer",
-	"feComposite",
-	"feConvolveMatrix",
-	"feDiffuseLighting",
-	"feDisplacementMap",
-	"feDistantLight",
-	"feDropShadow",
-	"feFlood",
-	"feFuncA",
-	"feFuncB",
-	"feFuncG",
-	"feFuncR",
-	"feGaussianBlur",
-	"feImage",
-	"feMerge",
-	"feMergeNode",
-	"feMorphology",
-	"feOffset",
-	"fePointLight",
-	"feSpecularLighting",
-	"feSpotLight",
-	"feTile",
-	"feTurbulence",
-	"filter",
-	"foreignObject",
-	"g",
-	"image",
-	"line",
-	"linearGradient",
-	"marker",
-	"mask",
-	"metadata",
-	"mpath",
-	"path",
-	"pattern",
-	"polygon",
-	"polyline",
-	"radialGradient",
-	"rect",
-	"script",
-	"set",
-	"stop",
-	"style",
-	"svg",
-	"switch",
-	"symbol",
-	"text",
-	"textPath",
-	"title",
-	"tspan",
-	"use",
-	"view"
-] as (keyof SVGElementTagNameMap)[];
+});
 
 type FunctionalSVGElement<A extends SVGElement> = FunctionalElement<SVGElementEventMap, A>;
 type FunctionalSVGElementFactory<A extends SVGElement> = FunctionalElementFactory<SVGElementEventMap, A>;
@@ -408,10 +225,13 @@ type FunctionalSVGElementFactories = {
 	[A in keyof SVGElementTagNameMap]: FunctionalSVGElementFactory<SVGElementTagNameMap[A]>;
 };
 
-export const svg = (() => {
-	let factories = {} as FunctionalSVGElementFactories;
-	for (let tag of SVG_ELEMENT_TAG_NAMES) {
-		factories[tag] = makeFunctionalElementFactory("http://www.w3.org/2000/svg", tag) as any;
+export const svg = new Proxy({} as FunctionalSVGElementFactories, {
+	get: (target, key) => {
+		let tag = key as keyof FunctionalSVGElementFactories;
+		let factory = target[tag];
+		if (factory == null) {
+			factory = target[tag] = makeFunctionalElementFactory("http://www.w3.org/2000/svg", tag) as any
+		}
+		return factory;
 	}
-	return factories;
-})();
+});
