@@ -102,7 +102,7 @@ class FunctionalElementImplementation extends Element {
             bindings[INSERT] = [
                 items.observe("insert", (state, index) => {
                     let value = state.value();
-                    this.insertBefore(createNode(value), null);
+                    this.insertBefore(createNode(value), this.childNodes.item(index));
                     let subscription = state.observe("update", (state) => {
                         let value = state.value();
                         this.replaceChild(createNode(value), this.childNodes.item(index));
