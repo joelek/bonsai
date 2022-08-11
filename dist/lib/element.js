@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.svg = exports.html = void 0;
+exports.svg = exports.html = exports.makeFunctionalElementFactory = exports.FunctionalElementImplementation = void 0;
 const state_1 = require("./state");
 function serializeValue(value) {
     if (typeof value === "string") {
@@ -167,6 +167,7 @@ class FunctionalElementImplementation extends Element {
         return this;
     }
 }
+exports.FunctionalElementImplementation = FunctionalElementImplementation;
 ;
 function makeFunctionalElementFactory(namespace, tag) {
     let prototype = Object.create(Object.getPrototypeOf(document.createElementNS(namespace, tag)));
@@ -183,6 +184,7 @@ function makeFunctionalElementFactory(namespace, tag) {
         return element;
     };
 }
+exports.makeFunctionalElementFactory = makeFunctionalElementFactory;
 ;
 exports.html = new Proxy({}, {
     get: (target, key) => {
