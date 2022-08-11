@@ -146,8 +146,7 @@ import { html, state, State } from "@joelek/bonsai";
 
 const CLASS_NAME = "my-list";
 
-const STYLE =
-`
+const STYLE = `
 	.${CLASS_NAME} {
 
 	}
