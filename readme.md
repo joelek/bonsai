@@ -158,7 +158,9 @@ const STYLE = `
 
 document.head.appendChild(html.style().nodes([STYLE]));
 
-function MyList(model: State<Array<string>>) {
+type MyList = State<Array<string>>;
+
+function MyList(model: MyList) {
 	return html.ul()
 		.attribute("class", CLASS_NAME)
 		.nodes(model.mapStates((state) =>
