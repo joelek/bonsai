@@ -5,7 +5,8 @@ Lightweight, functional and robust library for creating reactive web components.
 ```ts
 import { html } from "@joelek/bonsai";
 
-let ul = html.ul("my-list")
+let ul = html.ul()
+	.attribute("class", "my-list")
 	.listener("onclick", (event, element) => {})
 	.nodes([
 		html.li().nodes(["One"]),
@@ -69,7 +70,8 @@ Bonsai uses a pure, code-based approach for solving the isolation, scalability a
 ```ts
 import { html } from "@joelek/bonsai";
 
-let ul = html.ul("my-list")
+let ul = html.ul()
+	.attribute("class", "my-list")
 	.listener("onclick", (event, element) => {})
 	.nodes([
 		html.li().nodes(["One"]),
@@ -92,7 +94,8 @@ import { html, state } from "@joelek/bonsai";
 
 let model = state("my-list"); // State with type string is created.
 
-let ul = html.ul(model) // State is implicitly bound to the class attribute.
+let ul = html.ul()
+	.attribute("class", model) // State is implicitly bound to the class attribute.
 	.nodes([
 		html.li().nodes(["One"]),
 		html.li().nodes(["Two"])
@@ -108,7 +111,8 @@ import { html, state } from "@joelek/bonsai";
 
 let model = state(["One", "Two"]); // State with type Array<string> is created.
 
-let ul = html.ul("my-list")
+let ul = html.ul()
+	.attribute("class", "my-list")
 	.nodes(model.mapStates((state) => // State is mapped for each element in the array.
 		html.li().nodes([state]) // State is implicitly bound to the child nodes.
 	));
@@ -155,7 +159,8 @@ const STYLE = `
 document.head.appendChild(html.style().nodes([STYLE]));
 
 function MyList(model: State<Array<string>>) {
-	return html.ul(CLASS_NAME)
+	return html.ul()
+		.attribute("class", CLASS_NAME)
 		.nodes(model.mapStates((state) =>
 			html.li().nodes([state])
 		));

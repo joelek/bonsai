@@ -182,7 +182,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 };
 
 export type FunctionalElement<A extends FunctionalElementEventMap<A>, B extends Element> = FunctionalElementImplementation<A> & B;
-export type FunctionalElementFactory<A extends FunctionalElementEventMap<A>, B extends Element> = (classAttribute?: Attribute) => FunctionalElement<A, B>;
+export type FunctionalElementFactory<A extends FunctionalElementEventMap<A>, B extends Element> = () => FunctionalElement<A, B>;
 
 export type Namespace = "http://www.w3.org/1999/xhtml" | "http://www.w3.org/2000/svg";
 
@@ -194,10 +194,9 @@ export function makeFunctionalElementFactory<A extends FunctionalElementEventMap
 		}
 		Object.defineProperty(prototype, name, propertyDescriptor);
 	}
-	return (classAttribute?: Attribute) => {
+	return () => {
 		let element = document.createElementNS(namespace, tag) as FunctionalElement<A, B>;
 		Object.setPrototypeOf(element, prototype);
-		element.attribute("class", classAttribute);
 		return element;
 	}
 };
