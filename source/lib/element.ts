@@ -98,7 +98,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 			(this as any)[type] = undefined;
 		} else {
 			(this as any)[type] = (event: A[B]) => {
-				listener(event, this);
+				return listener(event, this);
 			};
 		}
 		return this;
