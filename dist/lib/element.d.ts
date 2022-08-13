@@ -19,8 +19,8 @@ export declare class FunctionalElementImplementation<A extends FunctionalElement
     attribute(key: "class"): Array<string> | undefined;
     attribute(key: "style"): Record<string, string> | undefined;
     attribute<A extends string>(key: A extends "class" | "style" ? never : A, value: Attribute): this;
-    attribute(key: "class", value: Array<Value> | State<Array<Value>> | undefined): this;
-    attribute(key: "style", value: Record<string, Value> | State<Record<string, Value>> | undefined): this;
+    attribute<A extends Array<Value>>(key: "class", value: A | State<A> | undefined): this;
+    attribute<A extends Record<string, Value>>(key: "style", value: A | State<A> | undefined): this;
     listener<B extends keyof A & string>(type: `on${B}`, listener?: FunctionalElementListener<A[B], this> | undefined): this;
     nodes<A extends Value | Node>(items: ArrayState<A> | Array<Value | Node | State<Value | Node>>): this;
     process(callback: (element: this) => void): this;
