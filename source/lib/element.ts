@@ -51,7 +51,10 @@ function parseClass(value: string): Array<string> {
 function serializeClass(value: Value): string {
 	if (value instanceof Array) {
 		let array = value as ArrayValue;
-		return array.map(serializeValue).join(" ");
+		return array
+			.filter((value) => typeof value !== "undefined")
+			.map(serializeValue)
+			.join(" ");
 	} else {
 		return serializeValue(value);
 	}
@@ -71,7 +74,10 @@ function parseStyle(value: string): Record<string, string> {
 function serializeStyle(value: Value): string {
 	if (value instanceof Object && value.constructor === Object) {
 		let object = value as RecordValue;
-		return Object.entries(object).map(([key, value]) => `${key}: ${serializeValue(value)}`).join("; ");
+		return Object.entries(object)
+			.filter(([key, value]) => typeof value !== "undefined")
+			.map(([key, value]) => `${key}: ${serializeValue(value)}`)
+			.join("; ");
 	} else {
 		return serializeValue(value);
 	}
