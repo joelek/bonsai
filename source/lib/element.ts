@@ -43,7 +43,10 @@ function createNode(value: Value | Node): Node {
 function parseClass(value: string): Array<string> {
 	let values = [] as Array<string>;
 	for (let chunk of value.trim().split(/\s+/)) {
-		values.push(chunk);
+		let value = chunk;
+		if (value !== "") {
+			values.push(value);
+		}
 	}
 	return values;
 };
@@ -66,7 +69,9 @@ function parseStyle(value: string): Record<string, string> {
 		let parts = chunk.split(":");
 		let key = parts[0].trim();
 		let value = parts.slice(1).join(":").trim();
-		values[key] = value;
+		if (key !== "" && value !== "") {
+			values[key] = value;
+		}
 	}
 	return values;
 };
