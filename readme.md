@@ -6,7 +6,7 @@ Lightweight, functional and robust library for creating reactive web components.
 import { html } from "@joelek/bonsai";
 
 let ul = html.ul()
-	.attribute("class", "my-list")
+	.attribute("class", ["my-list"])
 	.listener("onclick", (event, element) => {})
 	.nodes([
 		html.li().nodes(["One"]),
@@ -71,7 +71,7 @@ Bonsai uses a pure, code-based approach for solving the isolation, scalability a
 import { html } from "@joelek/bonsai";
 
 let ul = html.ul()
-	.attribute("class", "my-list")
+	.attribute("class", ["my-list"])
 	.listener("onclick", (event, element) => {})
 	.nodes([
 		html.li().nodes(["One"]),
@@ -92,7 +92,7 @@ State may be bound to an attribute of an element as shown in the example below.
 ```ts
 import { html, state } from "@joelek/bonsai";
 
-let model = state("my-list"); // State with type string is created.
+let model = state(["my-list"]); // State with type Array<string> is created.
 
 let ul = html.ul()
 	.attribute("class", model) // State is implicitly bound to the class attribute.
@@ -112,7 +112,7 @@ import { html, state } from "@joelek/bonsai";
 let model = state(["One", "Two"]); // State with type Array<string> is created.
 
 let ul = html.ul()
-	.attribute("class", "my-list")
+	.attribute("class", ["my-list"])
 	.nodes(model.mapStates((state) => // State is mapped for each element in the array.
 		html.li().nodes([state]) // State is implicitly bound to the child nodes.
 	));
@@ -162,7 +162,7 @@ type MyList = State<Array<string>>;
 
 function MyList(model: MyList) {
 	return html.ul()
-		.attribute("class", CLASS_NAME)
+		.attribute("class", [CLASS_NAME])
 		.nodes(model.mapStates((state) =>
 			html.li().nodes([state])
 		));
@@ -189,12 +189,19 @@ let circle = svg.circle();
 
 #### Attribute
 
-An attribute may be set for the element through the `attribute(key, value?)` method.
+An attribute may be get for the element through the `attribute(key)` method.
 
 * The `key` argument must be used to specify the attribute key.
-* The `value` argument may be used to specify the attribute value.
 
-The attribute with the given `key` may be removed by omitting the `value` argument.
+An attribute may be set for the element through the `attribute(key, value)` method.
+
+* The `key` argument must be used to specify the attribute key.
+* The `value` argument must be used to specify the attribute value.
+
+The attribute with the given `key` may be removed from the element by explicitly specifying the `value` argument as undefined.
+
+The `class` attribute will automatically be parsed and serialized as an array of class names.
+The `style` attribute will automatically be parsed and serialized as a record of style properties.
 
 #### Listener
 
