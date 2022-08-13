@@ -39,7 +39,10 @@ function parseClass(value) {
 function serializeClass(value) {
     if (value instanceof Array) {
         let array = value;
-        return array.map(serializeValue).join(" ");
+        return array
+            .filter((value) => typeof value !== "undefined")
+            .map(serializeValue)
+            .join(" ");
     }
     else {
         return serializeValue(value);
@@ -60,7 +63,10 @@ function parseStyle(value) {
 function serializeStyle(value) {
     if (value instanceof Object && value.constructor === Object) {
         let object = value;
-        return Object.entries(object).map(([key, value]) => `${key}: ${serializeValue(value)}`).join("; ");
+        return Object.entries(object)
+            .filter(([key, value]) => typeof value !== "undefined")
+            .map(([key, value]) => `${key}: ${serializeValue(value)}`)
+            .join("; ");
     }
     else {
         return serializeValue(value);
