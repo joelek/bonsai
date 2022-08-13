@@ -113,8 +113,8 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 	attribute(key: "class"): Array<string> | undefined;
 	attribute(key: "style"): Record<string, string> | undefined;
 	attribute<A extends string>(key: A extends "class" | "style" ? never : A, value: Attribute): this;
-	attribute(key: "class", value: Array<Value> | State<Array<Value>>): this;
-	attribute(key: "style", value: Record<string, Value> | State<Record<string, Value>>): this;
+	attribute(key: "class", value: Array<Value> | State<Array<Value>> | undefined): this;
+	attribute(key: "style", value: Record<string, Value> | State<Record<string, Value>> | undefined): this;
 	attribute(key: string, value?: Attribute): this | string | Array<string> | Record<string, string> | undefined {
 		let update = (key: string, value: Value) => {
 			if (typeof value === "undefined") {
