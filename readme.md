@@ -210,7 +210,7 @@ A listener may be added to the element through the `listener(type, listener?)` m
 * The `type` argument must be used to specify the event type using the `on*` format.
 * The `listener` argument may be used to specify the listener.
 
-There may only be a single listener added to each element for each unique event type. The listener added for the given `type` may be removed by omitting the `listener` argument.
+There may only be a single listener added to each element for each unique event type. The listener added for the given `type` may be removed by omitting the `listener` argument. Default behaviour may be prevented through the listener returning false.
 
 #### Nodes
 
