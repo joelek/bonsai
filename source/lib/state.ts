@@ -6,6 +6,8 @@ export type ReferenceValue = Object;
 
 export type Value = PrimitiveValue | ReferenceValue | Value[] | { [key: string]: Value; };
 
+export type ArrayValue = Value[];
+
 export type RecordValue = { [key: string]: Value; };
 
 export type StateMapper<A extends Value, B extends Value> = (state: State<A>) => B | State<B>;

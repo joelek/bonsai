@@ -1,4 +1,4 @@
-import { ArrayState, AbstractState, State, CancellationToken, Value } from "./state";
+import { ArrayState, AbstractState, State, CancellationToken, Value, RecordValue, ArrayValue } from "./state";
 
 export type Attribute = Value | State<Value>;
 
@@ -40,6 +40,43 @@ function createNode(value: Value | Node): Node {
 	}
 };
 
+function parseClass(value: string): Array<string> {
+	let values = [] as Array<string>;
+	for (let chunk of value.trim().split(/\s+/)) {
+		values.push(chunk);
+	}
+	return values;
+};
+
+function serializeClass(value: Value): string {
+	if (value instanceof Array) {
+		let array = value as ArrayValue;
+		return array.map(serializeValue).join(" ");
+	} else {
+		return serializeValue(value);
+	}
+};
+
+function parseStyle(value: string): Record<string, string> {
+	let values = {} as Record<string, string>;
+	for (let chunk of value.trim().split(";")) {
+		let parts = chunk.split(":");
+		let key = parts[0].trim();
+		let value = parts.slice(1).join(":").trim();
+		values[key] = value;
+	}
+	return values;
+};
+
+function serializeStyle(value: Value): string {
+	if (value instanceof Object && value.constructor === Object) {
+		let object = value as RecordValue;
+		return Object.entries(object).map(([key, value]) => `${key}: ${serializeValue(value)}`).join("; ");
+	} else {
+		return serializeValue(value);
+	}
+};
+
 const INSERT = Symbol();
 const REMOVE = Symbol();
 const UPDATE = Symbol();
@@ -66,22 +103,38 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 		}
 	}
 
-	attribute(key: string): string | undefined;
-	attribute(key: string, value: Attribute): this;
-	attribute(key: string, value?: Attribute): this | string | undefined {
+	attribute<A extends string>(key: A extends "class" | "style" ? never : A): string | undefined;
+	attribute(key: "class"): Array<string> | undefined;
+	attribute(key: "style"): Record<string, string> | undefined;
+	attribute<A extends string>(key: A extends "class" | "style" ? never : A, value: Attribute): this;
+	attribute(key: "class", value: Array<Attribute> | State<Array<Attribute>>): this;
+	attribute(key: "style", value: Record<string, Attribute> | State<Record<string, Attribute>>): this;
+	attribute(key: string, value?: Attribute): this | string | Array<string> | Record<string, string> | undefined {
 		let update = (key: string, value: Value) => {
 			if (typeof value === "undefined") {
 				this.removeAttribute(key);
 			} else {
+				if (key === "class") {
+					value = serializeClass(value);
+				}
+				if (key === "style") {
+					value = serializeStyle(value);
+				}
 				this.setAttribute(key, serializeValue(value));
 			}
 		};
 		let get = (key: string) => {
-			let attribute = this.getAttribute(key);
-			if (attribute == null) {
+			let value = this.getAttribute(key);
+			if (value == null) {
 				return;
 			}
-			return attribute;
+			if (key === "class") {
+				return parseClass(value);
+			}
+			if (key === "style") {
+				return parseStyle(value);
+			}
+			return value;
 		};
 		let set = (key: string, value: Attribute) => {
 			this.unbind(key);
