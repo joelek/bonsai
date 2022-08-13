@@ -66,31 +66,47 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 		}
 	}
 
-	attribute(key: string, value?: Attribute): this {
-		let update = (key: string, value?: Value): void => {
+	attribute(key: string): string | undefined;
+	attribute(key: string, value: Attribute): this;
+	attribute(key: string, value?: Attribute): this | string | undefined {
+		let update = (key: string, value: Value) => {
 			if (typeof value === "undefined") {
 				this.removeAttribute(key);
 			} else {
 				this.setAttribute(key, serializeValue(value));
 			}
 		};
-		this.unbind(key);
-		if (value instanceof AbstractState) {
-			let state = value;
-			let bindings = this.bindings;
-			if (bindings == null) {
-				this.bindings = bindings = {};
+		let get = (key: string) => {
+			let attribute = this.getAttribute(key);
+			if (attribute == null) {
+				return;
 			}
-			bindings[key] = [
-				state.observe("update", (state) => {
-					update(key, state.value());
-				})
-			];
-			update(key, state.value());
+			return attribute;
+		};
+		let set = (key: string, value: Attribute) => {
+			this.unbind(key);
+			if (value instanceof AbstractState) {
+				let state = value;
+				let bindings = this.bindings;
+				if (bindings == null) {
+					this.bindings = bindings = {};
+				}
+				bindings[key] = [
+					state.observe("update", (state) => {
+						update(key, state.value());
+					})
+				];
+				update(key, state.value());
+			} else {
+				update(key, value);
+			}
+			return this;
+		};
+		if (arguments.length === 1) {
+			return get(key);
 		} else {
-			update(key, value);
+			return set(key, value);
 		}
-		return this;
 	}
 
 	listener<B extends keyof A & string>(type: `on${B}`, listener?: FunctionalElementListener<A[B], this> | undefined): this {
