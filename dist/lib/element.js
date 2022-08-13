@@ -28,6 +28,45 @@ function createNode(value) {
     }
 }
 ;
+function parseClass(value) {
+    let values = [];
+    for (let chunk of value.trim().split(/\s+/)) {
+        values.push(chunk);
+    }
+    return values;
+}
+;
+function serializeClass(value) {
+    if (value instanceof Array) {
+        let array = value;
+        return array.map(serializeValue).join(" ");
+    }
+    else {
+        return serializeValue(value);
+    }
+}
+;
+function parseStyle(value) {
+    let values = {};
+    for (let chunk of value.trim().split(";")) {
+        let parts = chunk.split(":");
+        let key = parts[0].trim();
+        let value = parts.slice(1).join(":").trim();
+        values[key] = value;
+    }
+    return values;
+}
+;
+function serializeStyle(value) {
+    if (value instanceof Object && value.constructor === Object) {
+        let object = value;
+        return Object.entries(object).map(([key, value]) => `${key}: ${serializeValue(value)}`).join("; ");
+    }
+    else {
+        return serializeValue(value);
+    }
+}
+;
 const INSERT = Symbol();
 const REMOVE = Symbol();
 const UPDATE = Symbol();
@@ -57,27 +96,54 @@ class FunctionalElementImplementation extends Element {
                 this.removeAttribute(key);
             }
             else {
+                if (key === "class") {
+                    value = serializeClass(value);
+                }
+                if (key === "style") {
+                    value = serializeStyle(value);
+                }
                 this.setAttribute(key, serializeValue(value));
             }
         };
-        this.unbind(key);
-        if (value instanceof state_1.AbstractState) {
-            let state = value;
-            let bindings = this.bindings;
-            if (bindings == null) {
-                this.bindings = bindings = {};
+        let get = (key) => {
+            let value = this.getAttribute(key);
+            if (value == null) {
+                return;
             }
-            bindings[key] = [
-                state.observe("update", (state) => {
-                    update(key, state.value());
-                })
-            ];
-            update(key, state.value());
+            if (key === "class") {
+                return parseClass(value);
+            }
+            if (key === "style") {
+                return parseStyle(value);
+            }
+            return value;
+        };
+        let set = (key, value) => {
+            this.unbind(key);
+            if (value instanceof state_1.AbstractState) {
+                let state = value;
+                let bindings = this.bindings;
+                if (bindings == null) {
+                    this.bindings = bindings = {};
+                }
+                bindings[key] = [
+                    state.observe("update", (state) => {
+                        update(key, state.value());
+                    })
+                ];
+                update(key, state.value());
+            }
+            else {
+                update(key, value);
+            }
+            return this;
+        };
+        if (arguments.length === 1) {
+            return get(key);
         }
         else {
-            update(key, value);
+            return set(key, value);
         }
-        return this;
     }
     listener(type, listener) {
         if (typeof listener === "undefined") {
@@ -85,7 +151,7 @@ class FunctionalElementImplementation extends Element {
         }
         else {
             this[type] = (event) => {
-                listener(event, this);
+                return listener(event, this);
             };
         }
         return this;
@@ -177,10 +243,9 @@ function makeFunctionalElementFactory(namespace, tag) {
         }
         Object.defineProperty(prototype, name, propertyDescriptor);
     }
-    return (classAttribute) => {
+    return () => {
         let element = document.createElementNS(namespace, tag);
         Object.setPrototypeOf(element, prototype);
-        element.attribute("class", classAttribute);
         return element;
     };
 }

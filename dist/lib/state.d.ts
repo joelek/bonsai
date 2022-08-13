@@ -6,6 +6,7 @@ export declare type ReferenceValue = Object;
 export declare type Value = PrimitiveValue | ReferenceValue | Value[] | {
     [key: string]: Value;
 };
+export declare type ArrayValue = Value[];
 export declare type RecordValue = {
     [key: string]: Value;
 };
