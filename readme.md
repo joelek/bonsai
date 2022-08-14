@@ -90,34 +90,34 @@ The interactive state API provides functionality for creating data models as wel
 State may be bound to an attribute of an element as shown in the example below.
 
 ```ts
-import { html, state } from "@joelek/bonsai";
+import { html, stateify } from "@joelek/bonsai";
 
-let model = state(["my-list"]); // State with type Array<string> is created.
+let state = stateify(["my-list"]); // State with type Array<string> is created.
 
 let ul = html.ul()
-	.attribute("class", model) // State is implicitly bound to the class attribute.
+	.attribute("class", state) // State is implicitly bound to the class attribute.
 	.nodes([
 		html.li().nodes(["One"]),
 		html.li().nodes(["Two"])
 	]);
 
-model.update("my-new-list"); // State instantly updates the class attribute.
+state.update("my-new-list"); // State instantly updates the class attribute.
 ```
 
 State may be bound to the child nodes of an element as shown in the example below.
 
 ```ts
-import { html, state } from "@joelek/bonsai";
+import { html, stateify } from "@joelek/bonsai";
 
-let model = state(["One", "Two"]); // State with type Array<string> is created.
+let state = stateify(["One", "Two"]); // State with type Array<string> is created.
 
 let ul = html.ul()
 	.attribute("class", ["my-list"])
-	.nodes(model.mapStates((state) => // State is mapped for each element in the array.
+	.nodes(state.mapStates((state) => // State is mapped for each element in the array.
 		html.li().nodes([state]) // State is implicitly bound to the child nodes.
 	));
 
-model.append("Three"); // State instantly updates the child nodes.
+state.append("Three"); // State instantly updates the child nodes.
 ```
 
 A correct set of mutations is applied to the fragment when the state is updated as the state is bound directly to the fragment. This in contrast to diffing algorithms where a certain amount of guesswork has to be done regarding which set of mutations to apply.
@@ -146,7 +146,7 @@ All three algoritms produce mutation sets that when applied update the fragment 
 Bonsai can be used to create reactive web components by combining functional elements with interactive state.
 
 ```ts
-import { html, state, State } from "@joelek/bonsai";
+import { html, stateify, State } from "@joelek/bonsai";
 
 const CLASS_NAME = "my-list";
 
@@ -160,18 +160,18 @@ document.head.appendChild(html.style().nodes([STYLE]));
 
 type MyList = State<Array<string>>;
 
-function MyList(model: MyList) {
+function MyList(state: MyList) {
 	return html.ul()
 		.attribute("class", [CLASS_NAME])
-		.nodes(model.mapStates((state) =>
+		.nodes(state.mapStates((state) =>
 			html.li().nodes([state])
 		));
 };
 
-let model = state<Array<string>>([]);
-document.body.appendChild(MyList(model));
-model.append("One");
-model.append("Two");
+let state = stateify<Array<string>>([]);
+document.body.appendChild(MyList(state));
+state.append("One");
+state.append("Two");
 ```
 
 ## API
@@ -226,22 +226,22 @@ An element may be processed in a processing block through the `process(callback)
 
 ### Interactive State
 
-State should be created through the `state()` function. The function adapts to its input and creates an instance of the appropriate class.
+State should be created through the `stateify()` function. The function adapts to its input and creates an instance of the appropriate class.
 
 ```ts
-import { state } from "@joelek/bonsai";
+import { stateify } from "@joelek/bonsai";
 
-let one = state(1);
-let two = state(2);
+let one = stateify(1);
+let two = stateify(2);
 ```
 
 Multiple states may be combined into a single state using the `computed()` function.
 
 ```ts
-import { state, computed } from "@joelek/bonsai";
+import { stateify, computed } from "@joelek/bonsai";
 
-let one = state(1);
-let two = state(2);
+let one = stateify(1);
+let two = stateify(2);
 let sum = computed([one, two], (one, two) => one + two);
 ```
 
@@ -277,7 +277,7 @@ The value of a state may be retrieved through the `value()` method. The method r
 
 ### PrimitiveState
 
-An instance of `PrimitiveState` is created when a primitive is passed to the `state()` function. The `PrimitiveState` class extends from the `State` class.
+An instance of `PrimitiveState` is created when a primitive is passed to the `stateify()` function. The `PrimitiveState` class extends from the `State` class.
 
 * Instances of `PrimitiveState` emit an `update` event when the stored value changes.
 
@@ -285,7 +285,7 @@ Primitive values are bigint, boolean, number, string, null and undefined.
 
 ### ArrayState
 
-An instance of `ArrayState` is created when an array is passed to the `state()` function. The `ArrayState` class extends from the `State` class.
+An instance of `ArrayState` is created when an array is passed to the `stateify()` function. The `ArrayState` class extends from the `State` class.
 
 * Instances of `ArrayState` emit an `update` event when the stored value changes.
 * Instances of `ArrayState` emit an `insert` event when an element is inserted.
@@ -344,7 +344,7 @@ An error is thrown when the index is out of bounds.
 
 ### ObjectState
 
-An instance of `ObjectState` is created when an object is passed to the `state()` function. The `ObjectState` class extends from the `State` class.
+An instance of `ObjectState` is created when an object is passed to the `stateify()` function. The `ObjectState` class extends from the `State` class.
 
 * Instances of `ObjectState` emit an `update` event when the stored value changes.
 
@@ -356,7 +356,7 @@ Members may be retrieved from the object through the `member(key)` method.
 
 ### ReferenceState
 
-An instance of `ReferenceState` is created when an instance of a class is passed to the `state()` function. The `ReferenceState` class extends from the `State` class.
+An instance of `ReferenceState` is created when an instance of a class is passed to the `stateify()` function. The `ReferenceState` class extends from the `State` class.
 
 * Instances of `ReferenceState` emit an `update` event when the stored value changes.
 

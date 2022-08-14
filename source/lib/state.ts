@@ -56,7 +56,7 @@ export abstract class AbstractState<A extends Value, B extends TupleRecord<B> & 
 	}
 
 	compute<C extends Value>(computer: Computer<A, C>): State<C> {
-		let computed = state(computer(this.value()));
+		let computed = stateify(computer(this.value()));
 		this.observe("update", (state) => {
 			computed.update(computer(state.value()));
 		});
@@ -201,7 +201,7 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 		if (index < 0 || index > this.elements.length) {
 			throw new Error(`Expected index to be within bounds!`);
 		}
-		let element = item instanceof AbstractState ? item : state(item);
+		let element = item instanceof AbstractState ? item : stateify(item);
 		this.elements.splice(index, 0, element);
 		element.observe("update", this.onElementUpdate);
 		this.notify("insert", element, index);
@@ -213,7 +213,7 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 	}
 
 	mapStates<B extends Value>(mapper: StateMapper<A, B>): ArrayState<B> {
-		let that = state([] as Array<B>);
+		let that = stateify([] as Array<B>);
 		this.observe("insert", (state, index) => {
 			let mapped = mapper(state);
 			that.insert(index, mapped);
@@ -338,7 +338,7 @@ export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectS
 	}
 };
 
-export function state<A extends Value>(value: A): State<A> {
+export function stateify<A extends Value>(value: A): State<A> {
 	if (typeof value === "bigint") {
 		return new PrimitiveState(value) as any;
 	}
@@ -360,14 +360,14 @@ export function state<A extends Value>(value: A): State<A> {
 	if (value instanceof Array) {
 		let elements = [] as any;
 		for (let index = 0; index < value.length; index++) {
-			elements.push(state(value[index]));
+			elements.push(stateify(value[index]));
 		}
 		return new ArrayState(elements) as any;
 	}
 	if (value instanceof Object && value.constructor === Object) {
 		let members = {} as any;
 		for (let key in value) {
-			members[key] = state((value as any)[key]);
+			members[key] = stateify((value as any)[key]);
 		}
 		return new ObjectState(members) as any;
 	}
@@ -379,7 +379,7 @@ export function state<A extends Value>(value: A): State<A> {
 
 export function computed<A extends Value[], B extends Value>(states: [...States<A>], computer: (...args: [...A]) => B): State<B> {
 	let values = states.map((state) => state.value()) as [...A];
-	let computed = state(computer(...values));
+	let computed = stateify(computer(...values));
 	for (let index = 0; index < states.length; index++) {
 		let state = states[index];
 		state.observe("update", (state) => {
