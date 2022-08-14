@@ -290,14 +290,18 @@ export type ObjectStateEvents<A extends Value> = AbstractStateEvents<A> & {
 
 export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectStateEvents<A>> {
 	protected members: States<A>;
+	protected updating: boolean;
 
 	protected onMemberUpdate = () => {
-		this.notify("update", this);
+		if (!this.updating) {
+			this.notify("update", this);
+		}
 	};
 
 	constructor(members: States<A>) {
 		super();
 		this.members = { ...members };
+		this.updating = false;
 		for (let key in this.members) {
 			this.members[key].observe("update", this.onMemberUpdate);
 		}
@@ -309,10 +313,15 @@ export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectS
 
 	update(value: A): boolean {
 		let updated = false;
-		for (let key in value) {
-			if (this.members[key].update(value[key])) {
-				updated = true;
+		try {
+			this.updating = true;
+			for (let key in value) {
+				if (this.members[key].update(value[key])) {
+					updated = true;
+				}
 			}
+		} finally {
+			this.updating = false;
 		}
 		if (updated) {
 			this.notify("update", this);
