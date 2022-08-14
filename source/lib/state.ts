@@ -308,16 +308,16 @@ export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectS
 	}
 
 	update(value: A): boolean {
-		let changed = false;
+		let updated = false;
 		for (let key in value) {
 			if (this.members[key].update(value[key])) {
-				changed = true;
+				updated = true;
 			}
 		}
-		if (changed) {
+		if (updated) {
 			this.notify("update", this);
 		}
-		return changed;
+		return updated;
 	}
 
 	value(): A {
