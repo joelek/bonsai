@@ -1,6 +1,6 @@
 export type TupleRecord<A extends TupleRecord<A>> = { [C in keyof A]: any[]; };
 
-export type PrimitiveValue = bigint | boolean | number | string | null | undefined;
+export type PrimitiveValue = void | bigint | boolean | number | string | null | undefined;
 
 export type ReferenceValue = Object;
 
