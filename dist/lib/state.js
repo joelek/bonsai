@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.computed = exports.state = exports.ObjectState = exports.ArrayState = exports.ReferenceState = exports.PrimitiveState = exports.AbstractState = void 0;
+exports.computed = exports.stateify = exports.ObjectState = exports.ArrayState = exports.ReferenceState = exports.PrimitiveState = exports.AbstractState = void 0;
 class AbstractState {
     observers;
     notify(type, ...args) {
@@ -16,7 +16,7 @@ class AbstractState {
         this.observers = {};
     }
     compute(computer) {
-        let computed = state(computer(this.value()));
+        let computed = stateify(computer(this.value()));
         this.observe("update", (state) => {
             computed.update(computer(state.value()));
         });
@@ -118,16 +118,28 @@ class ArrayState extends AbstractState {
         this.insert(this.elements.length, item);
     }
     element(index) {
-        if (index < 0 || index >= this.elements.length) {
-            throw new Error(`Expected index to be within bounds!`);
+        if (index instanceof AbstractState) {
+            let element = stateify(this.element(index.value()).value());
+            index.observe("update", (index) => {
+                element.update(this.element(index.value()).value());
+            });
+            element.observe("update", (that) => {
+                this.element(index.value()).update(that.value());
+            });
+            return element;
         }
-        return this.elements[index];
+        else {
+            if (index < 0 || index >= this.elements.length) {
+                throw new Error(`Expected index to be within bounds!`);
+            }
+            return this.elements[index];
+        }
     }
     insert(index, item) {
         if (index < 0 || index > this.elements.length) {
             throw new Error(`Expected index to be within bounds!`);
         }
-        let element = item instanceof AbstractState ? item : state(item);
+        let element = item instanceof AbstractState ? item : stateify(item);
         this.elements.splice(index, 0, element);
         element.observe("update", this.onElementUpdate);
         this.notify("insert", element, index);
@@ -137,7 +149,7 @@ class ArrayState extends AbstractState {
         return this.elements.length;
     }
     mapStates(mapper) {
-        let that = state([]);
+        let that = stateify([]);
         this.observe("insert", (state, index) => {
             let mapped = mapper(state);
             that.insert(index, mapped);
@@ -253,7 +265,7 @@ class ObjectState extends AbstractState {
 }
 exports.ObjectState = ObjectState;
 ;
-function state(value) {
+function stateify(value) {
     if (typeof value === "bigint") {
         return new PrimitiveState(value);
     }
@@ -275,14 +287,14 @@ function state(value) {
     if (value instanceof Array) {
         let elements = [];
         for (let index = 0; index < value.length; index++) {
-            elements.push(state(value[index]));
+            elements.push(stateify(value[index]));
         }
         return new ArrayState(elements);
     }
     if (value instanceof Object && value.constructor === Object) {
         let members = {};
         for (let key in value) {
-            members[key] = state(value[key]);
+            members[key] = stateify(value[key]);
         }
         return new ObjectState(members);
     }
@@ -291,11 +303,11 @@ function state(value) {
     }
     throw new Error(`Expected code to be unreachable!`);
 }
-exports.state = state;
+exports.stateify = stateify;
 ;
 function computed(states, computer) {
     let values = states.map((state) => state.value());
-    let computed = state(computer(...values));
+    let computed = stateify(computer(...values));
     for (let index = 0; index < states.length; index++) {
         let state = states[index];
         state.observe("update", (state) => {

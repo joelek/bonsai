@@ -1,7 +1,7 @@
 export declare type TupleRecord<A extends TupleRecord<A>> = {
     [C in keyof A]: any[];
 };
-export declare type PrimitiveValue = bigint | boolean | number | string | null | undefined;
+export declare type PrimitiveValue = void | bigint | boolean | number | string | null | undefined;
 export declare type ReferenceValue = Object;
 export declare type Value = PrimitiveValue | ReferenceValue | Value[] | {
     [key: string]: Value;
@@ -67,7 +67,7 @@ export declare class ArrayState<A extends Value> extends AbstractState<Array<A>,
     constructor(elements: Array<State<A>>);
     [Symbol.iterator](): Iterator<State<A>>;
     append(item: A | State<A>): void;
-    element(index: number): State<A>;
+    element(index: number | State<number>): State<A>;
     insert(index: number, item: A | State<A>): void;
     length(): number;
     mapStates<B extends Value>(mapper: StateMapper<A, B>): ArrayState<B>;
@@ -86,5 +86,5 @@ export declare class ObjectState<A extends RecordValue> extends AbstractState<A,
     update(value: A): boolean;
     value(): A;
 }
-export declare function state<A extends Value>(value: A): State<A>;
+export declare function stateify<A extends Value>(value: A): State<A>;
 export declare function computed<A extends Value[], B extends Value>(states: [...States<A>], computer: (...args: [...A]) => B): State<B>;
