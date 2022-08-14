@@ -208,12 +208,16 @@ exports.ArrayState = ArrayState;
 ;
 class ObjectState extends AbstractState {
     members;
+    updating;
     onMemberUpdate = () => {
-        this.notify("update", this);
+        if (!this.updating) {
+            this.notify("update", this);
+        }
     };
     constructor(members) {
         super();
         this.members = { ...members };
+        this.updating = false;
         for (let key in this.members) {
             this.members[key].observe("update", this.onMemberUpdate);
         }
@@ -222,16 +226,22 @@ class ObjectState extends AbstractState {
         return this.members[key];
     }
     update(value) {
-        let changed = false;
-        for (let key in value) {
-            if (this.members[key].update(value[key])) {
-                changed = true;
+        let updated = false;
+        try {
+            this.updating = true;
+            for (let key in value) {
+                if (this.members[key].update(value[key])) {
+                    updated = true;
+                }
             }
         }
-        if (changed) {
+        finally {
+            this.updating = false;
+        }
+        if (updated) {
             this.notify("update", this);
         }
-        return changed;
+        return updated;
     }
     value() {
         let lastValue = {};

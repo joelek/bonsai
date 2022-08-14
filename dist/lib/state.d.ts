@@ -79,6 +79,7 @@ export declare class ArrayState<A extends Value> extends AbstractState<Array<A>,
 export declare type ObjectStateEvents<A extends Value> = AbstractStateEvents<A> & {};
 export declare class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectStateEvents<A>> {
     protected members: States<A>;
+    protected updating: boolean;
     protected onMemberUpdate: () => void;
     constructor(members: States<A>);
     member<B extends keyof A>(key: B): States<A>[B];
