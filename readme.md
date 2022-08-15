@@ -8,10 +8,10 @@ import { html } from "@joelek/bonsai";
 let ul = html.ul()
 	.attribute("class", ["my-list"])
 	.listener("onclick", (event, element) => {})
-	.nodes([
-		html.li().nodes(["One"]),
-		html.li().nodes(["Two"])
-	]);
+	.nodes(
+		html.li("One"),
+		html.li("Two")
+	);
 ```
 
 ## Background
@@ -73,10 +73,10 @@ import { html } from "@joelek/bonsai";
 let ul = html.ul()
 	.attribute("class", ["my-list"])
 	.listener("onclick", (event, element) => {})
-	.nodes([
-		html.li().nodes(["One"]),
-		html.li().nodes(["Two"])
-	]);
+	.nodes(
+		html.li("One"),
+		html.li("Two")
+	);
 ```
 
 Bonsai provides functional subclasses for all HTML and SVG element classes in the DOM. The subclasses are safe, scalable and have great interoperability with other libraries or existing code.
@@ -96,10 +96,10 @@ let state = stateify(["my-list"]); // State with type Array<string> is created.
 
 let ul = html.ul()
 	.attribute("class", state) // State is implicitly bound to the class attribute.
-	.nodes([
-		html.li().nodes(["One"]),
-		html.li().nodes(["Two"])
-	]);
+	.nodes(
+		html.li("One"),
+		html.li("Two")
+	);
 
 state.update(["my-new-list"]); // State instantly updates the class attribute.
 ```
@@ -114,7 +114,7 @@ let state = stateify(["One", "Two"]); // State with type Array<string> is create
 let ul = html.ul()
 	.attribute("class", ["my-list"])
 	.nodes(state.mapStates((state) => // State is mapped for each element in the array.
-		html.li().nodes([state]) // State is implicitly bound to the child nodes.
+		html.li(state) // State is implicitly bound to the child nodes.
 	));
 
 state.append("Three"); // State instantly updates the child nodes.
@@ -156,7 +156,7 @@ const STYLE = `
 	}
 `;
 
-document.head.appendChild(html.style().nodes([STYLE]));
+document.head.appendChild(html.style(STYLE));
 
 type MyList = State<Array<string>>;
 
@@ -164,7 +164,7 @@ function MyList(state: MyList) {
 	return html.ul()
 		.attribute("class", [CLASS_NAME])
 		.nodes(state.mapStates((state) =>
-			html.li().nodes([state])
+			html.li(state)
 		));
 };
 
@@ -185,6 +185,12 @@ import { html, svg } from "@joelek/bonsai";
 
 let div = html.div();
 let circle = svg.circle();
+```
+
+Child nodes may be set for an element through the factory function.
+
+```ts
+let p = html.p("One", "Two");
 ```
 
 #### Attribute
@@ -214,9 +220,9 @@ There may only be a single listener added to each element for each unique event 
 
 #### Nodes
 
-Child nodes may be set for the element through the `nodes(items)` method.
+Child nodes may be set for the element through the `nodes(...children)` method.
 
-* The `items` argument must be used to specify the child nodes. State is bound to the element and may be used to update the child nodes dynamically.
+* The `children` argument may be used to specify the child nodes. State is bound to the element and may be used to update the child nodes dynamically.
 
 #### Process
 
