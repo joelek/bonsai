@@ -173,7 +173,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 		}
 	}
 
-	listener<B extends keyof A & string>(type: `on${B}`, listener?: FunctionalElementListener<A[B], this> | undefined): this {
+	listener<B extends keyof A & string>(type: `on${B}`, listener: FunctionalElementListener<A[B], this> | undefined): this {
 		if (typeof listener === "undefined") {
 			(this as any)[type] = undefined;
 		} else {
