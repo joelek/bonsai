@@ -394,5 +394,4 @@ NB: This project targets TypeScript 4 in strict mode.
 
 * Write unit tests.
 * Consider implementing OptionalState.
-* Fix issue with undefined members not being initialized properly for ObjectState.
 * Simplify interface for specifying child nodes.

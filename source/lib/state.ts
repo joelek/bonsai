@@ -327,8 +327,13 @@ export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectS
 		}
 	}
 
-	member<B extends keyof A>(key: B): States<A>[B] {
-		return this.members[key];
+	member<B extends keyof A>(key: B): Exclude<States<A>[B], undefined> {
+		let member = this.members[key] as Exclude<States<A>[B], undefined>;
+		if (member == null) {
+			this.members[key] = member = stateify(undefined) as any;
+			this.members[key].observe("update", this.onMemberUpdate);
+		}
+		return member;
 	}
 
 	update(value: A): boolean {
@@ -336,7 +341,8 @@ export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectS
 		try {
 			this.updating = true;
 			for (let key in value) {
-				if (this.members[key].update(value[key])) {
+				let member = this.member(key);
+				if (member.update(value[key])) {
 					updated = true;
 				}
 			}
@@ -352,7 +358,8 @@ export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectS
 	value(): A {
 		let lastValue = {} as A;
 		for (let key in this.members) {
-			lastValue[key] = this.members[key].value();
+			let member = this.member(key);
+			lastValue[key] = member.value();
 		}
 		return lastValue;
 	}
@@ -374,7 +381,7 @@ export function stateify<A extends Value>(value: A): State<A> {
 	if (value === null) {
 		return new PrimitiveState(value) as any;
 	}
-	if (value === undefined) {
+	if (typeof value === "undefined") {
 		return new PrimitiveState(value) as any;
 	}
 	if (value instanceof Array) {
