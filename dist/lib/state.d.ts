@@ -82,7 +82,7 @@ export declare class ObjectState<A extends RecordValue> extends AbstractState<A,
     protected updating: boolean;
     protected onMemberUpdate: () => void;
     constructor(members: States<A>);
-    member<B extends keyof A>(key: B): States<A>[B];
+    member<B extends keyof A>(key: B): Exclude<States<A>[B], undefined>;
     update(value: A): boolean;
     value(): A;
 }

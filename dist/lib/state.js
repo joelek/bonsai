@@ -244,14 +244,20 @@ class ObjectState extends AbstractState {
         }
     }
     member(key) {
-        return this.members[key];
+        let member = this.members[key];
+        if (member == null) {
+            this.members[key] = member = stateify(undefined);
+            this.members[key].observe("update", this.onMemberUpdate);
+        }
+        return member;
     }
     update(value) {
         let updated = false;
         try {
             this.updating = true;
             for (let key in value) {
-                if (this.members[key].update(value[key])) {
+                let member = this.member(key);
+                if (member.update(value[key])) {
                     updated = true;
                 }
             }
@@ -267,7 +273,8 @@ class ObjectState extends AbstractState {
     value() {
         let lastValue = {};
         for (let key in this.members) {
-            lastValue[key] = this.members[key].value();
+            let member = this.member(key);
+            lastValue[key] = member.value();
         }
         return lastValue;
     }
@@ -290,7 +297,7 @@ function stateify(value) {
     if (value === null) {
         return new PrimitiveState(value);
     }
-    if (value === undefined) {
+    if (typeof value === "undefined") {
         return new PrimitiveState(value);
     }
     if (value instanceof Array) {
