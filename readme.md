@@ -101,7 +101,7 @@ let ul = html.ul()
 		html.li().nodes(["Two"])
 	]);
 
-state.update("my-new-list"); // State instantly updates the class attribute.
+state.update(["my-new-list"]); // State instantly updates the class attribute.
 ```
 
 State may be bound to the child nodes of an element as shown in the example below.
