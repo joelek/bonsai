@@ -393,3 +393,5 @@ NB: This project targets TypeScript 4 in strict mode.
 ## Roadmap
 
 * Write unit tests.
+* Consider implementing UndefinedState.
+* Fix issue with undefined members not being initialized properly for ObjectState.
