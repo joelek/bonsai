@@ -301,7 +301,7 @@ Values or states may be appended to the array through the `append(item)` method.
 
 Elements may be retrieved from the array through the `element(index)` method.
 
-* The `index` argument must be used to specify the index of the element.
+* The `index` argument must be used to specify the index value or state of the element.
 
 An error is thrown when the index is out of bounds.
 
