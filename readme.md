@@ -330,7 +330,7 @@ The states of an array may be mapped into a new array through the `mapStates(map
 
 * The `mapper` argument must be used to specify how an existing state should be mapped to the a new value or state.
 
-The states of state-mapped arrays are initialized using the `mapper` but not recomputed when updates are made to the states of the original array.
+The states of state-mapped arrays are initialized using the `mapper` but not recomputed when updates are made to the states of the original array. This is most often the desired behaviour when mapping instances such as elements.
 
 #### MapValues
 
@@ -338,7 +338,7 @@ The values of an array may be mapped into a new array through the `mapValues(map
 
 * The `mapper` argument must be used to specify how an existing value should be mapped to a new value.
 
-The states of value-mapped arrays are initialized using the `mapper` and recomputed when updates are made to the states of the original array. This is most often the desired behaviour.
+The states of value-mapped arrays are initialized using the `mapper` and recomputed when updates are made to the states of the original array. This is most often the desired behaviour when mapping pure data.
 
 #### Remove
 
