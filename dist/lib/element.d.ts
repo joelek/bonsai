@@ -3,6 +3,7 @@ export declare type Attribute = Value | State<Value>;
 export declare type Attributes = {
     [key: string]: Attribute;
 };
+export declare type Children = Array<ArrayState<Node | Value> | Value | Node | State<Value | Node>>;
 export declare type FunctionalElementListener<A extends Event, B extends Element> = (event: A, element: B) => void;
 export declare type FunctionalElementEventMap<A> = {
     [B in keyof A]: Event;
@@ -21,12 +22,12 @@ export declare class FunctionalElementImplementation<A extends FunctionalElement
     attribute<A extends string>(key: A extends "class" | "style" ? never : A, value: Attribute): this;
     attribute<A extends Array<Value>>(key: "class", value: A | State<A> | undefined): this;
     attribute<A extends Record<string, Value>>(key: "style", value: A | State<A> | undefined): this;
-    listener<B extends keyof A & string>(type: `on${B}`, listener?: FunctionalElementListener<A[B], this> | undefined): this;
-    nodes<A extends Value | Node>(items: ArrayState<A> | Array<Value | Node | State<Value | Node>>): this;
+    listener<B extends keyof A & string>(type: `on${B}`, listener: FunctionalElementListener<A[B], this> | undefined): this;
+    nodes(...children: Children): this;
     process(callback: (element: this) => void): this;
 }
 export declare type FunctionalElement<A extends FunctionalElementEventMap<A>, B extends Element> = FunctionalElementImplementation<A> & B;
-export declare type FunctionalElementFactory<A extends FunctionalElementEventMap<A>, B extends Element> = () => FunctionalElement<A, B>;
+export declare type FunctionalElementFactory<A extends FunctionalElementEventMap<A>, B extends Element> = (...children: Children) => FunctionalElement<A, B>;
 export declare type Namespace = "http://www.w3.org/1999/xhtml" | "http://www.w3.org/2000/svg";
 export declare function makeFunctionalElementFactory<A extends FunctionalElementEventMap<A>, B extends Element>(namespace: Namespace, tag: string): FunctionalElementFactory<A, B>;
 export declare type FunctionalHTMLElement<A extends HTMLElement> = FunctionalElement<HTMLElementEventMap, A>;

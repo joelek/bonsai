@@ -1,10 +1,12 @@
-import { ArrayState, AbstractState, State, CancellationToken, Value, RecordValue, ArrayValue } from "./state";
+import { ArrayState, AbstractState, State, CancellationToken, Value, RecordValue, ArrayValue, AbstractStateEvents } from "./state";
 
 export type Attribute = Value | State<Value>;
 
 export type Attributes = {
 	[key: string]: Attribute;
 };
+
+export type Children = Array<ArrayState<Node | Value> | Value | Node | State<Value | Node>>;
 
 export type FunctionalElementListener<A extends Event, B extends Element> = (event: A, element: B) => void;
 
@@ -184,72 +186,76 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 		return this;
 	}
 
-	nodes<A extends Value | Node>(items: ArrayState<A> | Array<Value | Node | State<Value | Node>>): this {
+	nodes(...children: Children): this {
+		let getOffset = (forChildIndex: number): number => {
+			let offset = 0;
+			for (let childIndex = 0; childIndex < forChildIndex; childIndex++) {
+				let item = children[childIndex];
+				if (item instanceof ArrayState) {
+					offset += item.length();
+				} else if (item instanceof Array) {
+					offset += item.length;
+				} else {
+					offset += 1;
+				}
+			}
+			return offset;
+		};
 		this.unbind(INSERT);
 		this.unbind(REMOVE);
 		this.unbind(UPDATE);
 		for (let index = this.childNodes.length - 1; index >= 0; index--) {
 			this.childNodes[index].remove();
 		}
-		if (items instanceof ArrayState) {
-			let bindings = this.bindings = (this.bindings ?? {});
-			bindings[INSERT] = [
-				items.observe("insert", (state, index) => {
+		for (let childIndex = 0; childIndex < children.length; childIndex++) {
+			let child = children[childIndex];
+			if (child instanceof ArrayState) {
+				let state = child as ArrayState<Value | Node>;
+				let bindings = this.bindings = this.bindings ?? {};
+				bindings[INSERT] = bindings[INSERT] ?? [];
+				bindings[INSERT][childIndex] = state.observe("insert", (state, index) => {
 					let value = state.value();
-					this.insertBefore(createNode(value), this.childNodes.item(index));
+					this.insertBefore(createNode(value), this.childNodes.item(getOffset(childIndex) + index));
 					let subscription = state.observe("update", (state) => {
 						let value = state.value();
-						this.replaceChild(createNode(value), this.childNodes.item(index));
+						this.replaceChild(createNode(value), this.childNodes.item(getOffset(childIndex) + index));
 					});
-					let subscriptions = bindings[UPDATE];
-					if (subscriptions == null) {
-						bindings[UPDATE] = subscriptions = [];
-					}
-					subscriptions.splice(index, 0, subscription);
-				})
-			];
-			bindings[REMOVE] = [
-				items.observe("remove", (state, index) => {
-					this.childNodes[index].remove();
-					let subscriptions = bindings[UPDATE];
-					if (subscriptions == null) {
-						return;
-					}
-					let subscription = subscriptions[index];
+					bindings[UPDATE] = bindings[UPDATE] ?? [];
+					bindings[UPDATE].splice(getOffset(childIndex) + index, 0, subscription);
+				});
+				bindings[REMOVE] = bindings[REMOVE] ?? [];
+				bindings[REMOVE][childIndex] = state.observe("remove", (state, index) => {
+					this.childNodes[getOffset(childIndex) + index].remove();
+					bindings[UPDATE] = bindings[UPDATE] ?? [];
+					let subscription = bindings[UPDATE][getOffset(childIndex) + index];
 					if (subscription != null) {
 						subscription();
-						subscriptions.splice(index, 1);
-						if (subscriptions.length === 0) {
+						bindings[UPDATE].splice(getOffset(childIndex) + index, 1);
+						if (bindings[UPDATE].length === 0) {
 							delete bindings[UPDATE];
 						}
 					}
-				})
-			];
-			bindings[UPDATE] = [];
-			for (let index = 0; index < items.length(); index++) {
-				let item = items.element(index);
-				this.appendChild(createNode(item.value()));
-				let subscriber = item.observe("update", (state) => {
-					let value = state.value();
-					this.replaceChild(createNode(value), this.childNodes.item(index));
 				});
-				bindings[UPDATE][index] = subscriber;
-			}
-		} else {
-			for (let index = 0; index < items.length; index++) {
-				let item = items[index];
-				if (item instanceof AbstractState) {
-					let bindings = this.bindings = (this.bindings ?? {});
-					bindings[UPDATE] = (bindings[UPDATE] ?? []);
-					this.appendChild(createNode(item.value()));
-					let subscriber = item.observe("update", (state) => {
+				bindings[UPDATE] = bindings[UPDATE] ?? [];
+				for (let index = 0; index < state.length(); index++) {
+					let element = state.element(index);
+					this.appendChild(createNode(element.value()));
+					bindings[UPDATE][getOffset(childIndex) + index] = element.observe("update", (state) => {
 						let value = state.value();
-						this.replaceChild(createNode(value), this.childNodes.item(index));
+						this.replaceChild(createNode(value), this.childNodes.item(getOffset(childIndex) + index));
 					});
-					bindings[UPDATE][index] = subscriber;
-				} else {
-					this.appendChild(createNode(item));
 				}
+			} else if (child instanceof AbstractState) {
+				let state = child as AbstractState<Node | Value, AbstractStateEvents<Node | Value>>;
+				let bindings = this.bindings = this.bindings ?? {};
+				bindings[UPDATE] = bindings[UPDATE] ?? [];
+				this.appendChild(createNode(state.value()));
+				bindings[UPDATE][getOffset(childIndex)] = state.observe("update", (state) => {
+					let value = state.value();
+					this.replaceChild(createNode(value), this.childNodes.item(getOffset(childIndex)));
+				});
+			} else {
+				this.appendChild(createNode(child));
 			}
 		}
 		return this;
@@ -262,7 +268,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 };
 
 export type FunctionalElement<A extends FunctionalElementEventMap<A>, B extends Element> = FunctionalElementImplementation<A> & B;
-export type FunctionalElementFactory<A extends FunctionalElementEventMap<A>, B extends Element> = () => FunctionalElement<A, B>;
+export type FunctionalElementFactory<A extends FunctionalElementEventMap<A>, B extends Element> = (...children: Children) => FunctionalElement<A, B>;
 
 export type Namespace = "http://www.w3.org/1999/xhtml" | "http://www.w3.org/2000/svg";
 
@@ -274,9 +280,10 @@ export function makeFunctionalElementFactory<A extends FunctionalElementEventMap
 		}
 		Object.defineProperty(prototype, name, propertyDescriptor);
 	}
-	return () => {
+	return (...children: Children) => {
 		let element = document.createElementNS(namespace, tag) as FunctionalElement<A, B>;
 		Object.setPrototypeOf(element, prototype);
+		element.nodes(...children);
 		return element;
 	}
 };
@@ -292,7 +299,7 @@ export const html = new Proxy({} as FunctionalHTMLElementFactories, {
 		let tag = key as keyof FunctionalHTMLElementFactories;
 		let factory = target[tag];
 		if (factory == null) {
-			factory = target[tag] = makeFunctionalElementFactory("http://www.w3.org/1999/xhtml", tag) as any
+			factory = target[tag] = makeFunctionalElementFactory("http://www.w3.org/1999/xhtml", tag) as any;
 		}
 		return factory;
 	}
@@ -309,7 +316,7 @@ export const svg = new Proxy({} as FunctionalSVGElementFactories, {
 		let tag = key as keyof FunctionalSVGElementFactories;
 		let factory = target[tag];
 		if (factory == null) {
-			factory = target[tag] = makeFunctionalElementFactory("http://www.w3.org/2000/svg", tag) as any
+			factory = target[tag] = makeFunctionalElementFactory("http://www.w3.org/2000/svg", tag) as any;
 		}
 		return factory;
 	}

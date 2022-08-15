@@ -167,74 +167,80 @@ class FunctionalElementImplementation extends Element {
         }
         return this;
     }
-    nodes(items) {
+    nodes(...children) {
+        let getOffset = (forChildIndex) => {
+            let offset = 0;
+            for (let childIndex = 0; childIndex < forChildIndex; childIndex++) {
+                let item = children[childIndex];
+                if (item instanceof state_1.ArrayState) {
+                    offset += item.length();
+                }
+                else if (item instanceof Array) {
+                    offset += item.length;
+                }
+                else {
+                    offset += 1;
+                }
+            }
+            return offset;
+        };
         this.unbind(INSERT);
         this.unbind(REMOVE);
         this.unbind(UPDATE);
         for (let index = this.childNodes.length - 1; index >= 0; index--) {
             this.childNodes[index].remove();
         }
-        if (items instanceof state_1.ArrayState) {
-            let bindings = this.bindings = (this.bindings ?? {});
-            bindings[INSERT] = [
-                items.observe("insert", (state, index) => {
+        for (let childIndex = 0; childIndex < children.length; childIndex++) {
+            let child = children[childIndex];
+            if (child instanceof state_1.ArrayState) {
+                let state = child;
+                let bindings = this.bindings = this.bindings ?? {};
+                bindings[INSERT] = bindings[INSERT] ?? [];
+                bindings[INSERT][childIndex] = state.observe("insert", (state, index) => {
                     let value = state.value();
-                    this.insertBefore(createNode(value), this.childNodes.item(index));
+                    this.insertBefore(createNode(value), this.childNodes.item(getOffset(childIndex) + index));
                     let subscription = state.observe("update", (state) => {
                         let value = state.value();
-                        this.replaceChild(createNode(value), this.childNodes.item(index));
+                        this.replaceChild(createNode(value), this.childNodes.item(getOffset(childIndex) + index));
                     });
-                    let subscriptions = bindings[UPDATE];
-                    if (subscriptions == null) {
-                        bindings[UPDATE] = subscriptions = [];
-                    }
-                    subscriptions.splice(index, 0, subscription);
-                })
-            ];
-            bindings[REMOVE] = [
-                items.observe("remove", (state, index) => {
-                    this.childNodes[index].remove();
-                    let subscriptions = bindings[UPDATE];
-                    if (subscriptions == null) {
-                        return;
-                    }
-                    let subscription = subscriptions[index];
+                    bindings[UPDATE] = bindings[UPDATE] ?? [];
+                    bindings[UPDATE].splice(getOffset(childIndex) + index, 0, subscription);
+                });
+                bindings[REMOVE] = bindings[REMOVE] ?? [];
+                bindings[REMOVE][childIndex] = state.observe("remove", (state, index) => {
+                    this.childNodes[getOffset(childIndex) + index].remove();
+                    bindings[UPDATE] = bindings[UPDATE] ?? [];
+                    let subscription = bindings[UPDATE][getOffset(childIndex) + index];
                     if (subscription != null) {
                         subscription();
-                        subscriptions.splice(index, 1);
-                        if (subscriptions.length === 0) {
+                        bindings[UPDATE].splice(getOffset(childIndex) + index, 1);
+                        if (bindings[UPDATE].length === 0) {
                             delete bindings[UPDATE];
                         }
                     }
-                })
-            ];
-            bindings[UPDATE] = [];
-            for (let index = 0; index < items.length(); index++) {
-                let item = items.element(index);
-                this.appendChild(createNode(item.value()));
-                let subscriber = item.observe("update", (state) => {
-                    let value = state.value();
-                    this.replaceChild(createNode(value), this.childNodes.item(index));
                 });
-                bindings[UPDATE][index] = subscriber;
-            }
-        }
-        else {
-            for (let index = 0; index < items.length; index++) {
-                let item = items[index];
-                if (item instanceof state_1.AbstractState) {
-                    let bindings = this.bindings = (this.bindings ?? {});
-                    bindings[UPDATE] = (bindings[UPDATE] ?? []);
-                    this.appendChild(createNode(item.value()));
-                    let subscriber = item.observe("update", (state) => {
+                bindings[UPDATE] = bindings[UPDATE] ?? [];
+                for (let index = 0; index < state.length(); index++) {
+                    let element = state.element(index);
+                    this.appendChild(createNode(element.value()));
+                    bindings[UPDATE][getOffset(childIndex) + index] = element.observe("update", (state) => {
                         let value = state.value();
-                        this.replaceChild(createNode(value), this.childNodes.item(index));
+                        this.replaceChild(createNode(value), this.childNodes.item(getOffset(childIndex) + index));
                     });
-                    bindings[UPDATE][index] = subscriber;
                 }
-                else {
-                    this.appendChild(createNode(item));
-                }
+            }
+            else if (child instanceof state_1.AbstractState) {
+                let state = child;
+                let bindings = this.bindings = this.bindings ?? {};
+                bindings[UPDATE] = bindings[UPDATE] ?? [];
+                this.appendChild(createNode(state.value()));
+                bindings[UPDATE][getOffset(childIndex)] = state.observe("update", (state) => {
+                    let value = state.value();
+                    this.replaceChild(createNode(value), this.childNodes.item(getOffset(childIndex)));
+                });
+            }
+            else {
+                this.appendChild(createNode(child));
             }
         }
         return this;
@@ -254,9 +260,10 @@ function makeFunctionalElementFactory(namespace, tag) {
         }
         Object.defineProperty(prototype, name, propertyDescriptor);
     }
-    return () => {
+    return (...children) => {
         let element = document.createElementNS(namespace, tag);
         Object.setPrototypeOf(element, prototype);
+        element.nodes(...children);
         return element;
     };
 }

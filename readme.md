@@ -394,4 +394,3 @@ NB: This project targets TypeScript 4 in strict mode.
 
 * Write unit tests.
 * Consider implementing OptionalState.
-* Simplify interface for specifying child nodes.
