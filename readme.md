@@ -393,5 +393,6 @@ NB: This project targets TypeScript 4 in strict mode.
 ## Roadmap
 
 * Write unit tests.
-* Consider implementing UndefinedState.
+* Consider implementing OptionalState.
 * Fix issue with undefined members not being initialized properly for ObjectState.
+* Simplify interface for specifying child nodes.
