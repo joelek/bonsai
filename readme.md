@@ -43,6 +43,17 @@ The three technologies are connected through the identifier `onclick` and throug
 
 The use of `querySelectorAll()` is not ideal as it simply selects all elements matching the given selector. If the class name is updated in the fragment without it also being updated in the code, behaviour stops working. If new fragments using identical class names are introduced, those fragments will gain unintended behaviour. Preventing this becomes the, often manual, responsibility of the programmer.
 
+In addition to this, programatically generated HTML fragments can suffer from severe security-related issues. Consider for instance the fragment below where text node has been maliciously replaced by a `script` element. The elment was inserted by tricking the generator into encoding the string `<script>console.log("Not cool!")</script>` directly into the fragment without any input sanitization.
+
+```html
+<ul class="my-list" onclick="onclick">
+	<li><script>console.log("Not cool!")</script></li>
+	<li>Two</li>
+</ul>
+```
+
+The browser has no way of distinguishing between structure and data when parsing the fragment and parses this as a `script` element. The script may even be executed depending on context unless proper security policies are enforced!
+
 This has lead to the re-emergence of combining fragments, behaviour, formatting and animation declarations into isolated units.
 
 It is possible to create isolated units using pure JavaScript but since the API is imperative, visual representation of structural hierarchy is lost. The API is also quite verbose as seen in the example below in which a list almost identical to the one in the previous example is generated.
@@ -229,6 +240,17 @@ Child nodes may be set for the element through the `nodes(...children)` method.
 An element may be processed in a processing block through the `process(callback)` method.
 
 * The `callback` argument must be used to specify the callback.
+
+#### Serialization
+
+Values set as attributes or child nodes will be serialized into the document using a simple algorithm. The algorithm serializes primitive values into strings and uses JSON-serialization for composite values. This provides maximum flexibility for the programmer with one caveat which is illustrated in the example below.
+
+```ts
+let p1 = html.p(1, 2); // Creates a paragraph with two text nodes containing "1" and "2", respectively.
+let p2 = html.p([1, 2]); // Creates a paragraph with one text node containing "[1, 2]".
+```
+
+Please note that the `class` and `style` attributes use custom serialization rules and also support deserialization in contrast to regular attributes.
 
 ### Interactive State
 
