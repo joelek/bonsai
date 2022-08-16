@@ -18,7 +18,7 @@ export type FunctionalElementListeners<A extends FunctionalElementEventMap<A>, B
 	[C in `on${keyof A & string}`]?: C extends `on${infer D extends keyof A & string}` ? FunctionalElementListener<A[D], FunctionalElement<A, B>> : never;
 };
 
-function serializeValue(value: Value): string {
+export function serializeValue(value: Value): string {
 	if (typeof value === "string") {
 		return value;
 	}
@@ -34,7 +34,7 @@ function serializeValue(value: Value): string {
 	});
 };
 
-function createNode(value: Value | Node): Node {
+export function createNode(value: Value | Node): Node {
 	if (value instanceof Node) {
 		return value;
 	} else {
@@ -42,7 +42,7 @@ function createNode(value: Value | Node): Node {
 	}
 };
 
-function parseClass(value: string): Array<string> {
+export function parseClass(value: string): Array<string> {
 	let values = [] as Array<string>;
 	for (let chunk of value.trim().split(/\s+/)) {
 		let value = chunk;
@@ -53,7 +53,7 @@ function parseClass(value: string): Array<string> {
 	return values;
 };
 
-function serializeClass(value: Value): string {
+export function serializeClass(value: Value): string {
 	if (value instanceof Array) {
 		let array = value as ArrayValue;
 		return array
@@ -65,7 +65,7 @@ function serializeClass(value: Value): string {
 	}
 };
 
-function parseStyle(value: string): Record<string, string> {
+export function parseStyle(value: string): Record<string, string> {
 	let values = {} as Record<string, string>;
 	for (let chunk of value.trim().split(";")) {
 		let parts = chunk.split(":");
@@ -78,7 +78,7 @@ function parseStyle(value: string): Record<string, string> {
 	return values;
 };
 
-function serializeStyle(value: Value): string {
+export function serializeStyle(value: Value): string {
 	if (value instanceof Object && value.constructor === Object) {
 		let object = value as RecordValue;
 		return Object.entries(object)
