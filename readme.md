@@ -154,10 +154,10 @@ All three algoritms produce mutation sets that when applied update the fragment 
 
 ### Reactive Components
 
-Bonsai can be used to create reactive web components by combining functional elements with interactive state.
+Bonsai can be used to create reactive web components by combining functional elements with interactive state. A scalable pattern is demonstrated in the example below.
 
 ```ts
-import { html, stateify, State } from "@joelek/bonsai";
+import { html, stateify, State, Children } from "@joelek/bonsai";
 
 const CLASS_NAME = "my-list";
 
@@ -169,15 +169,20 @@ const STYLE = `
 
 document.head.appendChild(html.style(STYLE));
 
-type MyList = State<Array<string>>;
+export type MyList = State<Array<string>>;
 
-function MyList(state: MyList) {
+export function MyList(state: MyList, /* ...children: Children */) {
 	return html.ul()
 		.attribute("class", [CLASS_NAME])
 		.nodes(state.mapStates((state) =>
 			html.li(state)
 		));
 };
+```
+
+```ts
+import { stateify } from "@joelek/bonsai";
+import { MyList } from "./MyList";
 
 let state = stateify<Array<string>>([]);
 document.body.appendChild(MyList(state));
