@@ -43,7 +43,7 @@ The three technologies are connected through the identifier `onclick` and throug
 
 The use of `querySelectorAll()` is not ideal as it simply selects all elements matching the given selector. If the class name is updated in the fragment without it also being updated in the code, behaviour stops working. If new fragments using identical class names are introduced, those fragments will gain unintended behaviour. Preventing this becomes the, often manual, responsibility of the programmer.
 
-In addition to this, programatically generated HTML fragments can suffer from severe security-related issues. Consider for instance the fragment below where text node has been maliciously replaced by a `script` element. The elment was inserted by tricking the generator into encoding the string `<script>console.log("Not cool!")</script>` directly into the fragment without any input sanitization.
+In addition to this, programatically generated HTML fragments can suffer from severe security-related issues. Consider for instance the fragment below where the text node has been maliciously replaced by a `script` element. The elment was inserted by tricking the generator into encoding the string `<script>console.log("Not cool!")</script>` directly into the fragment without any input sanitization.
 
 ```html
 <ul class="my-list" onclick="onclick">
@@ -227,7 +227,7 @@ The `style` attribute will automatically be parsed and serialized as a record of
 
 #### Listener
 
-A listener may be added to the element through the `listener(type, listener?)` method.
+A listener may be added to the element through the `listener(type, listener)` method.
 
 * The `type` argument must be used to specify the event type using the `on*` format.
 * The `listener` argument must be used to specify the listener.
