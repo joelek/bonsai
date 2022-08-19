@@ -9,9 +9,5 @@
 	"include": [
 		"./"
 	],
-	"references": [
-		{
-			"path": "../dom/"
-		}
-	]
+	"references": []
 }
