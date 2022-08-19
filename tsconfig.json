@@ -11,6 +11,9 @@
 	"include": [],
 	"references": [
 		{
+			"path": "./source/dom/"
+		},
+		{
 			"path": "./source/lib/"
 		}
 	]
