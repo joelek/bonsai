@@ -7,6 +7,12 @@ suite("state", (suite) => {
 		assert.equals(state.value(), {});
 	});
 
+	suite.case(`It should support updating optional members to undefined values.`, (assert) => {
+		let state = stateify({ data: { page: "" } } as { data?: { page: string } });
+		state.update({ data: undefined });
+		assert.equals(state.value(), { data: {} });
+	});
+
 	suite.case(`It should initialize optional members lazily when updated.`, (assert) => {
 		let state = stateify({} as { optional?: boolean });
 		state.update({ optional: undefined });

@@ -342,7 +342,7 @@ export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectS
 			this.updating = true;
 			for (let key in this.members) {
 				let member = this.member(key);
-				if (member.update(value[key])) {
+				if (member.update(value?.[key] as any)) {
 					updated = true;
 				}
 			}
