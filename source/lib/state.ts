@@ -359,7 +359,10 @@ export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectS
 		let lastValue = {} as A;
 		for (let key in this.members) {
 			let member = this.member(key);
-			lastValue[key] = member.value();
+			let value = member.value();
+			if (typeof value !== "undefined") {
+				lastValue[key] = value;
+			}
 		}
 		return lastValue;
 	}
