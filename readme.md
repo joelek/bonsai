@@ -383,9 +383,10 @@ An instance of `ObjectState` is created when an object is passed to the `stateif
 
 #### Member
 
-Members may be retrieved from the object through the `member(key)` method.
+Members may be retrieved from the object through the `member(key, defaultValue?)` method.
 
 * The `key` argument must be used to specify the key of the member.
+* The `defaultValue` argument may be used to specify the defaultValue of the member.
 
 ### ReferenceState
 
