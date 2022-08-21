@@ -190,6 +190,93 @@ state.append("One");
 state.append("Two");
 ```
 
+### Client-side routing
+
+Bonsai features a router module that may be used for client-side routing.
+
+```ts
+import { html, State, Router, Route, QueryParameters } from "@joelek/bonsai";
+
+export type StartPageOptions = {};
+
+export const StartPage = {
+	codec: {
+		decode(route: Route): StartPageOptions {
+			if (route.paths.length !== 1 || route.paths[0] !== "start") {
+				throw new Error();
+			}
+			return {};
+		},
+		encode(options: StartPageOptions): Route {
+			let paths = ["start"];
+			let parameters = [] as QueryParameters;
+			return {
+				paths,
+				parameters
+			};
+		}
+	},
+	factory(model: State<StartPageOptions>, title: State<string>, router: Router<any>) {
+		return html.h1("Start Page");
+	}
+};
+```
+
+```ts
+import { html, State, Router, Route, QueryParameters } from "@joelek/bonsai";
+
+export type ContactPageOptions = {};
+
+export const ContactPage = {
+	codec: {
+		decode(route: Route): ContactPageOptions {
+			if (route.paths.length !== 1 || route.paths[0] !== "contact") {
+				throw new Error();
+			}
+			return {};
+		},
+		encode(options: ContactPageOptions): Route {
+			let paths = ["contact"];
+			let parameters = [] as QueryParameters;
+			return {
+				paths,
+				parameters
+			};
+		}
+	},
+	factory(model: State<ContactPageOptions>, title: State<string>, router: Router<any>) {
+		return html.h1("Contact Page");
+	}
+};
+```
+
+```ts
+import { html, Router } from "@joelek/bonsai";
+import { StartPage } from "./StartPage";
+import { ContactPage } from "./ContactPage";
+
+const ROUTER = new Router({
+	start: StartPage,
+	contact: ContactPage
+}, "start");
+
+document.body.appendChild(
+	html.div(
+		html.p(
+			html.a("Start")
+				.listener("onclick", (event, element) => ROUTER.navigate("start", {})),
+			html.a("Contact")
+				.listener("onclick", (event, element) => ROUTER.navigate("contact", {}))
+		),
+		html.p("Current route:", ROUTER.url),
+		ROUTER.element
+	)
+);
+```
+
+* The router exposes the current route through the `url` state.
+* The router exposes the current element through the `element` state.
+
 ## API
 
 ### Functional Element
