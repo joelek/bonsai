@@ -432,4 +432,3 @@ NB: This project targets TypeScript 4 in strict mode.
 * Serialize classes as "class".
 * Ensure that the proper state type is inferred in update event messages.
 * Consider implementing TupleState that changes once irregardless of number of members.
-* Investigate issue with member(indexState) that may be caused by ObjectState.update().
