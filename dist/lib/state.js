@@ -243,10 +243,10 @@ class ObjectState extends AbstractState {
             this.members[key].observe("update", this.onMemberUpdate);
         }
     }
-    member(key) {
+    member(key, defaultValue) {
         let member = this.members[key];
         if (member == null) {
-            this.members[key] = member = stateify(undefined);
+            this.members[key] = member = stateify(defaultValue);
             this.members[key].observe("update", this.onMemberUpdate);
         }
         return member;
@@ -255,9 +255,15 @@ class ObjectState extends AbstractState {
         let updated = false;
         try {
             this.updating = true;
-            for (let key in value) {
+            for (let key in this.members) {
                 let member = this.member(key);
                 if (member.update(value[key])) {
+                    updated = true;
+                }
+            }
+            for (let key in value) {
+                if (!(key in this.members)) {
+                    let member = this.member(key, value[key]);
                     updated = true;
                 }
             }
@@ -274,7 +280,10 @@ class ObjectState extends AbstractState {
         let lastValue = {};
         for (let key in this.members) {
             let member = this.member(key);
-            lastValue[key] = member.value();
+            let value = member.value();
+            if (typeof value !== "undefined") {
+                lastValue[key] = value;
+            }
         }
         return lastValue;
     }

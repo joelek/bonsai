@@ -11,6 +11,12 @@ export declare type FunctionalElementEventMap<A> = {
 export declare type FunctionalElementListeners<A extends FunctionalElementEventMap<A>, B extends Element> = {
     [C in `on${keyof A & string}`]?: C extends `on${infer D extends keyof A & string}` ? FunctionalElementListener<A[D], FunctionalElement<A, B>> : never;
 };
+export declare function serializeValue(value: Value): string;
+export declare function createNode(value: Value | Node): Node;
+export declare function parseClass(value: string): Array<string>;
+export declare function serializeClass(value: Value): string;
+export declare function parseStyle(value: string): Record<string, string>;
+export declare function serializeStyle(value: Value): string;
 export declare class FunctionalElementImplementation<A extends FunctionalElementEventMap<A>> extends Element {
     protected bindings?: {
         [key: string | symbol]: Array<CancellationToken | undefined> | undefined;

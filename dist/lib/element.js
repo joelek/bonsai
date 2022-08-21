@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.svg = exports.html = exports.makeFunctionalElementFactory = exports.FunctionalElementImplementation = void 0;
+exports.svg = exports.html = exports.makeFunctionalElementFactory = exports.FunctionalElementImplementation = exports.serializeStyle = exports.parseStyle = exports.serializeClass = exports.parseClass = exports.createNode = exports.serializeValue = void 0;
 const state_1 = require("./state");
 function serializeValue(value) {
     if (typeof value === "string") {
@@ -18,6 +18,7 @@ function serializeValue(value) {
         }
     });
 }
+exports.serializeValue = serializeValue;
 ;
 function createNode(value) {
     if (value instanceof Node) {
@@ -27,6 +28,7 @@ function createNode(value) {
         return document.createTextNode(serializeValue(value));
     }
 }
+exports.createNode = createNode;
 ;
 function parseClass(value) {
     let values = [];
@@ -38,6 +40,7 @@ function parseClass(value) {
     }
     return values;
 }
+exports.parseClass = parseClass;
 ;
 function serializeClass(value) {
     if (value instanceof Array) {
@@ -51,6 +54,7 @@ function serializeClass(value) {
         return serializeValue(value);
     }
 }
+exports.serializeClass = serializeClass;
 ;
 function parseStyle(value) {
     let values = {};
@@ -64,6 +68,7 @@ function parseStyle(value) {
     }
     return values;
 }
+exports.parseStyle = parseStyle;
 ;
 function serializeStyle(value) {
     if (value instanceof Object && value.constructor === Object) {
@@ -77,6 +82,7 @@ function serializeStyle(value) {
         return serializeValue(value);
     }
 }
+exports.serializeStyle = serializeStyle;
 ;
 const INSERT = Symbol();
 const REMOVE = Symbol();
