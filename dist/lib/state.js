@@ -257,7 +257,7 @@ class ObjectState extends AbstractState {
             this.updating = true;
             for (let key in this.members) {
                 let member = this.member(key);
-                if (member.update(value[key])) {
+                if (member.update(value?.[key])) {
                     updated = true;
                 }
             }
