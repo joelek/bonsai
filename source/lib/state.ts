@@ -272,7 +272,7 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 		let updated = false;
 		try {
 			this.updating = true;
-			let length = Math.min(this.elements.length, value.length);
+			let length = Math.min(this.elements.length, value?.length ?? 0);
 			for (let index = 0; index < length; index++) {
 				if (this.elements[index].update(value[index])) {
 					updated = true;
@@ -282,7 +282,7 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 				this.remove(index);
 				updated = true;
 			}
-			for (let index = length; index < value.length; index++) {
+			for (let index = length; index < (value?.length ?? 0); index++) {
 				this.append(value[index]);
 				updated = true;
 			}
