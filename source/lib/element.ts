@@ -187,7 +187,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 							this.bindings = this.bindings ?? {};
 							(this.bindings[key] = this.bindings[key] ?? []).push(value.observe("update", (value) => {
 								values[key] = value;
-								update("class", values);
+								update("style", values);
 							}));
 						}
 					}
