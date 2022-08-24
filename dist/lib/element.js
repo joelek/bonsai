@@ -175,7 +175,7 @@ class FunctionalElementImplementation extends Element {
                             this.bindings = this.bindings ?? {};
                             (this.bindings[key] = this.bindings[key] ?? []).push(value.observe("update", (value) => {
                                 values[key] = value;
-                                update("class", values);
+                                update("style", values);
                             }));
                         }
                     }
