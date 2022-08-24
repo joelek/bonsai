@@ -151,7 +151,39 @@ class FunctionalElementImplementation extends Element {
                 update(key, state.value());
             }
             else {
-                update(key, value);
+                if (key === "class") {
+                    let values = [...value];
+                    for (let index = 0; index < values.length; index++) {
+                        let value = values[index];
+                        if (value instanceof state_1.AbstractState) {
+                            values[index] = value.value();
+                            this.bindings = this.bindings ?? {};
+                            (this.bindings[key] = this.bindings[key] ?? []).push(value.observe("update", (value) => {
+                                values[index] = value;
+                                update("class", values);
+                            }));
+                        }
+                    }
+                    update(key, values);
+                }
+                else if (key === "style") {
+                    let values = { ...value };
+                    for (let key in values) {
+                        let value = values[key];
+                        if (value instanceof state_1.AbstractState) {
+                            values[key] = value.value();
+                            this.bindings = this.bindings ?? {};
+                            (this.bindings[key] = this.bindings[key] ?? []).push(value.observe("update", (value) => {
+                                values[key] = value;
+                                update("class", values);
+                            }));
+                        }
+                    }
+                    update(key, values);
+                }
+                else {
+                    update(key, value);
+                }
             }
             return this;
         };
