@@ -172,7 +172,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 							values[index] = value.value();
 							this.bindings = this.bindings ?? {};
 							(this.bindings[key] = this.bindings[key] ?? []).push(value.observe("update", (value) => {
-								values[index] = value;
+								values[index] = value.value();
 								update("class", values);
 							}));
 						}
@@ -186,7 +186,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 							values[key] = value.value();
 							this.bindings = this.bindings ?? {};
 							(this.bindings[key] = this.bindings[key] ?? []).push(value.observe("update", (value) => {
-								values[key] = value;
+								values[key] = value.value();
 								update("style", values);
 							}));
 						}
