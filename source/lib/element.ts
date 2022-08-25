@@ -163,6 +163,14 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 					})
 				];
 				update(key, state.value());
+				if (key === "value") {
+					if (this instanceof HTMLInputElement || this instanceof HTMLTextAreaElement) {
+						let element = this;
+						element.onchange = (event) => {
+							state.update(element.value);
+						};
+					}
+				}
 			} else {
 				if (key === "class") {
 					let values = [ ...(value as ArrayValue) ];
