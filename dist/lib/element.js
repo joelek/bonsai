@@ -149,6 +149,14 @@ class FunctionalElementImplementation extends Element {
                     })
                 ];
                 update(key, state.value());
+                if (key === "value") {
+                    if (this instanceof HTMLInputElement || this instanceof HTMLTextAreaElement) {
+                        let element = this;
+                        element.onchange = (event) => {
+                            state.update(element.value);
+                        };
+                    }
+                }
             }
             else {
                 if (key === "class") {
