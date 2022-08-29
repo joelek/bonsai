@@ -519,3 +519,5 @@ NB: This project targets TypeScript 4 in strict mode.
 * Serialize classes as "class".
 * Ensure that the proper state type is inferred in update event messages.
 * Consider implementing TupleState that changes once irregardless of number of members.
+* Add support for class and style overrides.
+* Fix issue with type elision for bi-directionally bound state.
