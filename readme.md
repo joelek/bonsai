@@ -161,13 +161,11 @@ import { html, stateify, State, Children } from "@joelek/bonsai";
 
 const CLASS_NAME = "my-list";
 
-const STYLE = `
+document.head.appendChild(html.style(`
 	.${CLASS_NAME} {
 
 	}
-`;
-
-document.head.appendChild(html.style(STYLE));
+`));
 
 export type MyList = State<Array<string>>;
 
