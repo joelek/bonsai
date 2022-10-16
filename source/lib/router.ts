@@ -202,7 +202,7 @@ export class Router<A extends PageOptions<A>> {
 				let entryElement = entry.member("element");
 				let parsedRoute = this.parseRoute(stateRoute.value());
 				let factory = this.factories[parsedRoute.page as keyof A];
-				let options = stateify(parsedRoute.options as any as A[keyof A]);
+				let options = stateify(parsedRoute.options as any);
 				entryElement.update(factory.factory(options as any, entryTitle, this));
 				options.compute((options) => {
 					entryRoute.update(factory.codec.encode(options));

@@ -152,7 +152,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 		let set = (key: string, value: Attribute) => {
 			this.unbind(key);
 			if (value instanceof AbstractState) {
-				let state = value;
+				let state = value as AbstractState<any, any>;
 				let bindings = this.bindings;
 				if (bindings == null) {
 					this.bindings = bindings = {};
