@@ -1,8 +1,7 @@
 {
 	"bin": {},
-	"dependencies": {},
 	"devDependencies": {
-		"@joelek/wtf": "github:joelek/wtf#semver:^0.2",
+		"@joelek/wtf": "github:joelek/wtf#semver:^1.0",
 		"typescript": "^4.4"
 	},
 	"license": "MIT",
