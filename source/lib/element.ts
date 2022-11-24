@@ -330,6 +330,12 @@ export function makeFunctionalElementFactory<A extends FunctionalElementEventMap
 	return (...children: Children) => {
 		let element = document.createElementNS(namespace, tag) as FunctionalElement<A, B>;
 		Object.setPrototypeOf(element, prototype);
+		if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+			let that = element;
+			that.addEventListener("change", (event) => {
+				that.setAttribute("value", that.value);
+			});
+		}
 		element.nodes(...children);
 		return element;
 	}
