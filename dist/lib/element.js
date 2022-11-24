@@ -121,12 +121,6 @@ class FunctionalElementImplementation extends Element {
                 }
                 this.setAttribute(key, serializeValue(value));
             }
-            if (key === "value") {
-                if (this instanceof HTMLInputElement || this instanceof HTMLTextAreaElement) {
-                    // The "defaultValue" property is read from the "value" attribute which has been updated.
-                    this.value = this.defaultValue;
-                }
-            }
         };
         let get = (key) => {
             let value = this.getAttribute(key);
@@ -301,20 +295,52 @@ class FunctionalElementImplementation extends Element {
         callback(this);
         return this;
     }
+    setAttribute(key, value) {
+        super.setAttribute(key, value);
+        if (key === "value") {
+            if (this instanceof HTMLInputElement || this instanceof HTMLTextAreaElement) {
+                this.value = value;
+            }
+        }
+    }
 }
 exports.FunctionalElementImplementation = FunctionalElementImplementation;
 ;
 function makeFunctionalElementFactory(namespace, tag) {
-    let prototype = Object.create(Object.getPrototypeOf(document.createElementNS(namespace, tag)));
+    let element = document.createElementNS(namespace, tag);
+    let parentPrototype = Object.getPrototypeOf(element);
+    let prototype = Object.create(parentPrototype);
     for (let [name, propertyDescriptor] of Object.entries(Object.getOwnPropertyDescriptors(FunctionalElementImplementation.prototype))) {
         if (name === "constructor") {
             continue;
         }
         Object.defineProperty(prototype, name, propertyDescriptor);
     }
+    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+        let parentPropertyDescriptor = Object.getOwnPropertyDescriptor(parentPrototype, "value");
+        Object.defineProperty(prototype, "value", {
+            get() {
+                return parentPropertyDescriptor?.get?.call?.(this);
+            },
+            set(value) {
+                let oldValue = this.value;
+                parentPropertyDescriptor?.set?.call?.(this, value);
+                let newValue = this.value;
+                if (newValue !== oldValue) {
+                    this.dispatchEvent(new Event("change", { bubbles: true }));
+                }
+            }
+        });
+    }
     return (...children) => {
         let element = document.createElementNS(namespace, tag);
         Object.setPrototypeOf(element, prototype);
+        if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+            let that = element;
+            that.addEventListener("change", (event) => {
+                that.setAttribute("value", that.value);
+            });
+        }
         element.nodes(...children);
         return element;
     };
