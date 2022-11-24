@@ -320,12 +320,30 @@ export type FunctionalElementFactory<A extends FunctionalElementEventMap<A>, B e
 export type Namespace = "http://www.w3.org/1999/xhtml" | "http://www.w3.org/2000/svg";
 
 export function makeFunctionalElementFactory<A extends FunctionalElementEventMap<A>, B extends Element>(namespace: Namespace, tag: string): FunctionalElementFactory<A, B> {
-	let prototype = Object.create(Object.getPrototypeOf(document.createElementNS(namespace, tag)));
+	let element = document.createElementNS(namespace, tag);
+	let parentPrototype = Object.getPrototypeOf(element);
+	let prototype = Object.create(parentPrototype);
 	for (let [name, propertyDescriptor] of Object.entries(Object.getOwnPropertyDescriptors(FunctionalElementImplementation.prototype))) {
 		if (name === "constructor") {
 			continue;
 		}
 		Object.defineProperty(prototype, name, propertyDescriptor);
+	}
+	if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+		let parentPropertyDescriptor = Object.getOwnPropertyDescriptor(parentPrototype, "value");
+		Object.defineProperty(prototype, "value", {
+			get(this: HTMLInputElement | HTMLTextAreaElement) {
+				return parentPropertyDescriptor?.get?.call?.(this);
+			},
+			set(this: HTMLInputElement | HTMLTextAreaElement, value: any) {
+				let oldValue = this.value;
+				parentPropertyDescriptor?.set?.call?.(this, value);
+				let newValue = this.value;
+				if (newValue !== oldValue) {
+					this.dispatchEvent(new Event("change", { bubbles: true }));
+				}
+			}
+		});
 	}
 	return (...children: Children) => {
 		let element = document.createElementNS(namespace, tag) as FunctionalElement<A, B>;
