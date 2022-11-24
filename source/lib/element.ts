@@ -135,12 +135,6 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 				}
 				this.setAttribute(key, serializeValue(value));
 			}
-			if (key === "value") {
-				if (this instanceof HTMLInputElement || this instanceof HTMLTextAreaElement) {
-					// The "defaultValue" property is read from the "value" attribute which has been updated.
-					this.value = this.defaultValue;
-				}
-			}
 		};
 		let get = (key: string) => {
 			let value = this.getAttribute(key);
@@ -308,6 +302,15 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 	process(callback: (element: this) => void): this {
 		callback(this);
 		return this;
+	}
+
+	setAttribute(key: string, value: string): void {
+		super.setAttribute(key, value);
+		if (key === "value") {
+			if (this instanceof HTMLInputElement || this instanceof HTMLTextAreaElement) {
+				this.value = value;
+			}
+		}
 	}
 };
 
