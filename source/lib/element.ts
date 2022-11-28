@@ -110,7 +110,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 				}
 				delete bindings[key];
 			}
-			if (Object.getOwnPropertyDescriptors(bindings).length === 0) {
+			if (Object.getOwnPropertyNames(bindings).length === 0 && Object.getOwnPropertySymbols(bindings).length === 0) {
 				delete this.bindings;
 			}
 		}
