@@ -14,10 +14,6 @@ export type FunctionalElementEventMap<A> = {
 	[B in keyof A]: Event;
 };
 
-export type FunctionalElementListeners<A extends FunctionalElementEventMap<A>, B extends Element> = {
-	[C in `on${keyof A & string}`]?: C extends `on${infer D extends keyof A & string}` ? FunctionalElementListener<A[D], FunctionalElement<A, B>> : never;
-};
-
 export function serializeValue(value: Value): string {
 	if (typeof value === "string") {
 		return value;
