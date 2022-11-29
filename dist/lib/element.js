@@ -241,35 +241,35 @@ class FunctionalElementImplementation extends Element {
             if (child instanceof state_1.ArrayState) {
                 let state = child;
                 let bindings = this.bindings = this.bindings ?? {};
-                bindings[INSERT] = bindings[INSERT] ?? [];
-                bindings[INSERT][childIndex] = state.observe("insert", (state, index) => {
+                let insertBindings = bindings[INSERT] ?? [];
+                insertBindings[childIndex] = state.observe("insert", (state, index) => {
                     let value = state.value();
                     this.insertBefore(createNode(value), this.childNodes.item(getOffset(childIndex) + index));
                     let subscription = state.observe("update", (state) => {
                         let value = state.value();
                         this.replaceChild(createNode(value), this.childNodes.item(getOffset(childIndex) + index));
                     });
-                    bindings[UPDATE] = bindings[UPDATE] ?? [];
-                    bindings[UPDATE].splice(getOffset(childIndex) + index, 0, subscription);
+                    let updateBindings = bindings[UPDATE] ?? [];
+                    updateBindings.splice(getOffset(childIndex) + index, 0, subscription);
                 });
-                bindings[REMOVE] = bindings[REMOVE] ?? [];
-                bindings[REMOVE][childIndex] = state.observe("remove", (state, index) => {
+                let removeBindings = bindings[REMOVE] ?? [];
+                removeBindings[childIndex] = state.observe("remove", (state, index) => {
                     this.childNodes[getOffset(childIndex) + index].remove();
-                    bindings[UPDATE] = bindings[UPDATE] ?? [];
-                    let subscription = bindings[UPDATE][getOffset(childIndex) + index];
+                    let updateBindings = bindings[UPDATE] ?? [];
+                    let subscription = updateBindings[getOffset(childIndex) + index];
                     if (subscription != null) {
                         subscription();
-                        bindings[UPDATE].splice(getOffset(childIndex) + index, 1);
-                        if (bindings[UPDATE].length === 0) {
+                        updateBindings.splice(getOffset(childIndex) + index, 1);
+                        if (updateBindings.length === 0) {
                             delete bindings[UPDATE];
                         }
                     }
                 });
-                bindings[UPDATE] = bindings[UPDATE] ?? [];
+                let updateBindings = bindings[UPDATE] ?? [];
                 for (let index = 0; index < state.length(); index++) {
                     let element = state.element(index);
                     this.appendChild(createNode(element.value()));
-                    bindings[UPDATE][getOffset(childIndex) + index] = element.observe("update", (state) => {
+                    updateBindings[getOffset(childIndex) + index] = element.observe("update", (state) => {
                         let value = state.value();
                         this.replaceChild(createNode(value), this.childNodes.item(getOffset(childIndex) + index));
                     });
@@ -278,9 +278,9 @@ class FunctionalElementImplementation extends Element {
             else if (child instanceof state_1.AbstractState) {
                 let state = child;
                 let bindings = this.bindings = this.bindings ?? {};
-                bindings[UPDATE] = bindings[UPDATE] ?? [];
+                let updateBindings = bindings[UPDATE] ?? [];
                 this.appendChild(createNode(state.value()));
-                bindings[UPDATE][getOffset(childIndex)] = state.observe("update", (state) => {
+                updateBindings[getOffset(childIndex)] = state.observe("update", (state) => {
                     let value = state.value();
                     this.replaceChild(createNode(value), this.childNodes.item(getOffset(childIndex)));
                 });

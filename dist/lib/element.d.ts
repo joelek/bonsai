@@ -8,9 +8,6 @@ export declare type FunctionalElementListener<A extends Event, B extends Element
 export declare type FunctionalElementEventMap<A> = {
     [B in keyof A]: Event;
 };
-export declare type FunctionalElementListeners<A extends FunctionalElementEventMap<A>, B extends Element> = {
-    [C in `on${keyof A & string}`]?: C extends `on${infer D extends keyof A & string}` ? FunctionalElementListener<A[D], FunctionalElement<A, B>> : never;
-};
 export declare function serializeValue(value: Value): string;
 export declare function createNode(value: Value | Node): Node;
 export declare function parseClass(value: string): Array<string>;
