@@ -102,7 +102,7 @@ class FunctionalElementImplementation extends Element {
                 }
                 delete bindings[key];
             }
-            if (Object.getOwnPropertyDescriptors(bindings).length === 0) {
+            if (Object.getOwnPropertyNames(bindings).length === 0 && Object.getOwnPropertySymbols(bindings).length === 0) {
                 delete this.bindings;
             }
         }
