@@ -1,37 +1,37 @@
 import { RecordValue, State } from "./state";
-export declare type QueryParameter = {
+export type QueryParameter = {
     key: string;
     value: string;
 };
-export declare type QueryParameters = Array<QueryParameter>;
-export declare type Route = {
+export type QueryParameters = Array<QueryParameter>;
+export type Route = {
     paths: Array<string>;
     parameters: QueryParameters;
 };
-export declare type PageFactory<A extends RecordValue> = {
+export type PageFactory<A extends RecordValue> = {
     codec: RouteCodec<A>;
     factory: (options: State<A>, title: State<string>, router: Router<any>) => Element;
 };
-export declare type PageOptions<A extends PageOptions<A>> = {
+export type PageOptions<A extends PageOptions<A>> = {
     [B in keyof A]: A[B] extends RecordValue ? A[B] : never;
 };
-export declare type EmptyPageOptions<A extends PageOptions<A>> = {
+export type EmptyPageOptions<A extends PageOptions<A>> = {
     [B in keyof A & string]: {} extends A[B] ? B : never;
 }[keyof A & string];
-export declare type PageFactories<A extends PageOptions<A>> = {
+export type PageFactories<A extends PageOptions<A>> = {
     [B in keyof A]: A[B] extends RecordValue ? PageFactory<A[B]> : never;
 };
 export declare function pathify(string: string): string;
 export declare function getUrlFromRoute(route: Route): string;
-export declare type RouteCodec<A> = {
+export type RouteCodec<A> = {
     decode(route: Route): A;
     encode(options: A): Route;
 };
-export declare type HistoryState = {
+export type HistoryState = {
     route: Route;
     index: number;
 };
-export declare type CacheEntry = {
+export type CacheEntry = {
     element?: Element;
     route?: Route;
     title: string;
@@ -42,7 +42,7 @@ export declare function getInitialCache(): Array<CacheEntry>;
 export declare function getInitialIndex(): number;
 export declare function getInitialRoute(): Route;
 export declare function getInitialState(): HistoryState;
-export declare type ParsedRoute = {
+export type ParsedRoute = {
     page: string;
     options: RecordValue;
 };

@@ -1,25 +1,25 @@
-export declare type TupleRecord<A extends TupleRecord<A>> = {
+export type TupleRecord<A extends TupleRecord<A>> = {
     [C in keyof A]: any[];
 };
-export declare type PrimitiveValue = void | bigint | boolean | number | string | null | undefined;
-export declare type ReferenceValue = Object;
-export declare type Value = PrimitiveValue | ReferenceValue | Value[] | {
+export type PrimitiveValue = void | bigint | boolean | number | string | null | undefined;
+export type ReferenceValue = Object;
+export type Value = PrimitiveValue | ReferenceValue | Value[] | {
     [key: string]: Value;
 };
-export declare type ArrayValue = Value[];
-export declare type RecordValue = {
+export type ArrayValue = Value[];
+export type RecordValue = {
     [key: string]: Value;
 };
-export declare type StateMapper<A extends Value, B extends Value> = (state: State<A>) => B | State<B>;
-export declare type ValueMapper<A extends Value, B extends Value> = (value: A) => B;
-export declare type Observer<A extends any[]> = (...args: [...A]) => void;
-export declare type Computer<A extends Value, B extends Value> = (value: A) => B;
-export declare type CancellationToken = () => void;
-export declare type State<A extends Value> = AbstractState<A, AbstractStateEvents<A>> & (A extends PrimitiveValue ? PrimitiveState<A> : A extends Array<infer B extends Value> ? ArrayState<B> : A extends RecordValue ? ObjectState<A> : A extends ReferenceValue ? ReferenceState<A> : never);
-export declare type States<A> = {
+export type StateMapper<A extends Value, B extends Value> = (state: State<A>) => B | State<B>;
+export type ValueMapper<A extends Value, B extends Value> = (value: A) => B;
+export type Observer<A extends any[]> = (...args: [...A]) => void;
+export type Computer<A extends Value, B extends Value> = (value: A) => B;
+export type CancellationToken = () => void;
+export type State<A extends Value> = AbstractState<A, AbstractStateEvents<A>> & (A extends PrimitiveValue ? PrimitiveState<A> : A extends Array<infer B extends Value> ? ArrayState<B> : A extends RecordValue ? ObjectState<A> : A extends ReferenceValue ? ReferenceState<A> : never);
+export type States<A> = {
     [B in keyof A]: A[B] extends Value ? State<A[B]> : never;
 };
-export declare type AbstractStateEvents<A extends Value> = {
+export type AbstractStateEvents<A extends Value> = {
     "update": [
         state: AbstractState<A, AbstractStateEvents<A>>
     ];
@@ -36,21 +36,21 @@ export declare abstract class AbstractState<A extends Value, B extends TupleReco
     abstract update(value: A): boolean;
     abstract value(): A;
 }
-export declare type PrimitiveStateEvents<A extends PrimitiveValue> = AbstractStateEvents<A> & {};
+export type PrimitiveStateEvents<A extends PrimitiveValue> = AbstractStateEvents<A> & {};
 export declare class PrimitiveState<A extends PrimitiveValue> extends AbstractState<A, PrimitiveStateEvents<A>> {
     protected lastValue: A;
     constructor(lastValue: A);
     update(value: A): boolean;
     value(): A;
 }
-export declare type ReferenceStateEvents<A extends ReferenceValue> = AbstractStateEvents<A> & {};
+export type ReferenceStateEvents<A extends ReferenceValue> = AbstractStateEvents<A> & {};
 export declare class ReferenceState<A extends ReferenceValue> extends AbstractState<A, ReferenceStateEvents<A>> {
     protected lastValue: A;
     constructor(lastValue: A);
     update(valu: A): boolean;
     value(): A;
 }
-export declare type ArrayStateEvents<A extends Value> = AbstractStateEvents<Array<A>> & {
+export type ArrayStateEvents<A extends Value> = AbstractStateEvents<Array<A>> & {
     "insert": [
         state: State<A>,
         index: number
@@ -76,7 +76,7 @@ export declare class ArrayState<A extends Value> extends AbstractState<Array<A>,
     update(value: Array<A>): boolean;
     value(): Array<A>;
 }
-export declare type ObjectStateEvents<A extends Value> = AbstractStateEvents<A> & {};
+export type ObjectStateEvents<A extends Value> = AbstractStateEvents<A> & {};
 export declare class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectStateEvents<A>> {
     protected members: States<A>;
     protected updating: boolean;
