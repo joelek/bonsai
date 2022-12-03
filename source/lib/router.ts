@@ -68,7 +68,6 @@ export type CacheEntry = {
 
 export function updateHistoryState(historyState: HistoryState): void {
 	let url = getUrlFromRoute(historyState.route);
-	console.log("window.history.replaceState", historyState);
 	window.history.replaceState(historyState, "", url);
 };
 
@@ -149,7 +148,6 @@ export class Router<A extends PageOptions<A>> {
 
 	protected onPopState = (event: PopStateEvent) => {
 		let historyState = event.state as HistoryState;
-		console.log("popstate", historyState);
 		this.state.update(historyState);
 	};
 
@@ -173,7 +171,6 @@ export class Router<A extends PageOptions<A>> {
 	}
 
 	constructor(factories: PageFactories<A>, defaultPage: EmptyPageOptions<A>) {
-		console.log("window.history.state", window.history.state);
 		this.factories = { ...factories };
 		this.defaultPage = defaultPage;
 		this.documentTitle = document.title;
@@ -240,7 +237,6 @@ export class Router<A extends PageOptions<A>> {
 			index
 		};
 		let url = getUrlFromRoute(route);
-		console.log("window.history.pushState", historyState);
 		window.history.pushState(historyState, "", url);
 		this.state.update(historyState);
 		window.scrollTo({ top: 0, left: 0 });
