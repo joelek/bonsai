@@ -226,7 +226,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 			for (let childIndex = 0; childIndex < forChildIndex; childIndex++) {
 				let item = children[childIndex];
 				if (item instanceof ArrayState) {
-					offset += item.length();
+					offset += item.length().value();
 				} else if (item instanceof Array) {
 					offset += item.length;
 				} else {
@@ -271,7 +271,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 					}
 				});
 				let updateBindings = bindings[UPDATE] = bindings[UPDATE] ?? [];
-				for (let index = 0; index < state.length(); index++) {
+				for (let index = 0; index < state.length().value(); index++) {
 					let element = state.element(index);
 					this.appendChild(createNode(element.value()));
 					updateBindings[getOffset(childIndex) + index] = element.observe("update", (state) => {
