@@ -246,7 +246,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 			if (child instanceof ArrayState) {
 				let state = child as ArrayState<Value | Node>;
 				let bindings = this.bindings = this.bindings ?? {};
-				let insertBindings = bindings[INSERT] ?? [];
+				let insertBindings = bindings[INSERT] = bindings[INSERT] ?? [];
 				insertBindings[childIndex] = state.observe("insert", (state, index) => {
 					let value = state.value();
 					this.insertBefore(createNode(value), this.childNodes.item(getOffset(childIndex) + index));
@@ -254,13 +254,13 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 						let value = state.value();
 						this.replaceChild(createNode(value), this.childNodes.item(getOffset(childIndex) + index));
 					});
-					let updateBindings = bindings[UPDATE] ?? [];
+					let updateBindings = bindings[UPDATE] = bindings[UPDATE] ?? [];
 					updateBindings.splice(getOffset(childIndex) + index, 0, subscription);
 				});
-				let removeBindings = bindings[REMOVE] ?? [];
+				let removeBindings = bindings[REMOVE] = bindings[REMOVE] ?? [];
 				removeBindings[childIndex] = state.observe("remove", (state, index) => {
 					this.childNodes[getOffset(childIndex) + index].remove();
-					let updateBindings = bindings[UPDATE] ?? [];
+					let updateBindings = bindings[UPDATE] = bindings[UPDATE] ?? [];
 					let subscription = updateBindings[getOffset(childIndex) + index];
 					if (subscription != null) {
 						subscription();
@@ -270,7 +270,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 						}
 					}
 				});
-				let updateBindings = bindings[UPDATE] ?? [];
+				let updateBindings = bindings[UPDATE] = bindings[UPDATE] ?? [];
 				for (let index = 0; index < state.length(); index++) {
 					let element = state.element(index);
 					this.appendChild(createNode(element.value()));
@@ -282,7 +282,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 			} else if (child instanceof AbstractState) {
 				let state = child as AbstractState<Node | Value, AbstractStateEvents<Node | Value>>;
 				let bindings = this.bindings = this.bindings ?? {};
-				let updateBindings = bindings[UPDATE] ?? [];
+				let updateBindings = bindings[UPDATE] = bindings[UPDATE] ?? [];
 				this.appendChild(createNode(state.value()));
 				updateBindings[getOffset(childIndex)] = state.observe("update", (state) => {
 					let value = state.value();
