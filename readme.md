@@ -442,7 +442,21 @@ The states of an array may be mapped into a new array through the `mapStates(map
 
 * The `mapper` argument must be used to specify how an existing state should be mapped to the a new value or state.
 
-The states of state-mapped arrays are initialized using the `mapper` but not recomputed when updates are made to the states of the original array. This is most often the desired behaviour when mapping instances such as elements.
+The states of state-mapped arrays are initialized using the `mapper` but not recomputed when updates are made to the states of the original array. This is most often the desired behaviour when mapping data objects to HTML elements.
+
+```ts
+import { html, stateify } from "@joelek/bonsai";
+
+let state = stateify([{ name: "Joel Ek" }]);
+
+state.mapStates((state) => html.div()
+	.nodes(
+		html.p(state.member("name")) // The text content of the paragraph element is bound to the name state.
+	)
+));
+
+state.update([{ name: "Someone Else" }]); // State instantly updates the text content of the paragraph element without creating a new div element.
+```
 
 #### MapValues
 
@@ -451,6 +465,20 @@ The values of an array may be mapped into a new array through the `mapValues(map
 * The `mapper` argument must be used to specify how an existing value should be mapped to a new value.
 
 The states of value-mapped arrays are initialized using the `mapper` and recomputed when updates are made to the states of the original array. This is most often the desired behaviour when mapping pure data.
+
+```ts
+import { html, stateify } from "@joelek/bonsai";
+
+let state = stateify([{ name: "Joel Ek" }]);
+
+state.mapValues((value) => html.div()
+	.nodes(
+		html.p(value.name) // The text content of the paragraph element is set to the name value.
+	)
+));
+
+state.update([{ name: "Someone Else" }]); // State instantly creates a new div element that replaces the old div element.
+```
 
 #### Remove
 
