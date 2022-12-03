@@ -185,7 +185,7 @@ export class Router<A extends PageOptions<A>> {
 			this.url.update(getUrlFromRoute(stateRoute));
 		});
 		stateIndex.compute((stateIndex) => {
-			for (let i = this.cache.length(); i <= stateIndex; i++) {
+			for (let i = this.cache.length().value(); i <= stateIndex; i++) {
 				this.cache.append({
 					title: this.documentTitle
 				});
@@ -228,7 +228,7 @@ export class Router<A extends PageOptions<A>> {
 		let factory = this.factories[page];
 		let index = this.state.value().index + 1;
 		let route = factory.codec.encode(options);
-		for (let i = this.cache.length() - 1; i >= index; i--) {
+		for (let i = this.cache.length().value() - 1; i >= index; i--) {
 			this.cache.remove(i);
 		}
 		// Index needs to be specified after route since index changes trigger page initialization which reads route.
