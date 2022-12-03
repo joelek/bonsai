@@ -219,7 +219,7 @@ class FunctionalElementImplementation extends Element {
             for (let childIndex = 0; childIndex < forChildIndex; childIndex++) {
                 let item = children[childIndex];
                 if (item instanceof state_1.ArrayState) {
-                    offset += item.length();
+                    offset += item.length().value();
                 }
                 else if (item instanceof Array) {
                     offset += item.length;
@@ -266,7 +266,7 @@ class FunctionalElementImplementation extends Element {
                     }
                 });
                 let updateBindings = bindings[UPDATE] = bindings[UPDATE] ?? [];
-                for (let index = 0; index < state.length(); index++) {
+                for (let index = 0; index < state.length().value(); index++) {
                     let element = state.element(index);
                     this.appendChild(createNode(element.value()));
                     updateBindings[getOffset(childIndex) + index] = element.observe("update", (state) => {

@@ -98,6 +98,7 @@ exports.ReferenceState = ReferenceState;
 class ArrayState extends AbstractState {
     elements;
     updating;
+    currentLength;
     onElementUpdate = () => {
         if (!this.updating) {
             this.notify("update", this);
@@ -107,6 +108,7 @@ class ArrayState extends AbstractState {
         super();
         this.elements = [...elements];
         this.updating = false;
+        this.currentLength = stateify(elements.length);
         for (let index = 0; index < this.elements.length; index++) {
             this.elements[index].observe("update", this.onElementUpdate);
         }
@@ -151,30 +153,43 @@ class ArrayState extends AbstractState {
         let element = item instanceof AbstractState ? item : stateify(item);
         this.elements.splice(index, 0, element);
         element.observe("update", this.onElementUpdate);
+        this.currentLength.update(this.elements.length);
         this.notify("insert", element, index);
         this.notify("update", this);
     }
     length() {
-        return this.elements.length;
+        return this.currentLength;
     }
     mapStates(mapper) {
         let that = stateify([]);
+        let indexStates = [];
         this.observe("insert", (state, index) => {
-            let mapped = mapper(state);
+            let indexState = stateify(index);
+            indexStates.splice(index, 0, indexState);
+            for (let i = index + 1; i < indexStates.length; i++) {
+                indexStates[i].update(i);
+            }
+            let mapped = mapper(state, indexState);
             that.insert(index, mapped);
         });
         this.observe("remove", (state, index) => {
+            indexStates.splice(index, 1);
+            for (let i = index; i < indexStates.length; i++) {
+                indexStates[i].update(i);
+            }
             that.remove(index);
         });
         for (let index = 0; index < this.elements.length; index++) {
+            let indexState = stateify(index);
+            indexStates.splice(index, 0, indexState);
             let element = this.elements[index];
-            let mapped = mapper(element);
+            let mapped = mapper(element, indexState);
             that.append(mapped);
         }
         return that;
     }
     mapValues(mapper) {
-        return this.mapStates((state) => state.compute((value) => mapper(value)));
+        return this.mapStates((state, index) => state.compute((value) => mapper(value, index.value())));
     }
     remove(index) {
         if (index < 0 || index >= this.elements.length) {
@@ -183,6 +198,7 @@ class ArrayState extends AbstractState {
         let element = this.elements[index];
         this.elements.splice(index, 1);
         element.unobserve("update", this.onElementUpdate);
+        this.currentLength.update(this.elements.length);
         if (true) {
             this.notify("remove", element, index);
         }
@@ -216,6 +232,9 @@ class ArrayState extends AbstractState {
             this.notify("update", this);
         }
         return updated;
+    }
+    vacate() {
+        return this.update([]);
     }
     value() {
         let lastValue = [];
