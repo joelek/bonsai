@@ -520,3 +520,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Add support for class and style overrides.
 * Fix issue with type elision for bi-directionally bound state.
 * Provide index state to mapStates() and mapValues().
+* Fix issue with property setter for file input elements.
