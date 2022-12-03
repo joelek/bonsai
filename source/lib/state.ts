@@ -165,6 +165,7 @@ export type ArrayStateEvents<A extends Value> = AbstractStateEvents<Array<A>> & 
 export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArrayStateEvents<A>> {
 	protected elements: Array<State<A>>;
 	protected updating: boolean;
+	protected currentLength: State<number>;
 
 	protected onElementUpdate = () => {
 		if (!this.updating) {
@@ -176,6 +177,7 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 		super()
 		this.elements = [ ...elements ];
 		this.updating = false;
+		this.currentLength = stateify(elements.length);
 		for (let index = 0; index < this.elements.length; index++) {
 			this.elements[index].observe("update", this.onElementUpdate);
 		}
@@ -224,12 +226,13 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 		let element = item instanceof AbstractState ? item : stateify(item);
 		this.elements.splice(index, 0, element);
 		element.observe("update", this.onElementUpdate);
+		this.currentLength.update(this.elements.length);
 		this.notify("insert", element, index);
 		this.notify("update", this);
 	}
 
-	length(): number {
-		return this.elements.length;
+	length(): State<number> {
+		return this.currentLength;
 	}
 
 	mapStates<B extends Value>(mapper: StateMapper<A, B>): ArrayState<B> {
@@ -260,6 +263,7 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 		let element = this.elements[index];
 		this.elements.splice(index, 1);
 		element.unobserve("update", this.onElementUpdate);
+		this.currentLength.update(this.elements.length);
 		if (true) {
 			this.notify("remove", element, index);
 		}
