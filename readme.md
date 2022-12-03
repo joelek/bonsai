@@ -449,7 +449,7 @@ import { html, stateify } from "@joelek/bonsai";
 
 let state = stateify([{ name: "Joel Ek" }]);
 
-state.mapStates((state) => html.div()
+state.mapStates((state, indexState) => html.div()
 	.nodes(
 		html.p(state.member("name")) // The text content of the paragraph element is bound to the name state.
 	)
@@ -471,7 +471,7 @@ import { html, stateify } from "@joelek/bonsai";
 
 let state = stateify([{ name: "Joel Ek" }]);
 
-state.mapValues((value) => html.div()
+state.mapValues((value, index) => html.div()
 	.nodes(
 		html.p(value.name) // The text content of the paragraph element is set to the name value.
 	)
@@ -487,6 +487,10 @@ Elements may be removed from the array through the `remove(index)` method.
 * The `index` argument must be used to specify the index of the element.
 
 An error is thrown when the index is out of bounds.
+
+#### Vacate
+
+All elements may be removed from the array through the `vacate()` method.
 
 ### ObjectState
 
