@@ -10,9 +10,9 @@ export type ArrayValue = Value[];
 
 export type RecordValue = { [key: string]: Value; };
 
-export type StateMapper<A extends Value, B extends Value> = (state: State<A>) => B | State<B>;
+export type StateMapper<A extends Value, B extends Value> = (state: State<A>, index: State<number>) => B | State<B>;
 
-export type ValueMapper<A extends Value, B extends Value> = (value: A) => B;
+export type ValueMapper<A extends Value, B extends Value> = (value: A, index: number) => B;
 
 export type Observer<A extends any[]> = (...args: [...A]) => void;
 
@@ -237,23 +237,35 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 
 	mapStates<B extends Value>(mapper: StateMapper<A, B>): ArrayState<B> {
 		let that = stateify([] as Array<B>);
+		let indexStates = [] as Array<State<number>>;
 		this.observe("insert", (state, index) => {
-			let mapped = mapper(state);
+			let indexState = stateify(index);
+			indexStates.splice(index, 0, indexState);
+			for (let i = index + 1; i < indexStates.length; i++) {
+				indexStates[i].update(i);
+			}
+			let mapped = mapper(state, indexState);
 			that.insert(index, mapped);
 		});
 		this.observe("remove", (state, index) => {
+			indexStates.splice(index, 1);
+			for (let i = index; i < indexStates.length; i++) {
+				indexStates[i].update(i);
+			}
 			that.remove(index);
 		});
 		for (let index = 0; index < this.elements.length; index++) {
+			let indexState = stateify(index);
+			indexStates.splice(index, 0, indexState);
 			let element = this.elements[index];
-			let mapped = mapper(element);
+			let mapped = mapper(element, indexState);
 			that.append(mapped);
 		}
 		return that;
 	}
 
 	mapValues<B extends Value>(mapper: ValueMapper<A, B>): ArrayState<B> {
-		return this.mapStates((state) => state.compute((value) => mapper(value)));
+		return this.mapStates((state, index) => state.compute((value) => mapper(value, index.value())));
 	}
 
 	remove(index: number): void {
