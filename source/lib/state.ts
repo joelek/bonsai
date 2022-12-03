@@ -299,6 +299,10 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 		return updated;
 	}
 
+	vacate(): boolean {
+		return this.update([]);
+	}
+
 	value(): Array<A> {
 		let lastValue = [] as Array<A>;
 		for (let index = 0; index < this.elements.length; index++) {
