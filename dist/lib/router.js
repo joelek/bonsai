@@ -27,7 +27,6 @@ exports.getUrlFromRoute = getUrlFromRoute;
 ;
 function updateHistoryState(historyState) {
     let url = getUrlFromRoute(historyState.route);
-    console.log("window.history.replaceState", historyState);
     window.history.replaceState(historyState, "", url);
 }
 exports.updateHistoryState = updateHistoryState;
@@ -107,7 +106,6 @@ class Router {
     url = (0, state_1.stateify)(undefined);
     onPopState = (event) => {
         let historyState = event.state;
-        console.log("popstate", historyState);
         this.state.update(historyState);
     };
     parseRoute(route) {
@@ -130,7 +128,6 @@ class Router {
         };
     }
     constructor(factories, defaultPage) {
-        console.log("window.history.state", window.history.state);
         this.factories = { ...factories };
         this.defaultPage = defaultPage;
         this.documentTitle = document.title;
@@ -196,7 +193,6 @@ class Router {
             index
         };
         let url = getUrlFromRoute(route);
-        console.log("window.history.pushState", historyState);
         window.history.pushState(historyState, "", url);
         this.state.update(historyState);
         window.scrollTo({ top: 0, left: 0 });
