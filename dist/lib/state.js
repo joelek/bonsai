@@ -116,8 +116,10 @@ class ArrayState extends AbstractState {
     [Symbol.iterator]() {
         return this.elements[Symbol.iterator]();
     }
-    append(item) {
-        this.insert(this.elements.length, item);
+    append(...items) {
+        for (let item of items) {
+            this.insert(this.elements.length, item);
+        }
     }
     element(index) {
         if (index instanceof AbstractState) {

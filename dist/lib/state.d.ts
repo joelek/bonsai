@@ -67,7 +67,7 @@ export declare class ArrayState<A extends Value> extends AbstractState<Array<A>,
     protected onElementUpdate: () => void;
     constructor(elements: Array<State<A>>);
     [Symbol.iterator](): Iterator<State<A>>;
-    append(item: A | State<A>): void;
+    append(...items: Array<A | State<A>>): void;
     element(index: number | State<number>): State<A>;
     insert(index: number, item: A | State<A>): void;
     length(): State<number>;
