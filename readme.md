@@ -411,9 +411,9 @@ An instance of `ArrayState` is created when an array is passed to the `stateify(
 
 #### Append
 
-Values or states may be appended to the array through the `append(item)` method.
+Values or states may be appended to the array through the `append(items)` method.
 
-* The `item` argument must be used to specify the value or state to append.
+* The `items` argument must be used to specify the values or states to append.
 
 #### Element
 

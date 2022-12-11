@@ -187,8 +187,10 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 		return this.elements[Symbol.iterator]();
 	}
 
-	append(item: A | State<A>): void {
-		this.insert(this.elements.length, item);
+	append(...items: Array<A | State<A>>): void {
+		for (let item of items) {
+			this.insert(this.elements.length, item);
+		}
 	}
 
 
