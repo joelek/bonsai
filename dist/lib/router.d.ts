@@ -1,4 +1,8 @@
+import { OptionCodec } from "./codecs";
 import { RecordValue, State } from "./state";
+export type ExpansionOf<A> = A extends infer B ? {
+    [C in keyof B]: B[C];
+} : never;
 export type QueryParameter = {
     key: string;
     value: string;
@@ -59,3 +63,32 @@ export declare class Router<A extends PageOptions<A>> {
     constructor(factories: PageFactories<A>, defaultPage: EmptyPageOptions<A>);
     navigate<B extends keyof A>(page: B, options: A[B]): boolean;
 }
+export declare class RouteCodecImplementation<A extends {}> implements RouteCodec<A> {
+    protected pathCodecs: Array<{
+        key?: string;
+        codec: OptionCodec<any>;
+    }>;
+    protected parameterCodecs: Record<string, OptionCodec<any>>;
+    protected assertKeyAvailable(key: string): void;
+    protected withDynamicPath<B extends string, C extends any>(key: B, codec: OptionCodec<C>): RouteCodecImplementation<ExpansionOf<A & {
+        [key in B]: C;
+    }>>;
+    protected withStaticPath(value: string): RouteCodecImplementation<A>;
+    constructor(pathCodecs: Array<{
+        key?: string;
+        codec: OptionCodec<any>;
+    }>, parameterCodecs: Record<string, OptionCodec<any>>);
+    decode(route: Route): A;
+    encode(options: A): Route;
+    optional<B extends string, C extends any>(key: B, codec: OptionCodec<C>): RouteCodecImplementation<ExpansionOf<A & {
+        [key in B]: C | undefined;
+    }>>;
+    required<B extends string, C extends any>(key: B, codec: OptionCodec<C>): RouteCodecImplementation<ExpansionOf<A & {
+        [key in B]: C;
+    }>>;
+    path(value: string): RouteCodecImplementation<A>;
+    path<B extends string, C extends any>(key: B, codec: OptionCodec<C>): RouteCodecImplementation<ExpansionOf<A & {
+        [key in B]: C;
+    }>>;
+}
+export declare const codec: RouteCodecImplementation<{}>;
