@@ -190,63 +190,119 @@ state.append("Two");
 
 ### Client-side routing
 
-Bonsai features a router module that may be used for client-side routing.
+Bonsai features a router module that may be used for client-side routing. The router adds support for deep-linking by combining each route with a factory function that creates an instance of the corresponding page.
 
 ```ts
-import { html, State, Router, Route, QueryParameters } from "@joelek/bonsai";
+import { codec, html, State, Router, Route, QueryParameters } from "@joelek/bonsai";
 
 export type StartPageOptions = {};
 
 export const StartPage = {
-	codec: {
-		decode(route: Route): StartPageOptions {
-			if (route.paths.length !== 1 || route.paths[0] !== "start") {
-				throw new Error();
-			}
-			return {};
-		},
-		encode(options: StartPageOptions): Route {
-			let paths = ["start"];
-			let parameters = [] as QueryParameters;
-			return {
-				paths,
-				parameters
-			};
-		}
-	},
+	codec: codec.path("start"),
 	factory(model: State<StartPageOptions>, title: State<string>, router: Router<any>) {
 		return html.h1("Start Page");
 	}
 };
 ```
 
+A start page displaying an `h1` element with text content `Start Page` is combined with the `/start` route in the example shown above.
+
 ```ts
-import { html, State, Router, Route, QueryParameters } from "@joelek/bonsai";
+import { codec, html, State, Router, Route, QueryParameters } from "@joelek/bonsai";
 
 export type ContactPageOptions = {};
 
 export const ContactPage = {
-	codec: {
-		decode(route: Route): ContactPageOptions {
-			if (route.paths.length !== 1 || route.paths[0] !== "contact") {
-				throw new Error();
-			}
-			return {};
-		},
-		encode(options: ContactPageOptions): Route {
-			let paths = ["contact"];
-			let parameters = [] as QueryParameters;
-			return {
-				paths,
-				parameters
-			};
-		}
-	},
+	codec: codec.path("contact"),
 	factory(model: State<ContactPageOptions>, title: State<string>, router: Router<any>) {
 		return html.h1("Contact Page");
 	}
 };
 ```
+
+A contact page displaying an `h1` element with text content `Contact Page` is combined with the `/contact` route in the example shown above.
+
+#### Route codec
+
+Route codecs are used to programmatically define routes.
+
+A route codec may define static path components using `.path(value)`.
+
+```ts
+import { codec, Plain } from "@joelek/bonsai";
+
+// The route being defined is "/users".
+let codec = codec
+	.path("users");
+```
+
+A route codec may define dynamic path components using `.path(key, codec)`.
+
+```ts
+import { codec, Plain } from "@joelek/bonsai";
+
+// The route being defined is "/users/<user_id>".
+let codec = codec
+	.path("users")
+	.path("user_id", Plain);
+```
+
+Changing the order in which the path components are defined changes the route being defined.
+
+```ts
+import { codec, Plain } from "@joelek/bonsai";
+
+// The route being defined is "/<user_id>/users".
+let codec = codec
+	.path("user_id", Plain)
+	.path("users");
+```
+
+A route codec may define required query parameters using `.required(key, codec)`.
+
+```ts
+import { codec, Plain } from "@joelek/bonsai";
+
+// The route being defined is "/?<required>".
+let codec = codec
+	.required("required", Plain);
+```
+
+A route codec may define optional query parameters using `.optional(key, codec)`.
+
+```ts
+import { codec, Plain } from "@joelek/bonsai";
+
+// The route being defined is "/?<required>[&<optional>]".
+let codec = codec
+	.required("required", Plain)
+	.optional("optional", Plain);
+```
+
+Changing the order in which the query parameters are defined does not change the route being defined.
+
+```ts
+import { codec, Plain } from "@joelek/bonsai";
+
+// The route being defined is "/?<required>[&<optional>]".
+let codec = codec
+	.optional("optional", Plain)
+	.required("required", Plain);
+```
+
+Bonsai includes support for parsing options as `Plain` (string), `Boolean` or `Integer`.
+
+```ts
+import { codec, Integer } from "@joelek/bonsai";
+
+// The route being defined is "/?<required>".
+let codec = codec
+	.required("required", Integer);
+```
+
+#### Router
+
+A router instance is created from all routes possible and requires a default page be specified.
 
 ```ts
 import { html, Router } from "@joelek/bonsai";
@@ -257,7 +313,11 @@ const ROUTER = new Router({
 	start: StartPage,
 	contact: ContactPage
 }, "start");
+```
 
+The router may be used to show the active element and can be used to create instances of new pages through forward navigation. Backward navigation will re-use cached page instances when possible and only create new page instances when needed.
+
+```ts
 document.body.appendChild(
 	html.div(
 		html.p(
@@ -272,7 +332,7 @@ document.body.appendChild(
 );
 ```
 
-* The router exposes the current route through the `url` state.
+* The router exposes the current url through the `url` state.
 * The router exposes the current element through the `element` state.
 
 ## API

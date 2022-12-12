@@ -1,4 +1,7 @@
+import { OptionCodec, Undefined, Union } from "./codecs";
 import { RecordValue, stateify, State } from "./state";
+
+export type ExpansionOf<A> = A extends infer B ? { [C in keyof B]: B[C] } : never;
 
 export type QueryParameter = {
 	key: string;
@@ -243,3 +246,159 @@ export class Router<A extends PageOptions<A>> {
 		return false;
 	}
 };
+
+export class RouteCodecImplementation<A extends {}> implements RouteCodec<A> {
+	protected pathCodecs: Array<{ key?: string, codec: OptionCodec<any> }>;
+	protected parameterCodecs: Record<string, OptionCodec<any>>;
+
+	protected assertKeyAvailable(key: string): void {
+		if (typeof this.parameterCodecs[key] !== "undefined" || typeof this.pathCodecs.find((pathCodec) => pathCodec.key === key) !== "undefined") {
+			throw new Error(`Expected key "${key}" to be available!`);
+		}
+	}
+
+	protected withDynamicPath<B extends string, C extends any>(key: B, codec: OptionCodec<C>): RouteCodecImplementation<ExpansionOf<A & { [key in B]: C }>> {
+		this.assertKeyAvailable(key);
+		let pathCodec: OptionCodec<{ [key in B]: C }> = {
+			decode(string) {
+				return {
+					[key]: codec.decode(string)
+				} as { [key in B]: C };
+			},
+			encode(options) {
+				return codec.encode(options[key]);
+			}
+		};
+		return new RouteCodecImplementation([
+			...this.pathCodecs,
+			{
+				key: key,
+				codec: pathCodec
+			},
+		], this.parameterCodecs);
+	}
+
+	protected withStaticPath(value: string): RouteCodecImplementation<A> {
+		let pathCodec: OptionCodec<{}> = {
+			decode(string) {
+				if (string !== value) {
+					throw new Error(`Expected path "${string}" to be "${value}"!`);
+				}
+				return {};
+			},
+			encode(options) {
+				return value;
+			}
+		};
+		return new RouteCodecImplementation([
+			...this.pathCodecs,
+			{
+				key: undefined,
+				codec: pathCodec
+			},
+		], this.parameterCodecs);
+	}
+
+	constructor(pathCodecs: Array<{ key?: string, codec: OptionCodec<any> }>, parameterCodecs: Record<string, OptionCodec<any>>) {
+		this.pathCodecs = pathCodecs;
+		this.parameterCodecs = parameterCodecs;
+	}
+
+	decode(route: Route): A {
+		if (route.paths.length !== this.pathCodecs.length) {
+			throw new Error(`Expected ${this.pathCodecs.length} paths!`);
+		}
+		let options = {} as A;
+		for (let i = 0; i < this.pathCodecs.length; i++) {
+			let pathCodec = this.pathCodecs[i];
+			let path = route.paths[i];
+			options = {
+				...options,
+				...pathCodec.codec.decode(path)
+			};
+		}
+		for (let key in this.parameterCodecs) {
+			let parameterCodec = this.parameterCodecs[key];
+			let queryParameter = route.parameters.filter((parameter) => parameter.key === key).pop();
+			options = {
+				...options,
+				...parameterCodec.decode(queryParameter?.value)
+			};
+		}
+		return options;
+	}
+
+	encode(options: A): Route {
+		let paths = [] as Array<string>;
+		let parameters = [] as QueryParameters;
+		for (let pathCodec of this.pathCodecs) {
+			let value = pathCodec.codec.encode(options);
+			if (typeof value !== "undefined") {
+				paths.push(value);
+			}
+		}
+		for (let key in this.parameterCodecs) {
+			let parameterCodec = this.parameterCodecs[key];
+			let value = parameterCodec.encode(options);
+			if (typeof value !== "undefined") {
+				parameters.push({
+					key: key,
+					value: value
+				});
+			}
+		}
+		return {
+			paths,
+			parameters
+		};
+	}
+
+	optional<B extends string, C extends any>(key: B, codec: OptionCodec<C>): RouteCodecImplementation<ExpansionOf<A & { [key in B]: C | undefined }>> {
+		this.assertKeyAvailable(key);
+		let optionalCodec = Union.of(codec, Undefined);
+		let parameterCodec: OptionCodec<{ [key in B]: C | undefined }> = {
+			decode(string) {
+				return {
+					[key]: optionalCodec.decode(string)
+				} as { [key in B]: C | undefined };
+			},
+			encode(options) {
+				return optionalCodec.encode(options[key]);
+			}
+		};
+		return new RouteCodecImplementation(this.pathCodecs, {
+			...this.parameterCodecs,
+			[key]: parameterCodec
+		});
+	}
+
+	required<B extends string, C extends any>(key: B, codec: OptionCodec<C>): RouteCodecImplementation<ExpansionOf<A & { [key in B]: C }>> {
+		this.assertKeyAvailable(key);
+		let parameterCodec: OptionCodec<{ [key in B]: C }> = {
+			decode(string) {
+				return {
+					[key]: codec.decode(string)
+				} as { [key in B]: C };
+			},
+			encode(options) {
+				return codec.encode(options[key]);
+			}
+		};
+		return new RouteCodecImplementation(this.pathCodecs, {
+			...this.parameterCodecs,
+			[key]: parameterCodec
+		});
+	}
+
+	path(value: string): RouteCodecImplementation<A>;
+	path<B extends string, C extends any>(key: B, codec: OptionCodec<C>): RouteCodecImplementation<ExpansionOf<A & { [key in B]: C }>>;
+	path<B extends string, C extends any>(value: B, codec?: OptionCodec<C>): RouteCodecImplementation<A> | RouteCodecImplementation<ExpansionOf<A & { [key in B]: C }>> {
+		if (typeof codec === "undefined") {
+			return this.withStaticPath(value);
+		} else {
+			return this.withDynamicPath(value, codec);
+		}
+	}
+};
+
+export const codec = new RouteCodecImplementation([], {});
