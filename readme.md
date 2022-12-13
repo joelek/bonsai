@@ -304,7 +304,7 @@ let codec = codec
 	.required("required", Integer);
 ```
 
-The route may be specified in its entirety using `.route(route)`. Dynamic path components and query parameters may optionally specify a type using the `key:type` notation where `type` is one of the types supported by Bonsai;
+The route may be specified in its entirety using `.route(route)`.
 
 ```ts
 import { route } from "@joelek/bonsai";
@@ -312,6 +312,8 @@ import { route } from "@joelek/bonsai";
 // The route being defined is "static/<dynamic>?<required>&[optional]".
 let codec = route("static/<dynamic>?<required>&[optional]");
 ```
+
+Dynamic path components and query parameters may optionally specify a type using the `key:type` notation where `type` is one of the types supported by Bonsai.
 
 #### Router
 
