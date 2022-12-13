@@ -2,6 +2,18 @@ import * as wtf from "@joelek/wtf";
 import * as router from "./router";
 import * as codecs from "./codecs";
 
+wtf.test(`It should initialize paths from pathname "/root/path" and basename "/root/base".`, async (assert) => {
+	let observed = router.getInitialPaths("/root/path", "/root/base");
+	let expected = ["path"];
+	assert.equals(observed, expected);
+});
+
+wtf.test(`It should initialize paths from pathname "/root/path" and basename "/root/".`, async (assert) => {
+	let observed = router.getInitialPaths("/root/path", "/root/");
+	let expected = ["path"] as Array<string>;
+	assert.equals(observed, expected);
+});
+
 wtf.test(`It should decode optional parameters.`, async (assert) => {
 	let codec = router.codec.optional("key", codecs.Plain);
 	let observed = codec.decode({

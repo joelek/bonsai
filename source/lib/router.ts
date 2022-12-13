@@ -75,14 +75,11 @@ export function updateHistoryState(historyState: HistoryState): void {
 };
 
 export function getBaseHref(): string {
-	let element = document.head.querySelector("base[href]");
-	if (element != null) {
-		let attribute = element.getAttribute("href");
-		if (attribute != null) {
-			return attribute;
-		}
+	let url = new URL(document.body.baseURI);
+	if (url.origin !== window.location.origin) {
+		throw new Error(`Expected basename origin and location origin to be identical!`);
 	}
-	return "/";
+	return url.pathname;
 };
 
 export function getInitialCache(): Array<CacheEntry> {
@@ -93,15 +90,21 @@ export function getInitialIndex(): number {
 	return 0;
 };
 
+export function getInitialPaths(pathname: string, basename: string): Array<string> {
+	let pathnameParts = pathname.split("/");
+	let basenameParts = basename.split("/").slice(0, -1);
+	for (let i = 0; i < basenameParts.length; i++) {
+		if (basenameParts[i] !== pathnameParts[i]) {
+			throw new Error(`Expected basename to be a prefix of the pathname!`);
+		}
+	}
+	let paths = pathnameParts.slice(basenameParts.length).map((path) => decodeURIComponent(path));
+	return paths;
+};
+
 export function getInitialRoute(): Route {
 	let location = window.location;
-	let pathNameParts = location.pathname.split("/");
-	let baseHrefParts = getBaseHref().split("/");
-	let i = 0;
-	while (i < pathNameParts.length && i < baseHrefParts.length && pathNameParts[i] === baseHrefParts[i]) {
-		i++;
-	}
-	let paths = pathNameParts.slice(i).map((path) => decodeURIComponent(path));
+	let paths = getInitialPaths(location.pathname, getBaseHref());
 	let parameters = [] as QueryParameters;
 	for (let one in location.search.split("&")) {
 		let two = one.split("=");
