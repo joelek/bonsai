@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.codec = exports.RouteCodecImplementation = exports.Router = exports.getInitialState = exports.getInitialRoute = exports.getInitialIndex = exports.getInitialCache = exports.getBaseHref = exports.updateHistoryState = exports.getUrlFromRoute = exports.pathify = void 0;
+exports.route = exports.codec = exports.RouteCodecImplementation = exports.Router = exports.getInitialState = exports.getInitialRoute = exports.getInitialPaths = exports.getInitialIndex = exports.getInitialCache = exports.getBaseHref = exports.updateHistoryState = exports.getUrlFromRoute = exports.pathify = void 0;
 const codecs_1 = require("./codecs");
 const state_1 = require("./state");
 function pathify(string) {
@@ -33,14 +33,11 @@ function updateHistoryState(historyState) {
 exports.updateHistoryState = updateHistoryState;
 ;
 function getBaseHref() {
-    let element = document.head.querySelector("base[href]");
-    if (element != null) {
-        let attribute = element.getAttribute("href");
-        if (attribute != null) {
-            return attribute;
-        }
+    let url = new URL(document.body.baseURI);
+    if (url.origin !== window.location.origin) {
+        throw new Error(`Expected basename origin and location origin to be identical!`);
     }
-    return "/";
+    return url.pathname;
 }
 exports.getBaseHref = getBaseHref;
 ;
@@ -54,15 +51,22 @@ function getInitialIndex() {
 }
 exports.getInitialIndex = getInitialIndex;
 ;
+function getInitialPaths(pathname, basename) {
+    let pathnameParts = pathname.split("/");
+    let basenameParts = basename.split("/").slice(0, -1);
+    for (let i = 0; i < basenameParts.length; i++) {
+        if (basenameParts[i] !== pathnameParts[i]) {
+            throw new Error(`Expected basename to be a prefix of the pathname!`);
+        }
+    }
+    let paths = pathnameParts.slice(basenameParts.length).map((path) => decodeURIComponent(path));
+    return paths;
+}
+exports.getInitialPaths = getInitialPaths;
+;
 function getInitialRoute() {
     let location = window.location;
-    let pathNameParts = location.pathname.split("/");
-    let baseHrefParts = getBaseHref().split("/");
-    let i = 0;
-    while (i < pathNameParts.length && i < baseHrefParts.length && pathNameParts[i] === baseHrefParts[i]) {
-        i++;
-    }
-    let paths = pathNameParts.slice(i).map((path) => decodeURIComponent(path));
+    let paths = getInitialPaths(location.pathname, getBaseHref());
     let parameters = [];
     for (let one in location.search.split("&")) {
         let two = one.split("=");
@@ -348,3 +352,42 @@ class RouteCodecImplementation {
 exports.RouteCodecImplementation = RouteCodecImplementation;
 ;
 exports.codec = new RouteCodecImplementation([], {});
+const CODECS = {
+    plain: codecs_1.Plain,
+    integer: codecs_1.Integer,
+    boolean: codecs_1.Boolean
+};
+function route(route) {
+    let routeParts = route.split("?");
+    let pathParts = routeParts.slice(0, 1).join("?");
+    let parameterParts = routeParts.slice(1).join("?");
+    let codec = new RouteCodecImplementation([], {});
+    for (let pathPart of pathParts.split("/")) {
+        if (pathPart.startsWith("<") && pathPart.endsWith(">")) {
+            let innerParts = pathPart.slice(1, -1).split(":");
+            let key = innerParts.slice(0, 1).join(":");
+            let type = innerParts.slice(1).join(":");
+            codec = codec.path(key, CODECS[type] ?? codecs_1.Plain);
+        }
+        else {
+            codec = codec.path(pathPart);
+        }
+    }
+    for (let parameterPart of parameterParts.split("&")) {
+        if (parameterPart.startsWith("<") && parameterPart.endsWith(">")) {
+            let innerParts = parameterPart.slice(1, -1).split(":");
+            let key = innerParts.slice(0, 1).join(":");
+            let type = innerParts.slice(1).join(":");
+            codec = codec.required(key, CODECS[type] ?? codecs_1.Plain);
+        }
+        else if (parameterPart.startsWith("[") && parameterPart.endsWith("]")) {
+            let innerParts = parameterPart.slice(1, -1).split(":");
+            let key = innerParts.slice(0, 1).join(":");
+            let type = innerParts.slice(1).join(":");
+            codec = codec.optional(key, CODECS[type] ?? codecs_1.Plain);
+        }
+    }
+    return codec;
+}
+exports.route = route;
+;

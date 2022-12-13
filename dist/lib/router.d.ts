@@ -44,6 +44,7 @@ export declare function updateHistoryState(historyState: HistoryState): void;
 export declare function getBaseHref(): string;
 export declare function getInitialCache(): Array<CacheEntry>;
 export declare function getInitialIndex(): number;
+export declare function getInitialPaths(pathname: string, basename: string): Array<string>;
 export declare function getInitialRoute(): Route;
 export declare function getInitialState(): HistoryState;
 export type ParsedRoute = {
@@ -92,3 +93,22 @@ export declare class RouteCodecImplementation<A extends {}> implements RouteCode
     }>>;
 }
 export declare const codec: RouteCodecImplementation<{}>;
+type ParsedKey<A extends string> = A extends `${infer B}:${infer C}` ? B : A;
+type ParsedType<A extends string> = A extends `${infer B}:${infer C}` ? C extends keyof infer D extends {
+    plain: string;
+    integer: number;
+    boolean: boolean;
+} ? D[C] : string : string;
+type ParsedRequiredOption<A extends string> = {
+    [C in ParsedKey<A>]: ParsedType<A>;
+};
+type ParsedOptionalOption<A extends string> = {
+    [C in ParsedKey<A>]?: ParsedType<A>;
+};
+type ParsedPath<A extends string> = A extends `<${infer B}>` ? ParsedRequiredOption<B> : {};
+type ParsedPaths<A extends string> = A extends `${infer B}/${infer C}` ? ParsedPath<B> & ParsedPaths<C> : ParsedPath<A>;
+type ParsedParameter<A extends string> = A extends `<${infer B}>` ? ParsedRequiredOption<B> : A extends `[${infer B}]` ? ParsedOptionalOption<B> : {};
+type ParsedParameters<A extends string> = A extends `${infer B}&${infer C}` ? ParsedParameter<B> & ParsedParameters<C> : ParsedParameter<A>;
+type ParsedOptions<A extends string> = A extends `${infer B}?${infer C}` ? ParsedPaths<B> & ParsedParameters<C> : ParsedPaths<A>;
+export declare function route<A extends string>(route: A): RouteCodecImplementation<ExpansionOf<ParsedOptions<A>>>;
+export {};
