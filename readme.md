@@ -231,7 +231,7 @@ A route codec may define static path components using `.path(value)`.
 ```ts
 import { codec, Plain } from "@joelek/bonsai";
 
-// The route being defined is "/users".
+// The route being defined is "users".
 let codec = codec
 	.path("users");
 ```
@@ -241,7 +241,7 @@ A route codec may define dynamic path components using `.path(key, codec)`.
 ```ts
 import { codec, Plain } from "@joelek/bonsai";
 
-// The route being defined is "/users/<user_id>".
+// The route being defined is "users/<user_id>".
 let codec = codec
 	.path("users")
 	.path("user_id", Plain);
@@ -252,7 +252,7 @@ Changing the order in which the path components are defined changes the route be
 ```ts
 import { codec, Plain } from "@joelek/bonsai";
 
-// The route being defined is "/<user_id>/users".
+// The route being defined is "<user_id>/users".
 let codec = codec
 	.path("user_id", Plain)
 	.path("users");
@@ -263,8 +263,9 @@ A route codec may define required query parameters using `.required(key, codec)`
 ```ts
 import { codec, Plain } from "@joelek/bonsai";
 
-// The route being defined is "/?<required>".
+// The route being defined is "?<required>".
 let codec = codec
+	.path("")
 	.required("required", Plain);
 ```
 
@@ -273,8 +274,9 @@ A route codec may define optional query parameters using `.optional(key, codec)`
 ```ts
 import { codec, Plain } from "@joelek/bonsai";
 
-// The route being defined is "/?<required>[&<optional>]".
+// The route being defined is "?<required>&[optional]".
 let codec = codec
+	.path("")
 	.required("required", Plain)
 	.optional("optional", Plain);
 ```
@@ -284,20 +286,31 @@ Changing the order in which the query parameters are defined does not change the
 ```ts
 import { codec, Plain } from "@joelek/bonsai";
 
-// The route being defined is "/?<required>[&<optional>]".
+// The route being defined is "?<required>&[optional]".
 let codec = codec
+	.path("")
 	.optional("optional", Plain)
 	.required("required", Plain);
 ```
 
-Bonsai includes support for parsing options as `Plain` (string), `Boolean` or `Integer`.
+Bonsai includes support for parsing options as `plain` (string), `boolean` or `integer`.
 
 ```ts
 import { codec, Integer } from "@joelek/bonsai";
 
-// The route being defined is "/?<required>".
+// The route being defined is "?<required:integer>".
 let codec = codec
+	.path("")
 	.required("required", Integer);
+```
+
+The route may be specified in its entirety using `.route(route)`. Dynamic path components and query parameters may optionally specify a type using the `key:type` notation where `type` is one of the types supported by Bonsai;
+
+```ts
+import { route } from "@joelek/bonsai";
+
+// The route being defined is "static/<dynamic>?<required>&[optional]".
+let codec = route("static/<dynamic>?<required>&[optional]");
 ```
 
 #### Router
