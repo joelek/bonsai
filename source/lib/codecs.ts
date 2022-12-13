@@ -42,8 +42,8 @@ export class IntegerOptionCodec extends OptionCodec<number> {
 		if (typeof value === "undefined") {
 			throw new Error(`Expected value to be present!`);
 		}
-		if (/^([0-9]|[1-9][0-9]+)$/.test(value)) {
-			throw new Error(`Expected value to contain an integer!`);
+		if (!/^([0-9]|[1-9][0-9]+)$/.test(value)) {
+			throw new Error(`Expected value "${value}" to contain an integer!`);
 		}
 		return globalThis.Number.parseInt(value);
 	}
@@ -67,8 +67,8 @@ export class BooleanOptionCodec extends OptionCodec<boolean> {
 		if (typeof value === "undefined") {
 			throw new Error(`Expected value to be present!`);
 		}
-		if (/^(true|false)$/.test(value)) {
-			throw new Error(`Expected value to contain a boolean!`);
+		if (!/^(true|false)$/.test(value)) {
+			throw new Error(`Expected value "${value}" to contain a boolean!`);
 		}
 		return value === "true";
 	}
