@@ -1,4 +1,4 @@
-import { OptionCodec, Undefined, Union } from "./codecs";
+import { Boolean, Integer, OptionCodec, Plain, Undefined, Union } from "./codecs";
 import { RecordValue, stateify, State } from "./state";
 
 export type ExpansionOf<A> = A extends infer B ? { [C in keyof B]: B[C] } : never;
@@ -405,3 +405,66 @@ export class RouteCodecImplementation<A extends {}> implements RouteCodec<A> {
 };
 
 export const codec = new RouteCodecImplementation([], {});
+
+const CODECS: Record<string, OptionCodec<any>> = {
+	plain: Plain,
+	integer: Integer,
+	boolean: Boolean
+};
+
+type ParsedKey<A extends string> = A extends `${infer B}:${infer C}` ? B : A;
+
+type ParsedType<A extends string> = A extends `${infer B}:${infer C}` ? C extends keyof infer D extends {
+	plain: string;
+	integer: number;
+	boolean: boolean;
+} ? D[C] : string : string;
+
+type ParsedRequiredOption<A extends string> = {
+	[C in ParsedKey<A>]: ParsedType<A>;
+};
+
+type ParsedOptionalOption<A extends string> = {
+	[C in ParsedKey<A>]?: ParsedType<A>;
+};
+
+type ParsedPath<A extends string> = A extends `<${infer B}>` ? ParsedRequiredOption<B> : {};
+
+type ParsedPaths<A extends string> = A extends `${infer B}/${infer C}` ? ParsedPath<B> & ParsedPaths<C> : ParsedPath<A>;
+
+type ParsedParameter<A extends string> = A extends `<${infer B}>` ? ParsedRequiredOption<B> : A extends `[${infer B}]` ? ParsedOptionalOption<B> : {};
+
+type ParsedParameters<A extends string> = A extends `${infer B}&${infer C}` ? ParsedParameter<B> & ParsedParameters<C> : ParsedParameter<A>;
+
+type ParsedOptions<A extends string> = A extends `${infer B}?${infer C}` ? ParsedPaths<B> & ParsedParameters<C> : ParsedPaths<A>;
+
+export function route<A extends string>(route: A): RouteCodecImplementation<ExpansionOf<ParsedOptions<A>>> {
+	let routeParts = route.split("?");
+	let pathParts = routeParts.slice(0, 1).join("?");
+	let parameterParts = routeParts.slice(1).join("?");
+	let codec = new RouteCodecImplementation([], {});
+	for (let pathPart of pathParts.split("/")) {
+		if (pathPart.startsWith("<") && pathPart.endsWith(">")) {
+			let innerParts = pathPart.slice(1, -1).split(":");
+			let key = innerParts.slice(0, 1).join(":");
+			let type = innerParts.slice(1).join(":");
+			codec = codec.path(key, CODECS[type] ?? Plain);
+		} else {
+			codec = codec.path(pathPart);
+		}
+	}
+	for (let parameterPart of parameterParts.split("&")) {
+		if (parameterPart.startsWith("<") && parameterPart.endsWith(">")) {
+			let innerParts = parameterPart.slice(1, -1).split(":");
+			let key = innerParts.slice(0, 1).join(":");
+			let type = innerParts.slice(1).join(":");
+			codec = codec.required(key, CODECS[type] ?? Plain);
+		} else if (parameterPart.startsWith("[") && parameterPart.endsWith("]")) {
+			let innerParts = parameterPart.slice(1, -1).split(":");
+			let key = innerParts.slice(0, 1).join(":");
+			let type = innerParts.slice(1).join(":");
+			codec = codec.optional(key, CODECS[type] ?? Plain);
+		}
+	}
+	return codec as RouteCodecImplementation<ExpansionOf<ParsedOptions<A>>>;
+};
