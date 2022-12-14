@@ -190,134 +190,85 @@ state.append("Two");
 
 ### Client-side routing
 
-Bonsai features a router module that may be used for client-side routing. The router adds support for deep-linking by combining each route with a factory function that creates an instance of the corresponding page.
+Bonsai features a router that may be used for client-side routing. The router adds support for deep-linked pages and automatically maintains and restores history state.
+
+Each routable page is composed from a route codec and from a factory function generating instances of the page in question. The router caches the generated page instances and re-uses them when restoring history state.
 
 ```ts
-import { codec, html, State, Router, Route, QueryParameters } from "@joelek/bonsai";
+import { route, html, State, Router } from "@joelek/bonsai";
 
 export type StartPageOptions = {};
 
 export const StartPage = {
-	codec: codec.path("start"),
+	codec: route("start"),
 	factory(model: State<StartPageOptions>, title: State<string>, router: Router<any>) {
 		return html.h1("Start Page");
 	}
 };
 ```
 
-A start page displaying an `h1` element with text content `Start Page` is combined with the `/start` route in the example shown above.
+A page displaying an `h1` element with text content `Start Page` is combined with the `start` route in the example shown above.
 
 ```ts
-import { codec, html, State, Router, Route, QueryParameters } from "@joelek/bonsai";
+import { route, html, State, Router } from "@joelek/bonsai";
 
 export type ContactPageOptions = {};
 
 export const ContactPage = {
-	codec: codec.path("contact"),
+	codec: route("contact"),
 	factory(model: State<ContactPageOptions>, title: State<string>, router: Router<any>) {
 		return html.h1("Contact Page");
 	}
 };
 ```
 
-A contact page displaying an `h1` element with text content `Contact Page` is combined with the `/contact` route in the example shown above.
+A page displaying an `h1` element with text content `Contact Page` is combined with the `contact` route in the example shown above.
 
-#### Route codec
+#### Route codecs
 
-Route codecs are used to programmatically define routes.
+Route codecs are used to define how to decode and encode URIs into and from a set of options. The complete type of the options object is automatically inferred from the route URI.
 
-A route codec may define static path components using `.path(value)`.
-
-```ts
-import { codec, Plain } from "@joelek/bonsai";
-
-// The route being defined is "users".
-let codec = codec
-	.path("users");
-```
-
-A route codec may define dynamic path components using `.path(key, codec)`.
-
-```ts
-import { codec, Plain } from "@joelek/bonsai";
-
-// The route being defined is "users/<user_id>".
-let codec = codec
-	.path("users")
-	.path("user_id", Plain);
-```
-
-Changing the order in which the path components are defined changes the route being defined.
-
-```ts
-import { codec, Plain } from "@joelek/bonsai";
-
-// The route being defined is "<user_id>/users".
-let codec = codec
-	.path("user_id", Plain)
-	.path("users");
-```
-
-A route codec may define required query parameters using `.required(key, codec)`.
-
-```ts
-import { codec, Plain } from "@joelek/bonsai";
-
-// The route being defined is "?<required>".
-let codec = codec
-	.path("")
-	.required("required", Plain);
-```
-
-A route codec may define optional query parameters using `.optional(key, codec)`.
-
-```ts
-import { codec, Plain } from "@joelek/bonsai";
-
-// The route being defined is "?<required>&[optional]".
-let codec = codec
-	.path("")
-	.required("required", Plain)
-	.optional("optional", Plain);
-```
-
-Changing the order in which the query parameters are defined does not change the route being defined.
-
-```ts
-import { codec, Plain } from "@joelek/bonsai";
-
-// The route being defined is "?<required>&[optional]".
-let codec = codec
-	.path("")
-	.optional("optional", Plain)
-	.required("required", Plain);
-```
-
-Bonsai includes support for parsing options as `plain` (string), `boolean` or `integer`.
-
-```ts
-import { codec, Integer } from "@joelek/bonsai";
-
-// The route being defined is "?<required:integer>".
-let codec = codec
-	.path("")
-	.required("required", Integer);
-```
-
-The route may be specified in its entirety using `.route(route)`.
+A route may define any number of static or dynamic path components separated by a single `/`. Static path components are defined without a specific format and should be properly percent encoded. Dynamic components are defined using the `<key>` format. The keys should only contain characters that do not require percent encoding.
 
 ```ts
 import { route } from "@joelek/bonsai";
 
-// The route being defined is "static/<dynamic>?<required>&[optional]".
-let codec = route("static/<dynamic>?<required>&[optional]");
+let codec = route("static%20component/<dynamic-component>");
 ```
 
-Dynamic path components and query parameters may optionally specify a type using the `key:type` notation where `type` is one of the types supported by Bonsai.
+Dynamic components may specify a type using the `<key:type>` format. The type will be used to encode and decode the corresponding value and is reflected in the type of the option in question.
+
+Bonsai includes support for parsing options as `plain` (unquoted string), `boolean` and `integer`.
+
+```ts
+import { route } from "@joelek/bonsai";
+
+let codec = route("<my-plain:plain>/<my-boolean:boolean>/<my-integer:integer>");
+```
+
+A route may define any number of optional and required query parameters after a single `?` and separated by a single `&`. Required parameters are defined using the `<key>` format and optional parameters are defined using the `[key]` format. Both parameter kinds support types being specified using the `<key:type>` or `[key:type]` formats, respectively. The keys should only contain characters that do not require percent encoding.
+
+```ts
+import { route } from "@joelek/bonsai";
+
+let codec = route("?<required>&[optional]");
+```
+
+Please note that the keys of routes being specified through `route()` should only contain characters that do not require percent encoding. This is because of the lack of support for percent decoding in the TypeScript type system. The underlying `codec` helper can be used directly to specify the route when keys contain characters that do require percent encoding.
+
+```ts
+import { codec, Plain, Boolean, Integer } from "@joelek/bonsai";
+
+codec
+	.static("static component")
+	.dynamic("dynamic component key", Plain)
+	.required("required parameter key", Boolean)
+	.optional("optional parameter key", Integer);
+```
 
 #### Router
 
-A router instance is created from all routes possible and requires a default page be specified.
+A router is created from all routes possible and requires a default page be specified. The default page can not require options.
 
 ```ts
 import { html, Router } from "@joelek/bonsai";
@@ -330,7 +281,7 @@ const ROUTER = new Router({
 }, "start");
 ```
 
-The router may be used to show the active element and can be used to create instances of new pages through forward navigation. Backward navigation will re-use cached page instances when possible and only create new page instances when needed.
+The router may be used to show the active element and can be used to create instances of new pages through `navigate(page, options)`.
 
 ```ts
 document.body.appendChild(
