@@ -440,7 +440,7 @@ export function route<A extends string>(route: A): RouteCodecImplementation<Expa
 			let type = innerParts.slice(1).join(":");
 			codec = codec.dynamic(key, CODECS[type] ?? Plain);
 		} else {
-			codec = codec.static(pathPart);
+			codec = codec.static(decodeURIComponent(pathPart));
 		}
 	}
 	for (let parameterPart of parameterParts.split("&")) {
