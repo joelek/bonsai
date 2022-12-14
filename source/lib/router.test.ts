@@ -92,7 +92,7 @@ wtf.test(`It should decode required parameters from the last parameter value.`, 
 });
 
 wtf.test(`It should throw an error when a static path component is absent.`, async (assert) => {
-	let codec = router.codec.path("static");
+	let codec = router.codec.static("static");
 	await assert.throws(async () => {
 		codec.decode({
 			paths: [],
@@ -102,7 +102,7 @@ wtf.test(`It should throw an error when a static path component is absent.`, asy
 });
 
 wtf.test(`It should not throw an error when a static path component is present.`, async (assert) => {
-	let codec = router.codec.path("static");
+	let codec = router.codec.static("static");
 	let observed = codec.decode({
 		paths: [
 			"static"
@@ -114,7 +114,7 @@ wtf.test(`It should not throw an error when a static path component is present.`
 });
 
 wtf.test(`It should throw an error when a dynamic path component is absent.`, async (assert) => {
-	let codec = router.codec.path("key", codecs.Plain);
+	let codec = router.codec.dynamic("key", codecs.Plain);
 	await assert.throws(async () => {
 		codec.decode({
 			paths: [],
@@ -124,7 +124,7 @@ wtf.test(`It should throw an error when a dynamic path component is absent.`, as
 });
 
 wtf.test(`It should not throw an error when a dynamic path component is present.`, async (assert) => {
-	let codec = router.codec.path("key", codecs.Plain);
+	let codec = router.codec.dynamic("key", codecs.Plain);
 	let observed = codec.decode({
 		paths: [
 			"value"
@@ -140,7 +140,7 @@ wtf.test(`It should not throw an error when a dynamic path component is present.
 wtf.test(`It should throw an error when the same key is used for a dynamic path and a parameter.`, async (assert) => {
 	await assert.throws(async () => {
 		router.codec
-			.path("key", codecs.Plain)
+			.dynamic("key", codecs.Plain)
 			.required("key", codecs.Plain)
 	});
 });
@@ -148,8 +148,8 @@ wtf.test(`It should throw an error when the same key is used for a dynamic path 
 wtf.test(`It should throw an error when the same key is used for two dynamic paths.`, async (assert) => {
 	await assert.throws(async () => {
 		router.codec
-			.path("key", codecs.Plain)
-			.path("key", codecs.Plain)
+			.dynamic("key", codecs.Plain)
+			.dynamic("key", codecs.Plain)
 	});
 });
 
