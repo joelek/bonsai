@@ -71,15 +71,14 @@ export declare class RouteCodecImplementation<A extends {}> implements RouteCode
     }>;
     protected parameterCodecs: Record<string, OptionCodec<any>>;
     protected assertKeyAvailable(key: string): void;
-    protected withDynamicPath<B extends string, C extends any>(key: B, codec: OptionCodec<C>): RouteCodecImplementation<ExpansionOf<A & {
-        [key in B]: C;
-    }>>;
-    protected withStaticPath(value: string): RouteCodecImplementation<A>;
     constructor(pathCodecs: Array<{
         key?: string;
         codec: OptionCodec<any>;
     }>, parameterCodecs: Record<string, OptionCodec<any>>);
     decode(route: Route): A;
+    dynamic<B extends string, C extends any>(key: B, codec: OptionCodec<C>): RouteCodecImplementation<ExpansionOf<A & {
+        [key in B]: C;
+    }>>;
     encode(options: A): Route;
     optional<B extends string, C extends any>(key: B, codec: OptionCodec<C>): RouteCodecImplementation<ExpansionOf<A & {
         [key in B]: C | undefined;
@@ -87,10 +86,7 @@ export declare class RouteCodecImplementation<A extends {}> implements RouteCode
     required<B extends string, C extends any>(key: B, codec: OptionCodec<C>): RouteCodecImplementation<ExpansionOf<A & {
         [key in B]: C;
     }>>;
-    path(value: string): RouteCodecImplementation<A>;
-    path<B extends string, C extends any>(key: B, codec: OptionCodec<C>): RouteCodecImplementation<ExpansionOf<A & {
-        [key in B]: C;
-    }>>;
+    static(value: string): RouteCodecImplementation<A>;
 }
 export declare const codec: RouteCodecImplementation<{}>;
 type ParsedKey<A extends string> = A extends `${infer B}:${infer C}` ? B : A;

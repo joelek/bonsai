@@ -214,46 +214,6 @@ class RouteCodecImplementation {
             throw new Error(`Expected key "${key}" to be available!`);
         }
     }
-    withDynamicPath(key, codec) {
-        this.assertKeyAvailable(key);
-        let pathCodec = {
-            decode(string) {
-                return {
-                    [key]: codec.decode(string)
-                };
-            },
-            encode(options) {
-                return codec.encode(options[key]);
-            }
-        };
-        return new RouteCodecImplementation([
-            ...this.pathCodecs,
-            {
-                key: key,
-                codec: pathCodec
-            },
-        ], this.parameterCodecs);
-    }
-    withStaticPath(value) {
-        let pathCodec = {
-            decode(string) {
-                if (string !== value) {
-                    throw new Error(`Expected path "${string}" to be "${value}"!`);
-                }
-                return {};
-            },
-            encode(options) {
-                return value;
-            }
-        };
-        return new RouteCodecImplementation([
-            ...this.pathCodecs,
-            {
-                key: undefined,
-                codec: pathCodec
-            },
-        ], this.parameterCodecs);
-    }
     constructor(pathCodecs, parameterCodecs) {
         this.pathCodecs = pathCodecs;
         this.parameterCodecs = parameterCodecs;
@@ -280,6 +240,26 @@ class RouteCodecImplementation {
             };
         }
         return options;
+    }
+    dynamic(key, codec) {
+        this.assertKeyAvailable(key);
+        let pathCodec = {
+            decode(string) {
+                return {
+                    [key]: codec.decode(string)
+                };
+            },
+            encode(options) {
+                return codec.encode(options[key]);
+            }
+        };
+        return new RouteCodecImplementation([
+            ...this.pathCodecs,
+            {
+                key: key,
+                codec: pathCodec
+            },
+        ], this.parameterCodecs);
     }
     encode(options) {
         let paths = [];
@@ -340,13 +320,25 @@ class RouteCodecImplementation {
             [key]: parameterCodec
         });
     }
-    path(value, codec) {
-        if (typeof codec === "undefined") {
-            return this.withStaticPath(value);
-        }
-        else {
-            return this.withDynamicPath(value, codec);
-        }
+    static(value) {
+        let pathCodec = {
+            decode(string) {
+                if (string !== value) {
+                    throw new Error(`Expected path "${string}" to be "${value}"!`);
+                }
+                return {};
+            },
+            encode(options) {
+                return value;
+            }
+        };
+        return new RouteCodecImplementation([
+            ...this.pathCodecs,
+            {
+                key: undefined,
+                codec: pathCodec
+            },
+        ], this.parameterCodecs);
     }
 }
 exports.RouteCodecImplementation = RouteCodecImplementation;
@@ -367,10 +359,10 @@ function route(route) {
             let innerParts = pathPart.slice(1, -1).split(":");
             let key = innerParts.slice(0, 1).join(":");
             let type = innerParts.slice(1).join(":");
-            codec = codec.path(key, CODECS[type] ?? codecs_1.Plain);
+            codec = codec.dynamic(key, CODECS[type] ?? codecs_1.Plain);
         }
         else {
-            codec = codec.path(pathPart);
+            codec = codec.static(decodeURIComponent(pathPart));
         }
     }
     for (let parameterPart of parameterParts.split("&")) {
