@@ -475,13 +475,9 @@ import { html, stateify } from "@joelek/bonsai";
 
 let state = stateify([{ name: "Joel Ek" }]);
 
-state.mapStates((state, indexState) => html.div()
-	.nodes(
-		html.p(state.member("name")) // The text content of the paragraph element is bound to the name state.
-	)
-));
+state.mapStates((state) => html.p(state.member("name")));
 
-state.update([{ name: "Someone Else" }]); // State instantly updates the text content of the paragraph element without creating a new div element.
+state.update([{ name: "Someone Else" }]); // State instantly updates the paragraph element.
 ```
 
 #### MapValues
@@ -497,13 +493,9 @@ import { html, stateify } from "@joelek/bonsai";
 
 let state = stateify([{ name: "Joel Ek" }]);
 
-state.mapValues((value, index) => html.div()
-	.nodes(
-		html.p(value.name) // The text content of the paragraph element is set to the name value.
-	)
-));
+state.mapValues((value) => html.p(value.name));
 
-state.update([{ name: "Someone Else" }]); // State instantly creates a new div element that replaces the old div element.
+state.update([{ name: "Someone Else" }]); // State instantly creates a new paragraph element.
 ```
 
 #### Remove
