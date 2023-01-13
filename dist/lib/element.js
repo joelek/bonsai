@@ -48,7 +48,7 @@ function serializeClass(value) {
         return array
             .filter((value) => typeof value !== "undefined")
             .map(serializeValue)
-            .join(" ");
+            .join(" ") || undefined;
     }
     else {
         return serializeValue(value);
@@ -76,7 +76,7 @@ function serializeStyle(value) {
         return Object.entries(object)
             .filter(([key, value]) => typeof value !== "undefined")
             .map(([key, value]) => `${key}: ${serializeValue(value)}`)
-            .join("; ");
+            .join("; ") || undefined;
     }
     else {
         return serializeValue(value);
@@ -109,16 +109,16 @@ class FunctionalElementImplementation extends Element {
     }
     attribute(key, value) {
         let update = (key, value) => {
+            if (key === "class") {
+                value = serializeClass(value);
+            }
+            if (key === "style") {
+                value = serializeStyle(value);
+            }
             if (typeof value === "undefined") {
                 this.removeAttribute(key);
             }
             else {
-                if (key === "class") {
-                    value = serializeClass(value);
-                }
-                if (key === "style") {
-                    value = serializeStyle(value);
-                }
                 this.setAttribute(key, serializeValue(value));
             }
         };

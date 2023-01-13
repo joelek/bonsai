@@ -11,9 +11,9 @@ export type FunctionalElementEventMap<A> = {
 export declare function serializeValue(value: Value): string;
 export declare function createNode(value: Value | Node): Node;
 export declare function parseClass(value: string): Array<string>;
-export declare function serializeClass(value: Value): string;
+export declare function serializeClass(value: Value): string | undefined;
 export declare function parseStyle(value: string): Record<string, string>;
-export declare function serializeStyle(value: Value): string;
+export declare function serializeStyle(value: Value): string | undefined;
 export declare class FunctionalElementImplementation<A extends FunctionalElementEventMap<A>> extends Element {
     protected bindings?: {
         [key: string | symbol]: Array<CancellationToken | undefined> | undefined;
