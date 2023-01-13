@@ -49,13 +49,13 @@ export function parseClass(value: string): Array<string> {
 	return values;
 };
 
-export function serializeClass(value: Value): string {
+export function serializeClass(value: Value): string | undefined {
 	if (value instanceof Array) {
 		let array = value as ArrayValue;
 		return array
 			.filter((value) => typeof value !== "undefined")
 			.map(serializeValue)
-			.join(" ");
+			.join(" ") || undefined;
 	} else {
 		return serializeValue(value);
 	}
@@ -74,13 +74,13 @@ export function parseStyle(value: string): Record<string, string> {
 	return values;
 };
 
-export function serializeStyle(value: Value): string {
+export function serializeStyle(value: Value): string | undefined {
 	if (value instanceof Object && value.constructor === Object) {
 		let object = value as RecordValue;
 		return Object.entries(object)
 			.filter(([key, value]) => typeof value !== "undefined")
 			.map(([key, value]) => `${key}: ${serializeValue(value)}`)
-			.join("; ");
+			.join("; ") || undefined;
 	} else {
 		return serializeValue(value);
 	}
@@ -120,15 +120,15 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 	attribute<A extends Record<string, Value>>(key: "style", value: A | State<A> | undefined): this;
 	attribute(key: string, value?: Attribute): this | string | Array<string> | Record<string, string> | undefined {
 		let update = (key: string, value: Value) => {
+			if (key === "class") {
+				value = serializeClass(value);
+			}
+			if (key === "style") {
+				value = serializeStyle(value);
+			}
 			if (typeof value === "undefined") {
 				this.removeAttribute(key);
 			} else {
-				if (key === "class") {
-					value = serializeClass(value);
-				}
-				if (key === "style") {
-					value = serializeStyle(value);
-				}
 				this.setAttribute(key, serializeValue(value));
 			}
 		};
