@@ -1,9 +1,9 @@
 import { ArrayState, State, CancellationToken, Value } from "./state";
-export type Attribute = Value | State<Value>;
+export type Attribute<A extends Value> = A | State<A>;
 export type AttributeRecord = {
-    [key: string]: Attribute;
+    [key: string]: Attribute<Value>;
 };
-export type AttributeArray = Attribute[];
+export type AttributeArray = Attribute<Value>[];
 export type Children = Array<ArrayState<Node | Value> | Value | Node | State<Value | Node>>;
 export type FunctionalElementListener<A extends Event, B extends Element> = (event: A, element: B) => void;
 export type FunctionalElementEventMap<A> = {
@@ -27,7 +27,7 @@ export declare class FunctionalElementImplementation<A extends FunctionalElement
     attribute<A extends string>(key: A extends "class" | "style" ? never : A): string | undefined;
     attribute(key: "class"): AttributeArray | undefined;
     attribute(key: "style"): AttributeRecord | undefined;
-    attribute<A extends string>(key: A extends "class" | "style" ? never : A, attribute: Attribute): this;
+    attribute<A extends string>(key: A extends "class" | "style" ? never : A, attribute: Attribute<Value>): this;
     attribute<A extends AttributeArray>(key: "class", attribute: A | undefined): this;
     attribute<A extends AttributeRecord>(key: "style", attribute: A | undefined): this;
     listener<B extends keyof A & string>(type: `on${B}`, listener: FunctionalElementListener<A[B], this> | undefined): this;
