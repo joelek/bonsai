@@ -2,9 +2,9 @@ import { ArrayState, AbstractState, State, CancellationToken, Value, RecordValue
 
 export type Attribute = Value | State<Value>;
 
-export type Attributes = {
-	[key: string]: Attribute;
-};
+export type AttributeRecord = { [key: string]: Attribute; };
+
+export type AttributeArray = Attribute[];
 
 export type Children = Array<ArrayState<Node | Value> | Value | Node | State<Value | Node>>;
 
@@ -89,8 +89,12 @@ export function serializeStyle(value: Value): string | undefined {
 const INSERT = Symbol();
 const REMOVE = Symbol();
 const UPDATE = Symbol();
+const CLASS = Symbol();
+const STYLE = Symbol();
 
 export class FunctionalElementImplementation<A extends FunctionalElementEventMap<A>> extends Element {
+	protected [CLASS]?: AttributeArray;
+	protected [STYLE]?: AttributeRecord;
 	protected bindings?: { [key: string | symbol]: Array<CancellationToken | undefined> | undefined; };
 
 	protected unbind(key: string | symbol): void {
@@ -113,12 +117,12 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 	}
 
 	attribute<A extends string>(key: A extends "class" | "style" ? never : A): string | undefined;
-	attribute(key: "class"): Array<string> | undefined;
-	attribute(key: "style"): Record<string, string> | undefined;
-	attribute<A extends string>(key: A extends "class" | "style" ? never : A, value: Attribute): this;
-	attribute<A extends Array<Value>>(key: "class", value: A | State<A> | undefined): this;
-	attribute<A extends Record<string, Value>>(key: "style", value: A | State<A> | undefined): this;
-	attribute(key: string, value?: Attribute): this | string | Array<string> | Record<string, string> | undefined {
+	attribute(key: "class"): AttributeArray | undefined;
+	attribute(key: "style"): AttributeRecord | undefined;
+	attribute<A extends string>(key: A extends "class" | "style" ? never : A, attribute: Attribute): this;
+	attribute<A extends AttributeArray>(key: "class", attribute: A | undefined): this;
+	attribute<A extends AttributeRecord>(key: "style", attribute: A | undefined): this;
+	attribute(key: string, attribute?: Attribute): this | string | AttributeArray | AttributeRecord | undefined {
 		let update = (key: string, value: Value) => {
 			if (key === "class") {
 				value = serializeClass(value);
@@ -138,17 +142,17 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 				return;
 			}
 			if (key === "class") {
-				return parseClass(value);
+				return [ ...(this[CLASS] ?? parseClass(value)) ];
 			}
 			if (key === "style") {
-				return parseStyle(value);
+				return { ...(this[STYLE] ?? parseStyle(value)) };
 			}
 			return value;
 		};
-		let set = (key: string, value: Attribute) => {
+		let set = (key: string, attribute: Attribute) => {
 			this.unbind(key);
-			if (value instanceof AbstractState) {
-				let state = value as AbstractState<any, any>;
+			if (attribute instanceof AbstractState) {
+				let state = attribute as AbstractState<any, any>;
 				let bindings = this.bindings;
 				if (bindings == null) {
 					this.bindings = bindings = {};
@@ -168,36 +172,53 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 					}
 				}
 			} else {
-				if (key === "class") {
-					let values = [ ...(value as ArrayValue) ];
-					for (let index = 0; index < values.length; index++) {
-						let value = values[index];
-						if (value instanceof AbstractState) {
-							values[index] = value.value();
-							this.bindings = this.bindings ?? {};
-							(this.bindings["class"] = this.bindings["class"] ?? []).push(value.observe("update", (value) => {
-								values[index] = value.value();
-								update("class", values);
-							}));
-						}
+				if (typeof attribute === "undefined") {
+					if (key === "class") {
+						delete this[CLASS];
+					} else if (key === "style") {
+						delete this[STYLE];
 					}
-					update(key, values);
-				} else if (key === "style") {
-					let values = { ...(value as RecordValue) };
-					for (let key in values) {
-						let value = values[key];
-						if (value instanceof AbstractState) {
-							values[key] = value.value();
-							this.bindings = this.bindings ?? {};
-							(this.bindings["style"] = this.bindings["style"] ?? []).push(value.observe("update", (value) => {
-								values[key] = value.value();
-								update("style", values);
-							}));
-						}
-					}
-					update(key, values);
+					update(key, attribute);
 				} else {
-					update(key, value);
+					if (key === "class") {
+						let attributes = this[CLASS] = [ ...attribute as AttributeArray ];
+						let values = [] as ArrayValue;
+						for (let index = 0; index < attributes.length; index++) {
+							let attribute = attributes[index];
+							if (attribute instanceof AbstractState) {
+								let state = attribute as AbstractState<any, any>;
+								values[index] = attribute.value();
+								this.bindings = this.bindings ?? {};
+								(this.bindings["class"] = this.bindings["class"] ?? []).push(state.observe("update", (value) => {
+									values[index] = value.value();
+									update("class", values);
+								}));
+							} else {
+								values[index] = attribute;
+							}
+						}
+						update(key, values);
+					} else if (key === "style") {
+						let attributes = this[STYLE] = { ...attribute as AttributeRecord };
+						let values = {} as RecordValue;
+						for (let key in attributes) {
+							let attribute = attributes[key];
+							if (attribute instanceof AbstractState) {
+								let state = attribute as AbstractState<any, any>;
+								values[key] = attribute.value();
+								this.bindings = this.bindings ?? {};
+								(this.bindings["style"] = this.bindings["style"] ?? []).push(state.observe("update", (value) => {
+									values[key] = value.value();
+									update("style", values);
+								}));
+							} else {
+								values[key] = attribute;
+							}
+						}
+						update(key, values);
+					} else {
+						update(key, attribute);
+					}
 				}
 			}
 			return this;
@@ -205,7 +226,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 		if (arguments.length === 1) {
 			return get(key);
 		} else {
-			return set(key, value);
+			return set(key, attribute);
 		}
 	}
 
