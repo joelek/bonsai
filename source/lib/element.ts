@@ -1,10 +1,10 @@
 import { ArrayState, AbstractState, State, CancellationToken, Value, RecordValue, ArrayValue, AbstractStateEvents } from "./state";
 
-export type Attribute = Value | State<Value>;
+export type Attribute<A extends Value> = A | State<A>;
 
-export type AttributeRecord = { [key: string]: Attribute; };
+export type AttributeRecord = { [key: string]: Attribute<Value>; };
 
-export type AttributeArray = Attribute[];
+export type AttributeArray = Attribute<Value>[];
 
 export type Children = Array<ArrayState<Node | Value> | Value | Node | State<Value | Node>>;
 
@@ -119,10 +119,10 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 	attribute<A extends string>(key: A extends "class" | "style" ? never : A): string | undefined;
 	attribute(key: "class"): AttributeArray | undefined;
 	attribute(key: "style"): AttributeRecord | undefined;
-	attribute<A extends string>(key: A extends "class" | "style" ? never : A, attribute: Attribute): this;
+	attribute<A extends string>(key: A extends "class" | "style" ? never : A, attribute: Attribute<Value>): this;
 	attribute<A extends AttributeArray>(key: "class", attribute: A | undefined): this;
 	attribute<A extends AttributeRecord>(key: "style", attribute: A | undefined): this;
-	attribute(key: string, attribute?: Attribute): this | string | AttributeArray | AttributeRecord | undefined {
+	attribute(key: string, attribute?: Attribute<Value>): this | string | AttributeArray | AttributeRecord | undefined {
 		let update = (key: string, value: Value) => {
 			if (key === "class") {
 				value = serializeClass(value);
@@ -149,7 +149,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 			}
 			return value;
 		};
-		let set = (key: string, attribute: Attribute) => {
+		let set = (key: string, attribute: Attribute<Value>) => {
 			this.unbind(key);
 			if (attribute instanceof AbstractState) {
 				let state = attribute as AbstractState<any, any>;
