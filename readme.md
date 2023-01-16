@@ -322,19 +322,19 @@ let p = html.p("One", "Two");
 
 #### Attribute
 
-An attribute may be get for the element through the `attribute(key)` method.
+An attribute value or state may be retrieved for the element through the `attribute(key)` method.
 
-* The `key` argument must be used to specify the attribute key.
+* The `key` argument must be used to specify the key of the attribute.
 
-An attribute may be set for the element through the `attribute(key, value)` method.
+An attribute value or state may be set for the element through the `attribute(key, attribute)` method.
 
-* The `key` argument must be used to specify the attribute key.
-* The `value` argument must be used to specify the attribute value.
+* The `key` argument must be used to specify the key of the attribute.
+* The `attribute` argument must be used to specify the attribute value or state.
 
-The attribute with the given `key` may be removed from the element by explicitly specifying the `value` argument as undefined.
+The attribute with the given `key` may be removed from the element by explicitly specifying the `attribute` as undefined.
 
-The `class` attribute will automatically be parsed and serialized as an array of class names.
-The `style` attribute will automatically be parsed and serialized as a record of style properties.
+The `class` attribute must be specified as, and will be retrieved as, an array of attribute values or states.
+The `style` attribute must be specified as, and will be retrieved as, a record of attribute values or states.
 
 #### Listener
 
