@@ -166,7 +166,7 @@ class FunctionalElementImplementation extends Element {
                         if (value instanceof state_1.AbstractState) {
                             values[index] = value.value();
                             this.bindings = this.bindings ?? {};
-                            (this.bindings[key] = this.bindings[key] ?? []).push(value.observe("update", (value) => {
+                            (this.bindings["class"] = this.bindings["class"] ?? []).push(value.observe("update", (value) => {
                                 values[index] = value.value();
                                 update("class", values);
                             }));
@@ -181,7 +181,7 @@ class FunctionalElementImplementation extends Element {
                         if (value instanceof state_1.AbstractState) {
                             values[key] = value.value();
                             this.bindings = this.bindings ?? {};
-                            (this.bindings[key] = this.bindings[key] ?? []).push(value.observe("update", (value) => {
+                            (this.bindings["style"] = this.bindings["style"] ?? []).push(value.observe("update", (value) => {
                                 values[key] = value.value();
                                 update("style", values);
                             }));
