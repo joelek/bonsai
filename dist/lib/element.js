@@ -87,7 +87,11 @@ exports.serializeStyle = serializeStyle;
 const INSERT = Symbol();
 const REMOVE = Symbol();
 const UPDATE = Symbol();
+const CLASS = Symbol();
+const STYLE = Symbol();
 class FunctionalElementImplementation extends Element {
+    [CLASS];
+    [STYLE];
     bindings;
     unbind(key) {
         let bindings = this.bindings;
@@ -107,7 +111,7 @@ class FunctionalElementImplementation extends Element {
             }
         }
     }
-    attribute(key, value) {
+    attribute(key, attribute) {
         let update = (key, value) => {
             if (key === "class") {
                 value = serializeClass(value);
@@ -128,17 +132,17 @@ class FunctionalElementImplementation extends Element {
                 return;
             }
             if (key === "class") {
-                return parseClass(value);
+                return [...(this[CLASS] ?? parseClass(value))];
             }
             if (key === "style") {
-                return parseStyle(value);
+                return { ...(this[STYLE] ?? parseStyle(value)) };
             }
             return value;
         };
-        let set = (key, value) => {
+        let set = (key, attribute) => {
             this.unbind(key);
-            if (value instanceof state_1.AbstractState) {
-                let state = value;
+            if (attribute instanceof state_1.AbstractState) {
+                let state = attribute;
                 let bindings = this.bindings;
                 if (bindings == null) {
                     this.bindings = bindings = {};
@@ -159,38 +163,59 @@ class FunctionalElementImplementation extends Element {
                 }
             }
             else {
-                if (key === "class") {
-                    let values = [...value];
-                    for (let index = 0; index < values.length; index++) {
-                        let value = values[index];
-                        if (value instanceof state_1.AbstractState) {
-                            values[index] = value.value();
-                            this.bindings = this.bindings ?? {};
-                            (this.bindings["class"] = this.bindings["class"] ?? []).push(value.observe("update", (value) => {
-                                values[index] = value.value();
-                                update("class", values);
-                            }));
-                        }
+                if (typeof attribute === "undefined") {
+                    if (key === "class") {
+                        delete this[CLASS];
                     }
-                    update(key, values);
-                }
-                else if (key === "style") {
-                    let values = { ...value };
-                    for (let key in values) {
-                        let value = values[key];
-                        if (value instanceof state_1.AbstractState) {
-                            values[key] = value.value();
-                            this.bindings = this.bindings ?? {};
-                            (this.bindings["style"] = this.bindings["style"] ?? []).push(value.observe("update", (value) => {
-                                values[key] = value.value();
-                                update("style", values);
-                            }));
-                        }
+                    else if (key === "style") {
+                        delete this[STYLE];
                     }
-                    update(key, values);
+                    update(key, attribute);
                 }
                 else {
-                    update(key, value);
+                    if (key === "class") {
+                        let attributes = this[CLASS] = [...attribute];
+                        let values = [];
+                        for (let index = 0; index < attributes.length; index++) {
+                            let attribute = attributes[index];
+                            if (attribute instanceof state_1.AbstractState) {
+                                let state = attribute;
+                                values[index] = attribute.value();
+                                this.bindings = this.bindings ?? {};
+                                (this.bindings["class"] = this.bindings["class"] ?? []).push(state.observe("update", (value) => {
+                                    values[index] = value.value();
+                                    update("class", values);
+                                }));
+                            }
+                            else {
+                                values[index] = attribute;
+                            }
+                        }
+                        update(key, values);
+                    }
+                    else if (key === "style") {
+                        let attributes = this[STYLE] = { ...attribute };
+                        let values = {};
+                        for (let key in attributes) {
+                            let attribute = attributes[key];
+                            if (attribute instanceof state_1.AbstractState) {
+                                let state = attribute;
+                                values[key] = attribute.value();
+                                this.bindings = this.bindings ?? {};
+                                (this.bindings["style"] = this.bindings["style"] ?? []).push(state.observe("update", (value) => {
+                                    values[key] = value.value();
+                                    update("style", values);
+                                }));
+                            }
+                            else {
+                                values[key] = attribute;
+                            }
+                        }
+                        update(key, values);
+                    }
+                    else {
+                        update(key, attribute);
+                    }
                 }
             }
             return this;
@@ -199,7 +224,7 @@ class FunctionalElementImplementation extends Element {
             return get(key);
         }
         else {
-            return set(key, value);
+            return set(key, attribute);
         }
     }
     listener(type, listener) {
