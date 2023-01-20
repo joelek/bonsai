@@ -192,6 +192,28 @@ items.append("One");
 items.append("Two");
 ```
 
+Custom classes and styles may be added to the root element of each component.
+
+```ts
+import { stateify } from "@joelek/bonsai";
+import { MyList } from "./MyList";
+
+let items = stateify<Array<string>>([]);
+document.body.appendChild(
+	MyList({ items })
+		.attribute("class", (classes) => ([
+			...classes,
+			"my-custom-list"
+		])))
+		.attribute("style", (styles) => ({
+			...styles,
+			["background-color"]: "green"
+		})))
+);
+items.append("One");
+items.append("Two");
+```
+
 ### Client-side routing
 
 Bonsai features a router that may be used for client-side routing. The router adds support for deep-linked pages and automatically maintains and restores history state.
