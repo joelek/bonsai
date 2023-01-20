@@ -167,13 +167,15 @@ document.head.appendChild(html.style(`
 	}
 `));
 
-export type MyList = State<Array<string>>;
+export type MyList = {
+	items: State<Array<string>>;
+};
 
-export function MyList(state: MyList, /* ...children: Children */) {
+export function MyList({ items }: MyList, /* ...children: Children */) {
 	return html.ul()
 		.attribute("class", [CLASS_NAME])
-		.nodes(state.mapStates((state) =>
-			html.li(state)
+		.nodes(items.mapStates((item) =>
+			html.li(item)
 		));
 };
 ```
@@ -182,10 +184,12 @@ export function MyList(state: MyList, /* ...children: Children */) {
 import { stateify } from "@joelek/bonsai";
 import { MyList } from "./MyList";
 
-let state = stateify<Array<string>>([]);
-document.body.appendChild(MyList(state));
-state.append("One");
-state.append("Two");
+let items = stateify<Array<string>>([]);
+document.body.appendChild(
+	MyList({ items })
+);
+items.append("One");
+items.append("Two");
 ```
 
 ### Client-side routing
