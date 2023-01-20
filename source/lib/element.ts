@@ -117,8 +117,8 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 	}
 
 	attribute<A extends string>(key: A extends "class" | "style" ? never : A): string | undefined;
-	attribute(key: "class"): AttributeArray | undefined;
-	attribute(key: "style"): AttributeRecord | undefined;
+	attribute(key: "class"): AttributeArray;
+	attribute(key: "style"): AttributeRecord;
 	attribute<A extends string>(key: A extends "class" | "style" ? never : A, attribute: Attribute<Value>): this;
 	attribute<A extends AttributeArray>(key: "class", attribute: A | undefined): this;
 	attribute<A extends AttributeRecord>(key: "style", attribute: A | undefined): this;
@@ -138,14 +138,14 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 		};
 		let get = (key: string) => {
 			let value = this.getAttribute(key);
-			if (value == null) {
-				return;
-			}
 			if (key === "class") {
-				return [ ...(this[CLASS] ?? parseClass(value)) ];
+				return [ ...(this[CLASS] ?? parseClass(value ?? "")) ];
 			}
 			if (key === "style") {
-				return { ...(this[STYLE] ?? parseStyle(value)) };
+				return { ...(this[STYLE] ?? parseStyle(value ?? "")) };
+			}
+			if (value == null) {
+				return;
 			}
 			return value;
 		};
