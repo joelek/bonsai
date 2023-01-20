@@ -4,7 +4,11 @@ export type Attribute<A extends Value> = A | State<A>;
 
 export type AttributeRecord = { [key: string]: Attribute<Value>; };
 
+export type AttributeRecordMapper = (attributes: AttributeRecord) => AttributeRecord;
+
 export type AttributeArray = Attribute<Value>[];
+
+export type AttributeArrayMapper = (attributes: AttributeArray) => AttributeArray;
 
 export type Children = Array<ArrayState<Node | Value> | Value | Node | State<Value | Node>>;
 
@@ -120,9 +124,9 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 	attribute(key: "class"): AttributeArray;
 	attribute(key: "style"): AttributeRecord;
 	attribute<A extends string>(key: A extends "class" | "style" ? never : A, attribute: Attribute<Value>): this;
-	attribute<A extends AttributeArray>(key: "class", attribute: A | undefined): this;
-	attribute<A extends AttributeRecord>(key: "style", attribute: A | undefined): this;
-	attribute(key: string, attribute?: Attribute<Value>): this | string | AttributeArray | AttributeRecord | undefined {
+	attribute<A extends AttributeArray>(key: "class", attribute: A | AttributeArrayMapper | undefined): this;
+	attribute<A extends AttributeRecord>(key: "style", attribute: A | AttributeRecordMapper | undefined): this;
+	attribute(key: string, attribute?: Attribute<Value> | AttributeArrayMapper | AttributeRecordMapper | undefined): this | string | AttributeArray | AttributeRecord | undefined {
 		let update = (key: string, value: Value) => {
 			if (key === "class") {
 				value = serializeClass(value);
@@ -149,7 +153,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 			}
 			return value;
 		};
-		let set = (key: string, attribute: Attribute<Value>) => {
+		let set = (key: string, attribute: Attribute<Value> | AttributeArrayMapper | AttributeRecordMapper | undefined) => {
 			this.unbind(key);
 			if (attribute instanceof AbstractState) {
 				let state = attribute as AbstractState<any, any>;
@@ -181,6 +185,9 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 					update(key, attribute);
 				} else {
 					if (key === "class") {
+						if (typeof attribute === "function") {
+							attribute = (attribute as AttributeArrayMapper)(get("class") as AttributeArray);
+						}
 						let attributes = this[CLASS] = [ ...attribute as AttributeArray ];
 						let values = [] as ArrayValue;
 						for (let index = 0; index < attributes.length; index++) {
@@ -199,6 +206,9 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 						}
 						update(key, values);
 					} else if (key === "style") {
+						if (typeof attribute === "function") {
+							attribute = (attribute as AttributeRecordMapper)(get("style") as AttributeRecord);
+						}
 						let attributes = this[STYLE] = { ...attribute as AttributeRecord };
 						let values = {} as RecordValue;
 						for (let key in attributes) {
