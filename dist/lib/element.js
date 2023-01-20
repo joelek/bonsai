@@ -128,14 +128,14 @@ class FunctionalElementImplementation extends Element {
         };
         let get = (key) => {
             let value = this.getAttribute(key);
-            if (value == null) {
-                return;
-            }
             if (key === "class") {
-                return [...(this[CLASS] ?? parseClass(value))];
+                return [...(this[CLASS] ?? parseClass(value ?? ""))];
             }
             if (key === "style") {
-                return { ...(this[STYLE] ?? parseStyle(value)) };
+                return { ...(this[STYLE] ?? parseStyle(value ?? "")) };
+            }
+            if (value == null) {
+                return;
             }
             return value;
         };
@@ -174,6 +174,9 @@ class FunctionalElementImplementation extends Element {
                 }
                 else {
                     if (key === "class") {
+                        if (typeof attribute === "function") {
+                            attribute = attribute(get("class"));
+                        }
                         let attributes = this[CLASS] = [...attribute];
                         let values = [];
                         for (let index = 0; index < attributes.length; index++) {
@@ -194,6 +197,9 @@ class FunctionalElementImplementation extends Element {
                         update(key, values);
                     }
                     else if (key === "style") {
+                        if (typeof attribute === "function") {
+                            attribute = attribute(get("style"));
+                        }
                         let attributes = this[STYLE] = { ...attribute };
                         let values = {};
                         for (let key in attributes) {
