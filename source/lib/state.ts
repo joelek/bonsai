@@ -349,8 +349,8 @@ export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectS
 		}
 	}
 
-	member<B extends keyof A>(key: B, defaultValue?: A[B]): Exclude<States<A>[B], undefined> {
-		let member = this.members[key] as Exclude<States<A>[B], undefined>;
+	member<B extends keyof A>(key: B, defaultValue?: A[B]): Exclude<State<A[B]>, undefined> {
+		let member = this.members[key];
 		if (member == null) {
 			this.members[key] = member = stateify(defaultValue) as any;
 			this.members[key].observe("update", this.onMemberUpdate);
