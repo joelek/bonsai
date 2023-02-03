@@ -356,6 +356,7 @@ export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectS
 		if (member == null) {
 			this.members[key] = member = stateify(defaultValue) as any;
 			this.members[key].observe("update", this.onMemberUpdate);
+			this.onMemberUpdate();
 		}
 		return member;
 	}
