@@ -269,6 +269,7 @@ class ObjectState extends AbstractState {
         if (member == null) {
             this.members[key] = member = stateify(defaultValue);
             this.members[key].observe("update", this.onMemberUpdate);
+            this.onMemberUpdate();
         }
         return member;
     }
