@@ -595,3 +595,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Consider implementing TupleState that changes once irregardless of number of members.
 * Fix issue with type elision for bi-directionally bound state.
 * Fix issue with property setter for file input elements.
+* Allow Attributes to be statified through stateify().
