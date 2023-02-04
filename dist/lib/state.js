@@ -313,6 +313,9 @@ class ObjectState extends AbstractState {
 exports.ObjectState = ObjectState;
 ;
 function stateify(value) {
+    if (value instanceof AbstractState) {
+        return value;
+    }
     if (typeof value === "bigint") {
         return new PrimitiveState(value);
     }
