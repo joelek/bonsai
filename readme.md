@@ -588,11 +588,7 @@ NB: This project targets TypeScript 4 in strict mode.
 ## Roadmap
 
 * Write unit tests.
-* Consider implementing OptionalState to handle values that may be undefined.
-* Consider adding support for array of arrays as argument to nodes().
 * Serialize classes as "class".
 * Ensure that the proper state type is inferred in update event messages.
 * Consider implementing TupleState that changes once irregardless of number of members.
-* Fix issue with type elision for bi-directionally bound state.
 * Fix issue with property setter for file input elements.
-* Allow Attributes to be statified through stateify().
