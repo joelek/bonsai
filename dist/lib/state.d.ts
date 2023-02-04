@@ -89,5 +89,6 @@ export declare class ObjectState<A extends RecordValue> extends AbstractState<A,
     update(value: A): boolean;
     value(): A;
 }
-export declare function stateify<A extends Value>(value: A | State<A>): State<A>;
+export declare function stateify<A extends Value>(value: A): State<A>;
+export declare function stateify<A extends Value>(state: State<A>): State<A>;
 export declare function computed<A extends Value[], B extends Value>(states: [...States<A>], computer: (...args: [...A]) => B): State<B>;
