@@ -475,6 +475,10 @@ Elements may be retrieved from the array through the `element(index)` method.
 
 An error is thrown when the index is out of bounds.
 
+#### First
+
+The first element may be retrieved through the `first()` method.
+
 #### Insert
 
 Values or states may be inserted into the array through the `insert(index, item)` method.
@@ -483,6 +487,10 @@ Values or states may be inserted into the array through the `insert(index, item)
 * The `item` argument must be used to specify the value or state to insert.
 
 An error is thrown when the index is out of bounds.
+
+#### Last
+
+The last element may be retrieved through the `last()` method.
 
 #### Length
 

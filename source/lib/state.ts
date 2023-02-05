@@ -193,7 +193,6 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 		}
 	}
 
-
 	element(index: number | State<number>): State<A> {
 		if (index instanceof AbstractState) {
 			let element = this.element(index.value());
@@ -221,6 +220,15 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 		}
 	}
 
+	first(): State<A | undefined> {
+		let state = stateify<A | undefined>(undefined);
+		state.update(this.elements[0]?.value());
+		this.currentLength.observe("update", () => {
+			state.update(this.elements[0]?.value());
+		});
+		return state;
+	}
+
 	insert(index: number, item: A | State<A>): void {
 		if (index < 0 || index > this.elements.length) {
 			throw new Error(`Expected index to be within bounds!`);
@@ -231,6 +239,15 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 		this.currentLength.update(this.elements.length);
 		this.notify("insert", element, index);
 		this.notify("update", this);
+	}
+
+	last(): State<A | undefined> {
+		let state = stateify<A | undefined>(undefined);
+		state.update(this.elements[this.elements.length - 1]?.value());
+		this.currentLength.observe("update", () => {
+			state.update(this.elements[this.elements.length - 1]?.value());
+		});
+		return state;
 	}
 
 	length(): State<number> {
