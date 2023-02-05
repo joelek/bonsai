@@ -69,7 +69,9 @@ export declare class ArrayState<A extends Value> extends AbstractState<Array<A>,
     [Symbol.iterator](): Iterator<State<A>>;
     append(...items: Array<A | State<A>>): void;
     element(index: number | State<number>): State<A>;
+    first(): State<A | undefined>;
     insert(index: number, item: A | State<A>): void;
+    last(): State<A | undefined>;
     length(): State<number>;
     mapStates<B extends Value>(mapper: StateMapper<A, B>): ArrayState<B>;
     mapValues<B extends Value>(mapper: ValueMapper<A, B>): ArrayState<B>;

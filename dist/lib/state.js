@@ -148,6 +148,14 @@ class ArrayState extends AbstractState {
             return this.elements[index];
         }
     }
+    first() {
+        let state = stateify(undefined);
+        state.update(this.elements[0]?.value());
+        this.currentLength.observe("update", () => {
+            state.update(this.elements[0]?.value());
+        });
+        return state;
+    }
     insert(index, item) {
         if (index < 0 || index > this.elements.length) {
             throw new Error(`Expected index to be within bounds!`);
@@ -158,6 +166,14 @@ class ArrayState extends AbstractState {
         this.currentLength.update(this.elements.length);
         this.notify("insert", element, index);
         this.notify("update", this);
+    }
+    last() {
+        let state = stateify(undefined);
+        state.update(this.elements[this.elements.length - 1]?.value());
+        this.currentLength.observe("update", () => {
+            state.update(this.elements[this.elements.length - 1]?.value());
+        });
+        return state;
     }
     length() {
         return this.currentLength;
