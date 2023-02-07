@@ -355,7 +355,11 @@ function makeFunctionalElementFactory(namespace, tag) {
             },
             set(value) {
                 let oldValue = this.value;
-                parentPropertyDescriptor?.set?.call?.(this, value);
+                try {
+                    // Not all input element values may be changed programmatically.
+                    parentPropertyDescriptor?.set?.call?.(this, value);
+                }
+                catch (error) { }
                 let newValue = this.value;
                 if (newValue !== oldValue) {
                     this.dispatchEvent(new Event("change", { bubbles: true }));
