@@ -475,6 +475,12 @@ Elements may be retrieved from the array through the `element(index)` method.
 
 An error is thrown when the index is out of bounds.
 
+#### Filter
+
+The states of an array may be filtered into a new array through the `filter(predicate)` method.
+
+* The `predicate` argument must be used to specify the predicate deciding which elements to keep and which to discard.
+
 #### First
 
 The first element may be retrieved through the `first()` method.
