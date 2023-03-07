@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.computed = exports.stateify = exports.ObjectState = exports.ArrayState = exports.ReferenceState = exports.PrimitiveState = exports.AbstractState = void 0;
+const utils_1 = require("./utils");
 class AbstractState {
     observers;
     notify(type, ...args) {
@@ -147,6 +148,78 @@ class ArrayState extends AbstractState {
             }
             return this.elements[index];
         }
+    }
+    filter(predicate) {
+        let filteredIndices = stateify([]);
+        let indexStates = [];
+        let subscriptions = [];
+        this.observe("insert", (state, index) => {
+            let indexState = stateify(index);
+            indexStates.splice(index, 0, indexState);
+            for (let i = index + 1; i < indexStates.length; i++) {
+                indexStates[i].update(i);
+            }
+            let outcomeState = predicate(state, indexState);
+            if (outcomeState.value()) {
+                let orderedIndex = (0, utils_1.getOrderedIndex)(filteredIndices.elements, (filteredIndex) => indexState.value() - filteredIndex.value());
+                filteredIndices.insert(orderedIndex, indexState);
+            }
+            let subscription = outcomeState.observe("update", (outcome) => {
+                let orderedIndex = (0, utils_1.getOrderedIndex)(filteredIndices.elements, (filteredIndex) => indexState.value() - filteredIndex.value());
+                let found = filteredIndices.elements[orderedIndex]?.value() === indexState.value();
+                if (outcome.value()) {
+                    if (!found) {
+                        filteredIndices.insert(orderedIndex, indexState);
+                    }
+                }
+                else {
+                    if (found) {
+                        filteredIndices.remove(orderedIndex);
+                    }
+                }
+            });
+            subscriptions.splice(index, 0, subscription);
+        });
+        this.observe("remove", (state, index) => {
+            let indexState = indexStates[index];
+            let orderedIndex = (0, utils_1.getOrderedIndex)(filteredIndices.elements, (index) => indexState.value() - index.value());
+            let found = filteredIndices.elements[orderedIndex]?.value() === indexState.value();
+            if (found) {
+                filteredIndices.remove(orderedIndex);
+            }
+            indexStates.splice(index, 1);
+            for (let i = index; i < indexStates.length; i++) {
+                indexStates[i].update(i);
+            }
+            let subscription = subscriptions[index];
+            subscriptions.splice(index, 1);
+            subscription();
+        });
+        for (let index = 0; index < this.elements.length; index++) {
+            let indexState = stateify(index);
+            indexStates.splice(index, 0, indexState);
+            let element = this.elements[index];
+            let outcomeState = predicate(element, indexState);
+            if (outcomeState.value()) {
+                filteredIndices.append(indexState);
+            }
+            let subscription = outcomeState.observe("update", (outcome) => {
+                let orderedIndex = (0, utils_1.getOrderedIndex)(filteredIndices.elements, (filteredIndex) => indexState.value() - filteredIndex.value());
+                let found = filteredIndices.elements[orderedIndex]?.value() === indexState.value();
+                if (outcome.value()) {
+                    if (!found) {
+                        filteredIndices.insert(orderedIndex, indexState);
+                    }
+                }
+                else {
+                    if (found) {
+                        filteredIndices.remove(orderedIndex);
+                    }
+                }
+            });
+            subscriptions.splice(index, 0, subscription);
+        }
+        return filteredIndices.mapStates((state) => this.element(state));
     }
     first() {
         let state = stateify(undefined);

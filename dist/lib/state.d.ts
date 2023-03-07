@@ -12,6 +12,7 @@ export type RecordValue = {
 };
 export type StateMapper<A extends Value, B extends Value> = (state: State<A>, index: State<number>) => B | State<B>;
 export type ValueMapper<A extends Value, B extends Value> = (value: A, index: number) => B;
+export type Predicate<A extends Value> = (state: State<A>, index: State<number>) => State<boolean>;
 export type Observer<A extends any[]> = (...args: [...A]) => void;
 export type Computer<A extends Value, B extends Value> = (value: A) => B;
 export type CancellationToken = () => void;
@@ -69,6 +70,7 @@ export declare class ArrayState<A extends Value> extends AbstractState<Array<A>,
     [Symbol.iterator](): Iterator<State<A>>;
     append(...items: Array<A | State<A>>): void;
     element(index: number | State<number>): State<A>;
+    filter(predicate: Predicate<A>): ArrayState<A>;
     first(): State<A | undefined>;
     insert(index: number, item: A | State<A>): void;
     last(): State<A | undefined>;
