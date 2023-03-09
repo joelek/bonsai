@@ -227,6 +227,13 @@ class ArrayState extends AbstractState {
         this.currentLength.observe("update", () => {
             state.update(this.elements[0]?.value());
         });
+        state.observe("update", (state) => {
+            let value = state.value();
+            if (value == null) {
+                return;
+            }
+            this.elements[0]?.update(value);
+        });
         return state;
     }
     insert(index, item) {
@@ -245,6 +252,13 @@ class ArrayState extends AbstractState {
         state.update(this.elements[this.elements.length - 1]?.value());
         this.currentLength.observe("update", () => {
             state.update(this.elements[this.elements.length - 1]?.value());
+        });
+        state.observe("update", (state) => {
+            let value = state.value();
+            if (value == null) {
+                return;
+            }
+            this.elements[this.elements.length - 1]?.update(value);
         });
         return state;
     }
