@@ -13,7 +13,7 @@ export type RecordValue = {
 export type StateMapper<A extends Value, B extends Value> = (state: State<A>, index: State<number>) => B | State<B>;
 export type ValueMapper<A extends Value, B extends Value> = (value: A, index: number) => B;
 export type Predicate<A extends Value> = (state: State<A>, index: State<number>) => State<boolean>;
-export type Observer<A extends any[]> = (...args: [...A]) => void;
+export type Observer<A extends any[]> = <B extends A>(...args: B) => void;
 export type Computer<A extends Value, B extends Value> = (value: A) => B;
 export type CancellationToken = () => void;
 export type State<A extends Value> = AbstractState<A, AbstractStateEvents<A>> & (A extends PrimitiveValue ? PrimitiveState<A> : A extends Array<infer B extends Value> ? ArrayState<B> : A extends RecordValue ? ObjectState<A> : A extends ReferenceValue ? ReferenceState<A> : never);
