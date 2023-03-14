@@ -603,7 +603,6 @@ NB: This project targets TypeScript 4 in strict mode.
 
 * Write unit tests.
 * Serialize classes as "class".
-* Ensure that the proper state type is inferred in update event messages.
 * Consider implementing TupleState that changes once irregardless of number of members.
 * Fix issue with lazily initialized ObjectStates.
 

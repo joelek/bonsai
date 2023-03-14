@@ -18,7 +18,7 @@ export type ValueMapper<A extends Value, B extends Value> = (value: A, index: nu
 
 export type Predicate<A extends Value> = (state: State<A>, index: State<number>) => State<boolean>;
 
-export type Observer<A extends any[]> = (...args: [...A]) => void;
+export type Observer<A extends any[]> = <B extends A>(...args: B) => void;
 
 export type Computer<A extends Value, B extends Value> = (value: A) => B;
 
