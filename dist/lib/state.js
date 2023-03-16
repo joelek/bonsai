@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.computed = exports.stateify = exports.ObjectState = exports.ArrayState = exports.ReferenceState = exports.PrimitiveState = exports.AbstractState = void 0;
+exports.get_value = exports.get_state = exports.computed = exports.stateify = exports.ObjectState = exports.ArrayState = exports.ReferenceState = exports.PrimitiveState = exports.AbstractState = void 0;
 const utils_1 = require("./utils");
 class AbstractState {
     observers;
@@ -416,9 +416,6 @@ class ObjectState extends AbstractState {
 exports.ObjectState = ObjectState;
 ;
 function stateify(value) {
-    if (value instanceof AbstractState) {
-        return value;
-    }
     if (typeof value === "bigint") {
         return new PrimitiveState(value);
     }
@@ -471,4 +468,20 @@ function computed(states, computer) {
     return computed;
 }
 exports.computed = computed;
+;
+function get_state(attribute) {
+    if (attribute instanceof AbstractState) {
+        return attribute;
+    }
+    return stateify(attribute);
+}
+exports.get_state = get_state;
+;
+function get_value(attribute) {
+    if (attribute instanceof AbstractState) {
+        return attribute.value();
+    }
+    return attribute;
+}
+exports.get_value = get_value;
 ;
