@@ -107,8 +107,8 @@ class Router {
     documentTitle;
     cache;
     state;
-    element = (0, state_1.stateify)(undefined);
-    url = (0, state_1.stateify)(undefined);
+    element = (0, state_1.make_state)(undefined);
+    url = (0, state_1.make_state)(undefined);
     onPopState = (event) => {
         let historyState = event.state;
         this.state.update(historyState);
@@ -136,8 +136,8 @@ class Router {
         this.factories = { ...factories };
         this.defaultPage = defaultPage;
         this.documentTitle = document.title;
-        this.cache = (0, state_1.stateify)(getInitialCache());
-        this.state = (0, state_1.stateify)(getInitialState());
+        this.cache = (0, state_1.make_state)(getInitialCache());
+        this.state = (0, state_1.make_state)(getInitialState());
         let stateRoute = this.state.member("route");
         let stateIndex = this.state.member("index");
         this.state.compute((state) => {
@@ -161,7 +161,7 @@ class Router {
                 let entryElement = entry.member("element");
                 let parsedRoute = this.parseRoute(stateRoute.value());
                 let factory = this.factories[parsedRoute.page];
-                let options = (0, state_1.stateify)(parsedRoute.options);
+                let options = (0, state_1.make_state)(parsedRoute.options);
                 entryElement.update(factory.factory(options, entryTitle, this));
                 options.compute((options) => {
                     entryRoute.update(factory.codec.encode(options));
