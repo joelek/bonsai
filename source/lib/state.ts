@@ -556,3 +556,17 @@ export function computed<A extends Value[], B extends Value>(states: [...States<
 	}
 	return computed;
 };
+
+export function get_state<A extends Value>(attribute: A | State<A>): State<A> {
+	if (attribute instanceof AbstractState) {
+		return attribute;
+	}
+	return stateify(attribute);
+};
+
+export function get_value<A extends Value>(attribute: A | State<A>): A {
+	if (attribute instanceof AbstractState) {
+		return attribute.value();
+	}
+	return attribute;
+};
