@@ -1,5 +1,5 @@
 import { Boolean, Integer, OptionCodec, Plain, Undefined, Union } from "./codecs";
-import { RecordValue, stateify, State } from "./state";
+import { RecordValue, make_state, State } from "./state";
 
 export type ExpansionOf<A> = A extends infer B ? { [C in keyof B]: B[C] } : never;
 
@@ -149,8 +149,8 @@ export class Router<A extends PageOptions<A>> {
 	protected cache: State<Array<CacheEntry>>;
 	protected state: State<HistoryState>;
 
-	readonly element = stateify(undefined as Element | undefined);
-	readonly url = stateify(undefined as string | undefined);
+	readonly element = make_state(undefined as Element | undefined);
+	readonly url = make_state(undefined as string | undefined);
 
 	protected onPopState = (event: PopStateEvent) => {
 		let historyState = event.state as HistoryState;
@@ -180,8 +180,8 @@ export class Router<A extends PageOptions<A>> {
 		this.factories = { ...factories };
 		this.defaultPage = defaultPage;
 		this.documentTitle = document.title;
-		this.cache = stateify(getInitialCache());
-		this.state = stateify(getInitialState());
+		this.cache = make_state(getInitialCache());
+		this.state = make_state(getInitialState());
 		let stateRoute = this.state.member("route");
 		let stateIndex = this.state.member("index");
 		this.state.compute((state) => {
@@ -205,7 +205,7 @@ export class Router<A extends PageOptions<A>> {
 				let entryElement = entry.member("element");
 				let parsedRoute = this.parseRoute(stateRoute.value());
 				let factory = this.factories[parsedRoute.page as keyof A];
-				let options = stateify(parsedRoute.options as any);
+				let options = make_state(parsedRoute.options as any);
 				entryElement.update(factory.factory(options as any, entryTitle, this));
 				options.compute((options) => {
 					entryRoute.update(factory.codec.encode(options));

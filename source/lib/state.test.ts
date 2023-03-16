@@ -1,45 +1,45 @@
 import * as wtf from "@joelek/wtf";
-import { stateify } from "./state";
+import { make_state, stateify, valueify } from "./state";
 
 wtf.test(`It should not output undefined member values in object values.`, (assert) => {
-	let state = stateify({ required: undefined });
+	let state = make_state({ required: undefined });
 	assert.equals(state.value(), {});
 });
 
 wtf.test(`It should support updating optional object members to undefined values.`, (assert) => {
-	let state = stateify({ data: { page: "" } } as { data?: { page: string } });
+	let state = make_state({ data: { page: "" } } as { data?: { page: string } });
 	state.update({ data: undefined });
 	assert.equals(state.value(), { data: {} });
 });
 
 wtf.test(`It should support updating optional array members to undefined values.`, (assert) => {
-	let state = stateify({ data: [] } as { data?: string[] });
+	let state = make_state({ data: [] } as { data?: string[] });
 	state.update({ data: undefined });
 	assert.equals(state.value(), { data: [] });
 });
 
 wtf.test(`It should initialize optional members lazily when updated.`, (assert) => {
-	let state = stateify({} as { optional?: boolean });
+	let state = make_state({} as { optional?: boolean });
 	state.update({ optional: undefined });
 	let optional = state.member("optional", false);
 	assert.equals(optional.value(), undefined);
 });
 
 wtf.test(`It should initialize optional members lazily when accessed.`, (assert) => {
-	let state = stateify({} as { optional?: boolean });
+	let state = make_state({} as { optional?: boolean });
 	let optional = state.member("optional", false);
 	assert.equals(optional.value(), false);
 });
 
 wtf.test(`It should filter arrays.`, (assert) => {
-	let original = stateify(["a", "B", "c", "D", "e"] as Array<string>);
+	let original = make_state(["a", "B", "c", "D", "e"] as Array<string>);
 	let filtered = original.filter((state) => state.compute((value) => value === value.toLowerCase()));
 	assert.equals(original.value(), ["a", "B", "c", "D", "e"]);
 	assert.equals(filtered.value(), ["a", "c", "e"]);
 });
 
 wtf.test(`A filtered array should be updated when the elements in the original array are updated from the start.`, (assert) => {
-	let original = stateify(["a", "B", "c", "D", "e"] as Array<string>)
+	let original = make_state(["a", "B", "c", "D", "e"] as Array<string>);
 	let filtered = original.filter((state) => state.compute((value) => value === value.toLowerCase()));
 	assert.equals(original.value(), ["a", "B", "c", "D", "e"]);
 	assert.equals(filtered.value(), ["a", "c", "e"]);
@@ -61,7 +61,7 @@ wtf.test(`A filtered array should be updated when the elements in the original a
 });
 
 wtf.test(`A filtered array should be updated when the elements in the original array are updated from the end.`, (assert) => {
-	let original = stateify(["a", "B", "c", "D", "e"] as Array<string>)
+	let original = make_state(["a", "B", "c", "D", "e"] as Array<string>);
 	let filtered = original.filter((state) => state.compute((value) => value === value.toLowerCase()));
 	assert.equals(original.value(), ["a", "B", "c", "D", "e"]);
 	assert.equals(filtered.value(), ["a", "c", "e"]);
@@ -83,7 +83,7 @@ wtf.test(`A filtered array should be updated when the elements in the original a
 });
 
 wtf.test(`The original array should be updated when the elements of the filtered array are updated from the start.`, (assert) => {
-	let original = stateify(["a", "B", "c", "D", "e"] as Array<string>)
+	let original = make_state(["a", "B", "c", "D", "e"] as Array<string>);
 	let filtered = original.filter((state) => state.compute((value) => value === value.toLowerCase()));
 	assert.equals(original.value(), ["a", "B", "c", "D", "e"]);
 	assert.equals(filtered.value(), ["a", "c", "e"]);
@@ -99,7 +99,7 @@ wtf.test(`The original array should be updated when the elements of the filtered
 });
 
 wtf.test(`The original array should be updated when the elements of the filtered array are updated from the end.`, (assert) => {
-	let original = stateify(["a", "B", "c", "D", "e"] as Array<string>)
+	let original = make_state(["a", "B", "c", "D", "e"] as Array<string>);
 	let filtered = original.filter((state) => state.compute((value) => value === value.toLowerCase()));
 	assert.equals(original.value(), ["a", "B", "c", "D", "e"]);
 	assert.equals(filtered.value(), ["a", "c", "e"]);
@@ -115,7 +115,7 @@ wtf.test(`The original array should be updated when the elements of the filtered
 });
 
 wtf.test(`A filtered array should be updated when elements are inserted at the start of the original array.`, (assert) => {
-	let original = stateify([] as Array<string>)
+	let original = make_state([] as Array<string>);
 	let filtered = original.filter((state) => state.compute((value) => value === value.toLowerCase()));
 	assert.equals(original.value(), []);
 	assert.equals(filtered.value(), []);
@@ -137,7 +137,7 @@ wtf.test(`A filtered array should be updated when elements are inserted at the s
 });
 
 wtf.test(`A filtered array should be updated when elements are inserted at the end of the original array.`, (assert) => {
-	let original = stateify([] as Array<string>)
+	let original = make_state([] as Array<string>);
 	let filtered = original.filter((state) => state.compute((value) => value === value.toLowerCase()));
 	assert.equals(original.value(), []);
 	assert.equals(filtered.value(), []);
@@ -159,7 +159,7 @@ wtf.test(`A filtered array should be updated when elements are inserted at the e
 });
 
 wtf.test(`A filtered array should be updated when elements are removed from the start of the original array.`, (assert) => {
-	let original = stateify(["a", "B", "c", "D", "e"] as Array<string>)
+	let original = make_state(["a", "B", "c", "D", "e"] as Array<string>);
 	let filtered = original.filter((state) => state.compute((value) => value === value.toLowerCase()));
 	assert.equals(original.value(), ["a", "B", "c", "D", "e"]);
 	assert.equals(filtered.value(), ["a", "c", "e"]);
@@ -181,7 +181,7 @@ wtf.test(`A filtered array should be updated when elements are removed from the 
 });
 
 wtf.test(`A filtered array should be updated when elements are removed from the end of the original array.`, (assert) => {
-	let original = stateify(["a", "B", "c", "D", "e"] as Array<string>)
+	let original = make_state(["a", "B", "c", "D", "e"] as Array<string>);
 	let filtered = original.filter((state) => state.compute((value) => value === value.toLowerCase()));
 	assert.equals(original.value(), ["a", "B", "c", "D", "e"]);
 	assert.equals(filtered.value(), ["a", "c", "e"]);
@@ -200,4 +200,24 @@ wtf.test(`A filtered array should be updated when elements are removed from the 
 	original.remove(0);
 	assert.equals(original.value(), []);
 	assert.equals(filtered.value(), []);
+});
+
+wtf.test(`Stateify should convert values to states.`, (assert) => {
+	let state = stateify("test");
+	assert.equals(state.value(), "test");
+});
+
+wtf.test(`Stateify should not process states.`, (assert) => {
+	let state = stateify(make_state("test"));
+	assert.equals(state.value(), "test");
+});
+
+wtf.test(`Valueify should not process values.`, (assert) => {
+	let value = valueify("test");
+	assert.equals(value, "test");
+});
+
+wtf.test(`Valueify should convert states into values.`, (assert) => {
+	let value = valueify(make_state("test"));
+	assert.equals(value, "test");
 });

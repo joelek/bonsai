@@ -60,7 +60,7 @@ export abstract class AbstractState<A extends Value, B extends TupleRecord<B> & 
 	}
 
 	compute<C extends Value>(computer: Computer<A, C>): State<C> {
-		let computed = stateify(computer(this.value()));
+		let computed = make_state(computer(this.value()));
 		this.observe("update", (state) => {
 			computed.update(computer(state.value()));
 		});
@@ -181,7 +181,7 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 		super()
 		this.elements = [ ...elements ];
 		this.updating = false;
-		this.currentLength = stateify(elements.length);
+		this.currentLength = make_state(elements.length);
 		for (let index = 0; index < this.elements.length; index++) {
 			this.elements[index].observe("update", this.onElementUpdate);
 		}
@@ -200,7 +200,7 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 	element(index: number | State<number>): State<A> {
 		if (index instanceof AbstractState) {
 			let element = this.element(index.value());
-			let that = stateify(element.value());
+			let that = make_state(element.value());
 			let subscription = element.observe("update", (state) => {
 				that.update(state.value());
 			});
@@ -225,11 +225,11 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 	}
 
 	filter(predicate: Predicate<A>): ArrayState<A> {
-		let filteredIndices = stateify([] as Array<number>);
+		let filteredIndices = make_state([] as Array<number>);
 		let indexStates = [] as Array<State<number>>;
 		let subscriptions = [] as Array<CancellationToken>;
 		this.observe("insert", (state, index) => {
-			let indexState = stateify(index);
+			let indexState = make_state(index);
 			indexStates.splice(index, 0, indexState);
 			for (let i = index + 1; i < indexStates.length; i++) {
 				indexStates[i].update(i);
@@ -270,7 +270,7 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 			subscription();
 		});
 		for (let index = 0; index < this.elements.length; index++) {
-			let indexState = stateify(index);
+			let indexState = make_state(index);
 			indexStates.splice(index, 0, indexState);
 			let element = this.elements[index];
 			let outcomeState = predicate(element, indexState);
@@ -296,7 +296,7 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 	}
 
 	first(): State<A | undefined> {
-		let state = stateify<A | undefined>(undefined);
+		let state = make_state<A | undefined>(undefined);
 		state.update(this.elements[0]?.value());
 		this.currentLength.observe("update", () => {
 			state.update(this.elements[0]?.value());
@@ -315,7 +315,7 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 		if (index < 0 || index > this.elements.length) {
 			throw new Error(`Expected index to be within bounds!`);
 		}
-		let element = item instanceof AbstractState ? item : stateify(item);
+		let element = item instanceof AbstractState ? item : make_state(item);
 		this.elements.splice(index, 0, element);
 		element.observe("update", this.onElementUpdate);
 		this.currentLength.update(this.elements.length);
@@ -324,7 +324,7 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 	}
 
 	last(): State<A | undefined> {
-		let state = stateify<A | undefined>(undefined);
+		let state = make_state<A | undefined>(undefined);
 		state.update(this.elements[this.elements.length - 1]?.value());
 		this.currentLength.observe("update", () => {
 			state.update(this.elements[this.elements.length - 1]?.value());
@@ -344,10 +344,10 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 	}
 
 	mapStates<B extends Value>(mapper: StateMapper<A, B>): ArrayState<B> {
-		let that = stateify([] as Array<B>);
+		let that = make_state([] as Array<B>);
 		let indexStates = [] as Array<State<number>>;
 		this.observe("insert", (state, index) => {
-			let indexState = stateify(index);
+			let indexState = make_state(index);
 			indexStates.splice(index, 0, indexState);
 			for (let i = index + 1; i < indexStates.length; i++) {
 				indexStates[i].update(i);
@@ -363,7 +363,7 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 			that.remove(index);
 		});
 		for (let index = 0; index < this.elements.length; index++) {
-			let indexState = stateify(index);
+			let indexState = make_state(index);
 			indexStates.splice(index, 0, indexState);
 			let element = this.elements[index];
 			let mapped = mapper(element, indexState);
@@ -460,7 +460,7 @@ export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectS
 	member<B extends keyof A, C extends A[B]>(key: B, defaultValue?: C): State<A[B]> | State<Exclude<A[B], undefined> | C> {
 		let member = this.members[key];
 		if (member == null) {
-			this.members[key] = member = stateify(defaultValue) as any;
+			this.members[key] = member = make_state(defaultValue) as any;
 			this.members[key].observe("update", this.onMemberUpdate);
 			this.onMemberUpdate();
 		}
@@ -505,7 +505,7 @@ export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectS
 	}
 };
 
-export function stateify<A extends Value>(value: A): State<A> {
+export function make_state<A extends Value>(value: A): State<A> {
 	if (typeof value === "bigint") {
 		return new PrimitiveState(value) as any;
 	}
@@ -527,14 +527,14 @@ export function stateify<A extends Value>(value: A): State<A> {
 	if (value instanceof Array) {
 		let elements = [] as any;
 		for (let index = 0; index < value.length; index++) {
-			elements.push(stateify(value[index]));
+			elements.push(make_state(value[index]));
 		}
 		return new ArrayState(elements) as any;
 	}
 	if (value instanceof Object && value.constructor === Object) {
 		let members = {} as any;
 		for (let key in value) {
-			members[key] = stateify((value as any)[key]);
+			members[key] = make_state((value as any)[key]);
 		}
 		return new ObjectState(members) as any;
 	}
@@ -546,7 +546,7 @@ export function stateify<A extends Value>(value: A): State<A> {
 
 export function computed<A extends Value[], B extends Value>(states: [...States<A>], computer: (...args: [...A]) => B): State<B> {
 	let values = states.map((state) => state.value()) as [...A];
-	let computed = stateify(computer(...values));
+	let computed = make_state(computer(...values));
 	for (let index = 0; index < states.length; index++) {
 		let state = states[index];
 		state.observe("update", (state) => {
@@ -557,14 +557,14 @@ export function computed<A extends Value[], B extends Value>(states: [...States<
 	return computed;
 };
 
-export function get_state<A extends Value>(attribute: A | State<A>): State<A> {
+export function stateify<A extends Value>(attribute: A | State<A>): State<A> {
 	if (attribute instanceof AbstractState) {
 		return attribute;
 	}
-	return stateify(attribute);
+	return make_state(attribute);
 };
 
-export function get_value<A extends Value>(attribute: A | State<A>): A {
+export function valueify<A extends Value>(attribute: A | State<A>): A {
 	if (attribute instanceof AbstractState) {
 		return attribute.value();
 	}
