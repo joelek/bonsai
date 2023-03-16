@@ -505,10 +505,7 @@ export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectS
 	}
 };
 
-export function stateify<A extends Value>(value: A | State<A>): State<A> {
-	if (value instanceof AbstractState) {
-		return value;
-	}
+export function stateify<A extends Value>(value: A): State<A> {
 	if (typeof value === "bigint") {
 		return new PrimitiveState(value) as any;
 	}
