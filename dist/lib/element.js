@@ -24,6 +24,13 @@ function createNode(value) {
     if (value instanceof Node) {
         return value;
     }
+    else if (value instanceof Promise) {
+        let placeholder = document.createTextNode("");
+        value
+            .catch(() => undefined)
+            .then((value) => placeholder.replaceWith(createNode(value)));
+        return placeholder;
+    }
     else {
         return document.createTextNode(serializeValue(value));
     }
