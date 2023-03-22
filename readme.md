@@ -606,10 +606,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Consider implementing TupleState that changes once irregardless of number of members.
 * Consider implementing RecordState with "insert" and "remove" event messages.
 * Fix issue with lazily initialized ObjectStates.
-
-```ts
-let object = stateify({} as { a?: { key: string }, b?: { key: string } });
-let a = object.member("a", { key: "a" });
-let b = object.member("b", { key: "b" });
-object.update({}); // Both a and b members are present in object but keys are set to undefined.
-```
+* Fix issue with dynamic ArrayState elements.

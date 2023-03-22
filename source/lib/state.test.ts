@@ -221,3 +221,21 @@ wtf.test(`Valueify should convert states into values.`, (assert) => {
 	let value = valueify(make_state("test"));
 	assert.equals(value, "test");
 });
+/*
+wtf.test(`Dynamic ArrayState elements should support being updated after array is vacated.`, (assert) => {
+	let state = make_state(["one"]);
+	let element = state.element(stateify(0));
+	state.vacate();
+	element.update("two");
+	assert.equals(element.value(), "two");
+});
+ */
+/*
+wtf.test(`Lazily initialized ObjectStates should supporting being cleared.`, (assert) => {
+	let object = make_state({} as { a?: { key: string }, b?: { key: string } });
+	let a = object.member("a", { key: "a" });
+	let b = object.member("b", { key: "b" });
+	object.update({});
+	assert.equals(object.value(), {});
+});
+ */
