@@ -144,7 +144,7 @@ export type ParsedRoute = {
 
 export class Router<A extends PageOptions<A>> {
 	protected factories: PageFactories<A>;
-	protected defaultPage: string;
+	protected defaultPage: string | undefined;
 	protected documentTitle: string;
 	protected cache: State<Array<CacheEntry>>;
 	protected state: State<HistoryState>;
@@ -157,7 +157,7 @@ export class Router<A extends PageOptions<A>> {
 		this.state.update(historyState);
 	};
 
-	protected parseRoute(route: Route): ParsedRoute {
+	protected parseRoute(route: Route): ParsedRoute | undefined {
 		for (let page in this.factories) {
 			try {
 				let factory = this.factories[page];
@@ -168,15 +168,17 @@ export class Router<A extends PageOptions<A>> {
 				};
 			} catch (error) {}
 		}
-		let page = this.defaultPage;
-		let options = {};
-		return {
-			page,
-			options
-		};
+		if (typeof this.defaultPage !== "undefined") {
+			let page = this.defaultPage;
+			let options = {};
+			return {
+				page,
+				options
+			};
+		}
 	}
 
-	constructor(factories: PageFactories<A>, defaultPage: EmptyPageOptions<A>) {
+	constructor(factories: PageFactories<A>, defaultPage?: EmptyPageOptions<A>) {
 		this.factories = { ...factories };
 		this.defaultPage = defaultPage;
 		this.documentTitle = document.title;
@@ -204,12 +206,14 @@ export class Router<A extends PageOptions<A>> {
 				let entryRoute = entry.member("route");
 				let entryElement = entry.member("element");
 				let parsedRoute = this.parseRoute(stateRoute.value());
-				let factory = this.factories[parsedRoute.page as keyof A];
-				let options = make_state(parsedRoute.options as any);
-				entryElement.update(factory.factory(options as any, entryTitle, this));
-				options.compute((options) => {
-					entryRoute.update(factory.codec.encode(options));
-				});
+				if (typeof parsedRoute !== "undefined") {
+					let factory = this.factories[parsedRoute.page as keyof A];
+					let options = make_state(parsedRoute.options as any);
+					entryElement.update(factory.factory(options as any, entryTitle, this));
+					options.compute((options) => {
+						entryRoute.update(factory.codec.encode(options));
+					});
+				}
 			}
 		});
 		let entry = this.cache.element(stateIndex);
