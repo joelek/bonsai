@@ -179,7 +179,7 @@ export class Router<A extends PageOptions<A>> {
 	}
 
 	constructor(factories: PageFactories<A>, defaultPage?: EmptyPageOptions<A>) {
-		this.factories = { ...factories };
+		this.factories = factories;
 		this.defaultPage = defaultPage;
 		this.documentTitle = document.title;
 		this.cache = make_state(getInitialCache());
