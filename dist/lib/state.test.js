@@ -2,6 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const wtf = require("@joelek/wtf");
 const state_1 = require("./state");
+wtf.test(`It should support assignment from empty string literal to any string.`, (assert) => {
+    let string = (0, state_1.make_state)("");
+});
 wtf.test(`It should not output undefined member values in object values.`, (assert) => {
     let state = (0, state_1.make_state)({ required: undefined });
     assert.equals(state.value(), {});

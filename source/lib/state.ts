@@ -18,7 +18,7 @@ export type ValueMapper<A extends Value, B extends Value> = (value: A, index: nu
 
 export type Predicate<A extends Value> = (state: State<A>, index: State<number>) => State<boolean>;
 
-export type Observer<A extends any[]> = <B extends A>(...args: B) => void;
+export type Observer<A extends any[]> = (...args: A) => void;
 
 export type Computer<A extends Value, B extends Value> = (value: A) => B;
 
@@ -43,7 +43,7 @@ export type AbstractStateEvents<A extends Value> = {
 };
 
 export abstract class AbstractState<A extends Value, B extends TupleRecord<B> & AbstractStateEvents<A>> {
-	protected observers: { [C in keyof B]?: Array<Observer<B[C]>> };
+	protected observers: { [C in keyof B]?: Array<Observer<any>> };
 
 	protected notify<C extends keyof B>(type: C, ...args: [...B[C]]): void {
 		let observers = this.observers[type];
