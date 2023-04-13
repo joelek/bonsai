@@ -53,15 +53,15 @@ export type ParsedRoute = {
 };
 export declare class Router<A extends PageOptions<A>> {
     protected factories: PageFactories<A>;
-    protected defaultPage: string;
+    protected defaultPage: string | undefined;
     protected documentTitle: string;
     protected cache: State<Array<CacheEntry>>;
     protected state: State<HistoryState>;
     readonly element: State<Element | undefined>;
     readonly url: State<string | undefined>;
     protected onPopState: (event: PopStateEvent) => void;
-    protected parseRoute(route: Route): ParsedRoute;
-    constructor(factories: PageFactories<A>, defaultPage: EmptyPageOptions<A>);
+    protected parseRoute(route: Route): ParsedRoute | undefined;
+    constructor(factories: PageFactories<A>, defaultPage?: EmptyPageOptions<A>);
     navigate<B extends keyof A>(page: B, options: A[B]): boolean;
 }
 export declare class RouteCodecImplementation<A extends {}> implements RouteCodec<A> {

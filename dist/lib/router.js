@@ -125,12 +125,14 @@ class Router {
             }
             catch (error) { }
         }
-        let page = this.defaultPage;
-        let options = {};
-        return {
-            page,
-            options
-        };
+        if (typeof this.defaultPage !== "undefined") {
+            let page = this.defaultPage;
+            let options = {};
+            return {
+                page,
+                options
+            };
+        }
     }
     constructor(factories, defaultPage) {
         this.factories = { ...factories };
@@ -160,12 +162,14 @@ class Router {
                 let entryRoute = entry.member("route");
                 let entryElement = entry.member("element");
                 let parsedRoute = this.parseRoute(stateRoute.value());
-                let factory = this.factories[parsedRoute.page];
-                let options = (0, state_1.make_state)(parsedRoute.options);
-                entryElement.update(factory.factory(options, entryTitle, this));
-                options.compute((options) => {
-                    entryRoute.update(factory.codec.encode(options));
-                });
+                if (typeof parsedRoute !== "undefined") {
+                    let factory = this.factories[parsedRoute.page];
+                    let options = (0, state_1.make_state)(parsedRoute.options);
+                    entryElement.update(factory.factory(options, entryTitle, this));
+                    options.compute((options) => {
+                        entryRoute.update(factory.codec.encode(options));
+                    });
+                }
             }
         });
         let entry = this.cache.element(stateIndex);
