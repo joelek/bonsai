@@ -135,7 +135,7 @@ class Router {
         }
     }
     constructor(factories, defaultPage) {
-        this.factories = { ...factories };
+        this.factories = factories;
         this.defaultPage = defaultPage;
         this.documentTitle = document.title;
         this.cache = (0, state_1.make_state)(getInitialCache());
