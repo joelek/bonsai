@@ -294,7 +294,7 @@ codec
 
 #### Router
 
-A router is created from all routes possible and requires a default page be specified. The default page can not require options.
+A router is created from all routes possible and supports a default page being specified. The default page can not require any options.
 
 ```ts
 import { html, Router } from "@joelek/bonsai";
