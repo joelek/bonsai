@@ -1,5 +1,9 @@
 import * as wtf from "@joelek/wtf";
-import { make_state, stateify, valueify } from "./state";
+import { make_state, State, stateify, valueify } from "./state";
+
+wtf.test(`It should support assignment from empty string literal to any string.`, (assert) => {
+	let string: State<string> = make_state("");
+});
 
 wtf.test(`It should not output undefined member values in object values.`, (assert) => {
 	let state = make_state({ required: undefined });
