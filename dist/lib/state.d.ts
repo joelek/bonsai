@@ -16,7 +16,10 @@ export type Predicate<A extends Value> = (state: State<A>, index: State<number>)
 export type Observer<A extends any[]> = (...args: A) => void;
 export type Computer<A extends Value, B extends Value> = (value: A) => B;
 export type CancellationToken = () => void;
-export type State<A extends Value> = AbstractState<A, AbstractStateEvents<A>> & (A extends PrimitiveValue ? PrimitiveState<A> : A extends Array<infer B extends Value> ? ArrayState<B> : A extends RecordValue ? ObjectState<A> : A extends ReferenceValue ? ReferenceState<A> : never);
+export type State<A extends Value> = AbstractState<A, AbstractStateEvents<A>> & (A extends PrimitiveValue ? PrimitiveState<A> : A extends Array<infer B extends Value> ? IndexStates<A> & ArrayState<B> : A extends RecordValue ? States<A> & ObjectState<A> : A extends ReferenceValue ? ReferenceState<A> : never);
+export type IndexStates<A> = {
+    [B in keyof A & number]: A[B] extends Value ? State<A[B]> : never;
+};
 export type States<A> = {
     [B in keyof A]: A[B] extends Value ? State<A[B]> : never;
 };
@@ -70,13 +73,13 @@ export declare class ArrayState<A extends Value> extends AbstractState<Array<A>,
     [Symbol.iterator](): Iterator<State<A>>;
     append(...items: Array<A | State<A>>): void;
     element(index: number | State<number>): State<A>;
-    filter(predicate: Predicate<A>): ArrayState<A>;
+    filter(predicate: Predicate<A>): State<Array<A>>;
     first(): State<A | undefined>;
     insert(index: number, item: A | State<A>): void;
     last(): State<A | undefined>;
     length(): State<number>;
-    mapStates<B extends Value>(mapper: StateMapper<A, B>): ArrayState<B>;
-    mapValues<B extends Value>(mapper: ValueMapper<A, B>): ArrayState<B>;
+    mapStates<B extends Value>(mapper: StateMapper<A, B>): State<Array<B>>;
+    mapValues<B extends Value>(mapper: ValueMapper<A, B>): State<Array<B>>;
     remove(index: number): void;
     update(value: Array<A>): boolean;
     vacate(): boolean;

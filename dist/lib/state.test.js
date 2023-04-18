@@ -208,6 +208,18 @@ wtf.test(`Valueify should convert states into values.`, (assert) => {
     let value = (0, state_1.valueify)((0, state_1.make_state)("test"));
     assert.equals(value, "test");
 });
+wtf.test(`State arrays should be created with index signatures.`, (assert) => {
+    let state = (0, state_1.make_state)(["a", "b", "c"]);
+    assert.equals(state[0] === state.element(0), true);
+    assert.equals(state[1] === state.element(1), true);
+    assert.equals(state[2] === state.element(2), true);
+});
+wtf.test(`State objects should be created with index signatures.`, (assert) => {
+    let state = (0, state_1.make_state)({ string: "a", number: 0, boolean: false });
+    assert.equals(state.string === state.member("string"), true);
+    assert.equals(state.number === state.member("number"), true);
+    assert.equals(state.boolean === state.member("boolean"), true);
+});
 /*
 wtf.test(`Dynamic ArrayState elements should support being updated after array is vacated.`, (assert) => {
     let state = make_state(["one"]);

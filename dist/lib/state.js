@@ -439,14 +439,32 @@ function make_state(value) {
         for (let index = 0; index < value.length; index++) {
             elements.push(make_state(value[index]));
         }
-        return new ArrayState(elements);
+        return new Proxy(new ArrayState(elements), {
+            get: (target, key) => {
+                if (key in target) {
+                    return target[key];
+                }
+                else {
+                    return target.element(key);
+                }
+            }
+        });
     }
     if (value instanceof Object && value.constructor === Object) {
         let members = {};
         for (let key in value) {
             members[key] = make_state(value[key]);
         }
-        return new ObjectState(members);
+        return new Proxy(new ObjectState(members), {
+            get: (target, key) => {
+                if (key in target) {
+                    return target[key];
+                }
+                else {
+                    return target.member(key);
+                }
+            }
+        });
     }
     if (value instanceof Object) {
         return new ReferenceState(value);
