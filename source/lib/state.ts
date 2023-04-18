@@ -224,7 +224,7 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 		}
 	}
 
-	filter(predicate: Predicate<A>): ArrayState<A> {
+	filter(predicate: Predicate<A>): State<Array<A>> {
 		let filteredIndices = make_state([] as Array<number>);
 		let indexStates = [] as Array<State<number>>;
 		let subscriptions = [] as Array<CancellationToken>;
@@ -343,7 +343,7 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 		return this.currentLength;
 	}
 
-	mapStates<B extends Value>(mapper: StateMapper<A, B>): ArrayState<B> {
+	mapStates<B extends Value>(mapper: StateMapper<A, B>): State<Array<B>> {
 		let that = make_state([] as Array<B>);
 		let indexStates = [] as Array<State<number>>;
 		this.observe("insert", (state, index) => {
@@ -372,7 +372,7 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 		return that;
 	}
 
-	mapValues<B extends Value>(mapper: ValueMapper<A, B>): ArrayState<B> {
+	mapValues<B extends Value>(mapper: ValueMapper<A, B>): State<Array<B>> {
 		return this.mapStates((state, index) => state.compute((value) => mapper(value, index.value())));
 	}
 
