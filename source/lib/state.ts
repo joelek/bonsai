@@ -26,11 +26,15 @@ export type CancellationToken = () => void;
 
 export type State<A extends Value> = AbstractState<A, AbstractStateEvents<A>> & (
 	A extends PrimitiveValue ? PrimitiveState<A> :
-	A extends Array<infer B extends Value> ? ArrayState<B> :
-	A extends RecordValue ? ObjectState<A> :
+	A extends Array<infer B extends Value> ? IndexStates<A> & ArrayState<B> :
+	A extends RecordValue ? States<A> & ObjectState<A> :
 	A extends ReferenceValue ? ReferenceState<A> :
 	never
 );
+
+export type IndexStates<A> = {
+	[B in keyof A & number]: A[B] extends Value ? State<A[B]> : never;
+};
 
 export type States<A> = {
 	[B in keyof A]: A[B] extends Value ? State<A[B]> : never;
@@ -529,14 +533,30 @@ export function make_state<A extends Value>(value: A): State<A> {
 		for (let index = 0; index < value.length; index++) {
 			elements.push(make_state(value[index]));
 		}
-		return new ArrayState(elements) as any;
+		return new Proxy(new ArrayState(elements), {
+			get: (target: any, key: any) => {
+				if (key in target) {
+					return target[key];
+				} else {
+					return target.element(key);
+				}
+			}
+		});
 	}
 	if (value instanceof Object && value.constructor === Object) {
 		let members = {} as any;
 		for (let key in value) {
 			members[key] = make_state((value as any)[key]);
 		}
-		return new ObjectState(members) as any;
+		return new Proxy(new ObjectState(members), {
+			get: (target: any, key: any) => {
+				if (key in target) {
+					return target[key];
+				} else {
+					return target.member(key);
+				}
+			}
+		});
 	}
 	if (value instanceof Object) {
 		return new ReferenceState(value) as any;
