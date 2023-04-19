@@ -2,6 +2,10 @@ import { ArrayState, AbstractState, State, CancellationToken, Value, RecordValue
 
 export type Attribute<A extends Value> = A | State<A>;
 
+export type Attributes<A extends RecordValue> = State<A> | {
+	[B in keyof A]: Attribute<A[B]>;
+};
+
 export type AttributeRecord = { [key: string]: Attribute<Value>; };
 
 export type AttributeRecordMapper = (attributes: AttributeRecord) => AttributeRecord;
