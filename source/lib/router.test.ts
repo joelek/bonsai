@@ -688,3 +688,41 @@ wtf.test(`A router should only update itself when the current entry updates itse
 	element.args[1].update("Title 2");
 	assert.equals(document.title, "Title");
 }));
+
+wtf.test(`A router should update itself properly after dynamically setting and unsetting the default route.`, async (assert) => mock(() => {
+	class DefaultElement extends MockElement<{}> {};
+	let instance = new router.Router({
+		default: {
+			codec: router.route("default"),
+			factory: (options, title, router) => {
+				return new DefaultElement(options, title, router) as any as Element;
+			}
+		}
+	});
+	assert.equals(instance.url.value(), "0");
+	assert.equals(instance.element.value() == null, true);
+	instance.default("default");
+	assert.equals(instance.url.value(), "default");
+	assert.instanceof(instance.element.value(), DefaultElement);
+	instance.default(undefined);
+	assert.equals(instance.url.value(), "default");
+	assert.instanceof(instance.element.value(), DefaultElement);
+}));
+
+wtf.test(`A router should update itself properly after dynamically adding and removing routes.`, async (assert) => mock(() => {
+	class RouteElement extends MockElement<{ id: number }> {};
+	let instance0 = new router.Router({});
+	assert.equals(instance0.url.value(), "0");
+	assert.equals(instance0.element.value() == null, true);
+	let instance1 = instance0.add("route", {
+		codec: router.route("<id:integer>"),
+		factory: (options, title, router) => {
+			return new RouteElement(options, title, router) as any as Element;
+		}
+	});
+	assert.equals(instance1.url.value(), "0");
+	assert.instanceof(instance1.element.value(), RouteElement);
+	let instance2 = instance1.remove("route");
+	assert.equals(instance2.url.value(), "0");
+	assert.equals(instance2.element.value() == null, true);
+}));
