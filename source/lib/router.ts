@@ -1,5 +1,5 @@
 import { Boolean, Integer, OptionCodec, Plain, Undefined, Union } from "./codecs";
-import { RecordValue, make_state, State } from "./state";
+import { RecordValue, make_state, State, computed } from "./state";
 
 export type ExpansionOf<A> = A extends infer B ? { [C in keyof B]: B[C] } : never;
 
@@ -144,9 +144,9 @@ export type ParsedRoute = {
 	options: RecordValue;
 };
 
-export class Router<A extends PageOptions<any>> {
-	protected factories: PageFactories<A>;
-	protected defaultPage: string | undefined;
+export class Router<A extends PageOptions<any> = {}> {
+	protected factories: State<PageFactories<A>>;
+	protected defaultPage: State<EmptyPageOptions<A> | undefined>;
 	protected documentTitle: string;
 	protected cache: State<Array<CacheEntry>>;
 	protected state: State<HistoryState>;
@@ -154,35 +154,9 @@ export class Router<A extends PageOptions<any>> {
 	readonly element = make_state(undefined as Element | undefined);
 	readonly url = make_state(undefined as string | undefined);
 
-	protected onPopState = (event: PopStateEvent) => {
-		let historyState = event.state as HistoryState;
-		this.state.update(historyState);
-	};
-
-	protected parseRoute(route: Route): ParsedRoute | undefined {
-		for (let page in this.factories) {
-			try {
-				let factory = this.factories[page];
-				let options = factory.codec.decode(route);
-				return {
-					page,
-					options
-				};
-			} catch (error) {}
-		}
-		if (typeof this.defaultPage !== "undefined") {
-			let page = this.defaultPage;
-			let options = {};
-			return {
-				page,
-				options
-			};
-		}
-	}
-
 	constructor(factories: PageFactories<A>, defaultPage?: EmptyPageOptions<A>) {
-		this.factories = factories;
-		this.defaultPage = defaultPage;
+		this.factories = make_state(factories);
+		this.defaultPage = make_state(defaultPage);
 		this.documentTitle = document.title;
 		this.cache = make_state(getInitialCache());
 		this.state = make_state(getInitialState());
@@ -201,17 +175,44 @@ export class Router<A extends PageOptions<any>> {
 				});
 			}
 		});
-		stateIndex.compute((stateIndex) => {
+		let parsedRoute = make_state(undefined as ParsedRoute | undefined);
+		let computedParsedRoute = computed([stateRoute, this.defaultPage, this.factories], (stateRoute, defaultPage, factories) => {
+			for (let page in factories) {
+				try {
+					let factory = factories[page];
+					let options = factory.codec.decode(stateRoute);
+					return {
+						page,
+						options
+					};
+				} catch (error) {}
+			}
+			if (typeof defaultPage !== "undefined") {
+				let page = defaultPage;
+				let options = {};
+				return {
+					page,
+					options
+				};
+			}
+		});
+		computedParsedRoute.compute((computedParsedRoute) => {
+			parsedRoute.update(computedParsedRoute);
+		});
+		computed([stateIndex, parsedRoute], (stateIndex, parsedRoute) => {
 			let entry = this.cache.element(stateIndex);
-			if (entry.value().element == null) {
-				let entryTitle = entry.member("title");
-				let entryRoute = entry.member("route");
-				let entryElement = entry.member("element");
-				let parsedRoute = this.parseRoute(stateRoute.value());
-				if (typeof parsedRoute !== "undefined") {
-					let factory = this.factories[parsedRoute.page as keyof A];
-					let options = make_state(parsedRoute.options as any);
-					entryElement.update(factory.factory(options as any, entryTitle, this));
+			let entryTitle = entry.member("title");
+			let entryRoute = entry.member("route");
+			let entryElement = entry.member("element");
+			if (parsedRoute == null) {
+				entryTitle.update(this.documentTitle);
+				entryRoute.update(undefined);
+				entryElement.update(undefined);
+			} else {
+				if (entryElement.value() == null) {
+					let factory = this.factories.value()[parsedRoute.page as keyof A];
+					let options = make_state(parsedRoute.options as A[keyof A]);
+					entryElement.update(factory.factory(options, entryTitle, this));
 					options.compute((options) => {
 						entryRoute.update(factory.codec.encode(options));
 					});
@@ -233,11 +234,27 @@ export class Router<A extends PageOptions<any>> {
 				stateRoute.update(entryRoute);
 			}
 		});
-		window.addEventListener("popstate", this.onPopState);
+		window.addEventListener("popstate", (event) => {
+			let historyState = event.state as HistoryState;
+			this.state.update(historyState);
+		});
+	}
+
+	add<B extends string, C extends RecordValue>(page: B, factory: PageFactory<C>): Router<ExpansionOf<A & { [key in B]: C }>> {
+		this.factories.update({
+			...this.factories.value(),
+			[page]: factory
+		});
+		return this as any;
+	}
+
+	default<B extends EmptyPageOptions<A>>(page: B | undefined): Router<A> {
+		this.defaultPage.update(page);
+		return this;
 	}
 
 	navigate<B extends keyof A>(page: B, options: A[B]): boolean {
-		let factory = this.factories[page];
+		let factory = this.factories.value()[page];
 		let index = this.state.value().index + 1;
 		let route = factory.codec.encode(options);
 		for (let i = this.cache.length().value() - 1; i >= index; i--) {
@@ -253,6 +270,14 @@ export class Router<A extends PageOptions<any>> {
 		this.state.update(historyState);
 		window.scrollTo(0, 0);
 		return false;
+	}
+
+	remove<B extends keyof A>(page: B): Router<ExpansionOf<Omit<A, B>>> {
+		this.factories.update({
+			...this.factories.value(),
+			[page]: undefined
+		});
+		return this as any;
 	}
 };
 
