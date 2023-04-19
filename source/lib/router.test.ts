@@ -555,3 +555,58 @@ wtf.test(`It should parse multiple optional query parameters.`, async (assert) =
 	};
 	assert.equals(observed, expected);
 });
+
+wtf.test(`A router should be initialized properly when there is no matching route.`, async (assert) => mock(() => {
+	let instance = new router.Router({});
+	assert.equals(instance.url.value(), "route");
+	assert.equals(instance.element.value() == null, true);
+}));
+
+wtf.test(`A router should be initialized properly when there is a matching route.`, async (assert) => mock(() => {
+	class RouteElement {};
+	let instance = new router.Router({
+		route: {
+			codec: router.route("route"),
+			factory: (options, title, router) => {
+				return new RouteElement() as Element;
+			}
+		}
+	});
+	assert.equals(instance.url.value(), "route");
+	assert.instanceof(instance.element.value(), RouteElement);
+}));
+
+wtf.test(`A router should be initialized properly when there is no matching route and a default route.`, async (assert) => mock(() => {
+	class DefaultElement {};
+	let instance = new router.Router({
+		default: {
+			codec: router.route("default"),
+			factory: (options, title, router) => {
+				return new DefaultElement() as Element;
+			}
+		}
+	}, "default");
+	assert.equals(instance.url.value(), "default");
+	assert.instanceof(instance.element.value(), DefaultElement);
+}));
+
+wtf.test(`A router should be initialized properly when there is a matching route and a default route.`, async (assert) => mock(() => {
+	class DefaultElement {};
+	class RouteElement {};
+	let instance = new router.Router({
+		default: {
+			codec: router.route("default"),
+			factory: (options, title, router) => {
+				return new DefaultElement() as Element;
+			}
+		},
+		route: {
+			codec: router.route("route"),
+			factory: (options, title, router) => {
+				return new RouteElement() as Element;
+			}
+		}
+	}, "default");
+	assert.equals(instance.url.value(), "route");
+	assert.instanceof(instance.element.value(), RouteElement);
+}));
