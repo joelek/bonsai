@@ -22,15 +22,11 @@ export type PageFactory<A extends RecordValue> = {
 	factory: RouteFactory<A>;
 };
 
-export type PageOptions<A extends PageOptions<A>> = {
-	[B in keyof A]: A[B] extends RecordValue ? A[B] : never;
-};
-
-export type EmptyPageOptions<A extends PageOptions<A>> = {
+export type EmptyPageOptions<A> = {
 	[B in keyof A & string]: {} extends A[B] ? B : never;
 }[keyof A & string];
 
-export type PageFactories<A extends PageOptions<A>> = {
+export type PageFactories<A> = {
 	[B in keyof A]: A[B] extends RecordValue ? PageFactory<A[B]> : never;
 };
 
@@ -144,7 +140,7 @@ export type ParsedRoute = {
 	options: RecordValue;
 };
 
-export class Router<A extends PageOptions<A>> {
+export class Router<A> {
 	protected factories: PageFactories<A>;
 	protected defaultPage: string | undefined;
 	protected documentTitle: string;
