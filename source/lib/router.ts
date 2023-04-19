@@ -15,9 +15,11 @@ export type Route = {
 	parameters: QueryParameters;
 };
 
+export type RouteFactory<A extends RecordValue> = (options: State<A>, title: State<string>, router: Router<any>) => Element;
+
 export type PageFactory<A extends RecordValue> = {
 	codec: RouteCodec<A>;
-	factory: (options: State<A>, title: State<string>, router: Router<any>) => Element;
+	factory: RouteFactory<A>;
 };
 
 export type PageOptions<A extends PageOptions<A>> = {
