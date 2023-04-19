@@ -2,6 +2,92 @@ import * as wtf from "@joelek/wtf";
 import * as router from "./router";
 import * as codecs from "./codecs";
 
+async function mock(callback: () => (void | Promise<void>)): Promise<void> {
+	let window = globalThis["window"];
+	globalThis["window"] = (() => {
+		let listeners = [] as Array<Parameters<typeof window["addEventListener"]>>;
+		let stack = [] as Array<Parameters<typeof window["history"]["pushState"]>>;
+		let index = 0 as number;
+		return {
+			addEventListener(...[type, listener]: Parameters<typeof window["addEventListener"]>) {
+				listeners.push([type, listener]);
+			},
+			history: {
+				back() {
+					this.go(-1);
+				},
+				forward() {
+					this.go(+1);
+				},
+				go(delta) {
+					if (delta == null || delta === 0) {
+						// Reload.
+					} else {
+						let new_index = index + delta;
+						if (new_index >= 0 && new_index < stack.length) {
+							index = new_index;
+							for (let [type, listener] of listeners) {
+								if (type !== "popstate") {
+									continue;
+								}
+								let event = { state: this.state } as PopStateEvent;
+								if (typeof listener === "function") {
+									listener(event);
+								} else {
+									listener.handleEvent(event);
+								}
+							}
+						}
+					}
+				},
+				pushState(data, unused, url) {
+					data = JSON.parse(JSON.stringify(data));
+					stack.splice(index);
+					stack.push([
+						data,
+						unused,
+						url
+					]);
+				},
+				replaceState(data, unused, url) {
+					data = JSON.parse(JSON.stringify(data));
+					stack[index] = [
+						data,
+						unused,
+						url
+					];
+				},
+				get length() {
+					return stack.length;
+				},
+				get state() {
+					if (index >= 0 && index < stack.length) {
+						return JSON.parse(JSON.stringify(stack[index][0]));
+					} else {
+						return null;
+					}
+				}
+			},
+			location: {
+				origin: "http://localhost",
+				pathname: "/base/route",
+				search: ""
+			},
+			scrollTo(x, y) {}
+		} as typeof window;
+	})();
+	let document = globalThis["document"];
+	globalThis["document"] = (() => {
+		return {
+			baseURI: "http://localhost/base/",
+			title: "Title"
+		} as typeof document;
+	})();
+	await callback();
+	globalThis["window"] = window;
+	globalThis["document"] = document;
+};
+
 wtf.test(`It should initialize paths from pathname "/root/path" and basename "/root/base".`, async (assert) => {
 	let observed = router.getInitialPaths("/root/path", "/root/base");
 	let expected = ["path"];
