@@ -42,12 +42,13 @@ async function mock(callback: () => (void | Promise<void>)): Promise<void> {
 				},
 				pushState(data, unused, url) {
 					data = JSON.parse(JSON.stringify(data));
-					stack.splice(index);
+					stack.splice(index + 1);
 					stack.push([
 						data,
 						unused,
 						url
 					]);
+					index += 1;
 				},
 				replaceState(data, unused, url) {
 					data = JSON.parse(JSON.stringify(data));
