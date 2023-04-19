@@ -622,7 +622,7 @@ wtf.test(`A router should be initialized properly when there is a matching route
 }));
 
 wtf.test(`A router should update itself properly after navigation.`, async (assert) => mock(() => {
-	class RouteElement extends MockElement<{}> {};
+	class RouteElement extends MockElement<{ id: number }> {};
 	let instance = new router.Router({
 		route: {
 			codec: router.route("<id:integer>"),
@@ -642,4 +642,49 @@ wtf.test(`A router should update itself properly after navigation.`, async (asse
 	window.history.forward()
 	assert.equals(instance.url.value(), "1");
 	assert.instanceof(instance.element.value(), RouteElement);
+}));
+
+wtf.test(`A router should update itself properly when the current entry updates itself.`, async (assert) => mock(() => {
+	class RouteElement extends MockElement<{ id: number }> {};
+	let instance = new router.Router({
+		route: {
+			codec: router.route("<id:integer>"),
+			factory: (options, title, router) => {
+				return new RouteElement(options, title, router) as any as Element;
+			}
+		}
+	});
+	assert.equals(instance.url.value(), "0");
+	assert.instanceof(instance.element.value(), RouteElement);
+	let element = instance.element.value() as any as RouteElement;
+	element.args[0].update({
+		id: 1
+	});
+	assert.equals(instance.url.value(), "1");
+	element.args[1].update("Title 1");
+	assert.equals(document.title, "Title 1");
+}));
+
+wtf.test(`A router should only update itself when the current entry updates itself.`, async (assert) => mock(() => {
+	class RouteElement extends MockElement<{ id: number }> {};
+	let instance = new router.Router({
+		route: {
+			codec: router.route("<id:integer>"),
+			factory: (options, title, router) => {
+				return new RouteElement(options, title, router) as any as Element;
+			}
+		}
+	});
+	assert.equals(instance.url.value(), "0");
+	assert.instanceof(instance.element.value(), RouteElement);
+	let element = instance.element.value() as any as RouteElement;
+	instance.navigate("route", { id: 1 });
+	assert.equals(instance.url.value(), "1");
+	assert.instanceof(instance.element.value(), RouteElement);
+	element.args[0].update({
+		id: 2
+	});
+	assert.equals(instance.url.value(), "1");
+	element.args[1].update("Title 2");
+	assert.equals(document.title, "Title");
 }));
