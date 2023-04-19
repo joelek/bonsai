@@ -12,17 +12,18 @@ export type Route = {
     paths: Array<string>;
     parameters: QueryParameters;
 };
+export type RouteFactory<A extends RecordValue> = (options: State<A>, title: State<string>, router: Router<any>) => Element;
 export type PageFactory<A extends RecordValue> = {
     codec: RouteCodec<A>;
-    factory: (options: State<A>, title: State<string>, router: Router<any>) => Element;
+    factory: RouteFactory<A>;
 };
-export type PageOptions<A extends PageOptions<A>> = {
+export type PageOptions<A> = {
     [B in keyof A]: A[B] extends RecordValue ? A[B] : never;
 };
-export type EmptyPageOptions<A extends PageOptions<A>> = {
+export type EmptyPageOptions<A> = {
     [B in keyof A & string]: {} extends A[B] ? B : never;
 }[keyof A & string];
-export type PageFactories<A extends PageOptions<A>> = {
+export type PageFactories<A> = {
     [B in keyof A]: A[B] extends RecordValue ? PageFactory<A[B]> : never;
 };
 export declare function pathify(string: string): string;
@@ -51,18 +52,21 @@ export type ParsedRoute = {
     page: string;
     options: RecordValue;
 };
-export declare class Router<A extends PageOptions<A>> {
-    protected factories: PageFactories<A>;
-    protected defaultPage: string | undefined;
+export declare class Router<A extends PageOptions<any> = {}> {
+    protected factories: State<PageFactories<A>>;
+    protected defaultPage: State<EmptyPageOptions<A> | undefined>;
     protected documentTitle: string;
     protected cache: State<Array<CacheEntry>>;
     protected state: State<HistoryState>;
     readonly element: State<Element | undefined>;
     readonly url: State<string | undefined>;
-    protected onPopState: (event: PopStateEvent) => void;
-    protected parseRoute(route: Route): ParsedRoute | undefined;
     constructor(factories: PageFactories<A>, defaultPage?: EmptyPageOptions<A>);
+    add<B extends string, C extends RecordValue>(page: B, factory: PageFactory<C>): Router<ExpansionOf<A & {
+        [key in B]: C;
+    }>>;
+    default<B extends EmptyPageOptions<A>>(page: B | undefined): Router<A>;
     navigate<B extends keyof A>(page: B, options: A[B]): boolean;
+    remove<B extends keyof A>(page: B): Router<ExpansionOf<Omit<A, B>>>;
 }
 export declare class RouteCodecImplementation<A extends {}> implements RouteCodec<A> {
     protected pathCodecs: Array<{

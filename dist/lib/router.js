@@ -33,7 +33,7 @@ function updateHistoryState(historyState) {
 exports.updateHistoryState = updateHistoryState;
 ;
 function getBaseHref() {
-    let url = new URL(document.body.baseURI);
+    let url = new URL(document.baseURI);
     if (url.origin !== window.location.origin) {
         throw new Error(`Expected basename origin and location origin to be identical!`);
     }
@@ -109,34 +109,9 @@ class Router {
     state;
     element = (0, state_1.make_state)(undefined);
     url = (0, state_1.make_state)(undefined);
-    onPopState = (event) => {
-        let historyState = event.state;
-        this.state.update(historyState);
-    };
-    parseRoute(route) {
-        for (let page in this.factories) {
-            try {
-                let factory = this.factories[page];
-                let options = factory.codec.decode(route);
-                return {
-                    page,
-                    options
-                };
-            }
-            catch (error) { }
-        }
-        if (typeof this.defaultPage !== "undefined") {
-            let page = this.defaultPage;
-            let options = {};
-            return {
-                page,
-                options
-            };
-        }
-    }
     constructor(factories, defaultPage) {
-        this.factories = factories;
-        this.defaultPage = defaultPage;
+        this.factories = (0, state_1.make_state)(factories);
+        this.defaultPage = (0, state_1.make_state)(defaultPage);
         this.documentTitle = document.title;
         this.cache = (0, state_1.make_state)(getInitialCache());
         this.state = (0, state_1.make_state)(getInitialState());
@@ -155,15 +130,44 @@ class Router {
                 });
             }
         });
-        stateIndex.compute((stateIndex) => {
+        let parsedRoute = (0, state_1.make_state)(undefined);
+        let computedParsedRoute = (0, state_1.computed)([stateRoute, this.defaultPage, this.factories], (stateRoute, defaultPage, factories) => {
+            for (let page in factories) {
+                try {
+                    let factory = factories[page];
+                    let options = factory.codec.decode(stateRoute);
+                    return {
+                        page,
+                        options
+                    };
+                }
+                catch (error) { }
+            }
+            if (typeof defaultPage !== "undefined") {
+                let page = defaultPage;
+                let options = {};
+                return {
+                    page,
+                    options
+                };
+            }
+        });
+        computedParsedRoute.compute((computedParsedRoute) => {
+            parsedRoute.update(computedParsedRoute);
+        });
+        (0, state_1.computed)([stateIndex, parsedRoute], (stateIndex, parsedRoute) => {
             let entry = this.cache.element(stateIndex);
-            if (entry.value().element == null) {
-                let entryTitle = entry.member("title");
-                let entryRoute = entry.member("route");
-                let entryElement = entry.member("element");
-                let parsedRoute = this.parseRoute(stateRoute.value());
-                if (typeof parsedRoute !== "undefined") {
-                    let factory = this.factories[parsedRoute.page];
+            let entryTitle = entry.member("title");
+            let entryRoute = entry.member("route");
+            let entryElement = entry.member("element");
+            if (parsedRoute == null) {
+                entryTitle.update(this.documentTitle);
+                entryRoute.update(undefined);
+                entryElement.update(undefined);
+            }
+            else {
+                if (entryElement.value() == null) {
+                    let factory = this.factories.value()[parsedRoute.page];
                     let options = (0, state_1.make_state)(parsedRoute.options);
                     entryElement.update(factory.factory(options, entryTitle, this));
                     options.compute((options) => {
@@ -187,10 +191,24 @@ class Router {
                 stateRoute.update(entryRoute);
             }
         });
-        window.addEventListener("popstate", this.onPopState);
+        window.addEventListener("popstate", (event) => {
+            let historyState = event.state;
+            this.state.update(historyState);
+        });
+    }
+    add(page, factory) {
+        this.factories.update({
+            ...this.factories.value(),
+            [page]: factory
+        });
+        return this;
+    }
+    default(page) {
+        this.defaultPage.update(page);
+        return this;
     }
     navigate(page, options) {
-        let factory = this.factories[page];
+        let factory = this.factories.value()[page];
         let index = this.state.value().index + 1;
         let route = factory.codec.encode(options);
         for (let i = this.cache.length().value() - 1; i >= index; i--) {
@@ -204,8 +222,15 @@ class Router {
         let url = getUrlFromRoute(route);
         window.history.pushState(historyState, "", url);
         this.state.update(historyState);
-        window.scrollTo({ top: 0, left: 0 });
+        window.scrollTo(0, 0);
         return false;
+    }
+    remove(page) {
+        this.factories.update({
+            ...this.factories.value(),
+            [page]: undefined
+        });
+        return this;
     }
 }
 exports.Router = Router;

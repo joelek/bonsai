@@ -3,6 +3,96 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const wtf = require("@joelek/wtf");
 const router = require("./router");
 const codecs = require("./codecs");
+async function mock(callback) {
+    let window = globalThis["window"];
+    globalThis["window"] = (() => {
+        let listeners = [];
+        let stack = [];
+        let index = 0;
+        return {
+            addEventListener(...[type, listener]) {
+                listeners.push([type, listener]);
+            },
+            history: {
+                back() {
+                    this.go(-1);
+                },
+                forward() {
+                    this.go(+1);
+                },
+                go(delta) {
+                    if (delta == null || delta === 0) {
+                        // Reload.
+                    }
+                    else {
+                        let new_index = index + delta;
+                        if (new_index >= 0 && new_index < stack.length) {
+                            index = new_index;
+                            for (let [type, listener] of listeners) {
+                                if (type !== "popstate") {
+                                    continue;
+                                }
+                                let event = { state: this.state };
+                                if (typeof listener === "function") {
+                                    listener(event);
+                                }
+                                else {
+                                    listener.handleEvent(event);
+                                }
+                            }
+                        }
+                    }
+                },
+                pushState(data, unused, url) {
+                    data = JSON.parse(JSON.stringify(data));
+                    stack.splice(index + 1);
+                    stack.push([
+                        data,
+                        unused,
+                        url
+                    ]);
+                    index += 1;
+                },
+                replaceState(data, unused, url) {
+                    data = JSON.parse(JSON.stringify(data));
+                    stack[index] = [
+                        data,
+                        unused,
+                        url
+                    ];
+                },
+                get length() {
+                    return stack.length;
+                },
+                get state() {
+                    if (index >= 0 && index < stack.length) {
+                        return JSON.parse(JSON.stringify(stack[index][0]));
+                    }
+                    else {
+                        return null;
+                    }
+                }
+            },
+            location: {
+                origin: "http://localhost",
+                pathname: "/base/0",
+                search: ""
+            },
+            scrollTo(x, y) { }
+        };
+    })();
+    let document = globalThis["document"];
+    globalThis["document"] = (() => {
+        return {
+            baseURI: "http://localhost/base/",
+            title: "Title"
+        };
+    })();
+    await callback();
+    globalThis["window"] = window;
+    globalThis["document"] = document;
+}
+;
 wtf.test(`It should initialize paths from pathname "/root/path" and basename "/root/base".`, async (assert) => {
     let observed = router.getInitialPaths("/root/path", "/root/base");
     let expected = ["path"];
@@ -439,3 +529,180 @@ wtf.test(`It should parse multiple optional query parameters.`, async (assert) =
     };
     assert.equals(observed, expected);
 });
+class MockElement {
+    args;
+    constructor(...args) {
+        this.args = [...args];
+    }
+}
+;
+wtf.test(`A router should be initialized properly when there is no matching route.`, async (assert) => mock(() => {
+    let instance = new router.Router({});
+    assert.equals(instance.url.value(), "0");
+    assert.equals(instance.element.value() == null, true);
+}));
+wtf.test(`A router should be initialized properly when there is a matching route.`, async (assert) => mock(() => {
+    class RouteElement extends MockElement {
+    }
+    ;
+    let instance = new router.Router({
+        route: {
+            codec: router.route("<id:integer>"),
+            factory: (options, title, router) => {
+                return new RouteElement(options, title, router);
+            }
+        }
+    });
+    assert.equals(instance.url.value(), "0");
+    assert.instanceof(instance.element.value(), RouteElement);
+}));
+wtf.test(`A router should be initialized properly when there is no matching route and a default route.`, async (assert) => mock(() => {
+    class DefaultElement extends MockElement {
+    }
+    ;
+    let instance = new router.Router({
+        default: {
+            codec: router.route("default"),
+            factory: (options, title, router) => {
+                return new DefaultElement(options, title, router);
+            }
+        }
+    }, "default");
+    assert.equals(instance.url.value(), "default");
+    assert.instanceof(instance.element.value(), DefaultElement);
+}));
+wtf.test(`A router should be initialized properly when there is a matching route and a default route.`, async (assert) => mock(() => {
+    class DefaultElement extends MockElement {
+    }
+    ;
+    class RouteElement extends MockElement {
+    }
+    ;
+    let instance = new router.Router({
+        default: {
+            codec: router.route("default"),
+            factory: (options, title, router) => {
+                return new DefaultElement(options, title, router);
+            }
+        },
+        route: {
+            codec: router.route("<id:integer>"),
+            factory: (options, title, router) => {
+                return new RouteElement(options, title, router);
+            }
+        }
+    }, "default");
+    assert.equals(instance.url.value(), "0");
+    assert.instanceof(instance.element.value(), RouteElement);
+}));
+wtf.test(`A router should update itself properly after navigation.`, async (assert) => mock(() => {
+    class RouteElement extends MockElement {
+    }
+    ;
+    let instance = new router.Router({
+        route: {
+            codec: router.route("<id:integer>"),
+            factory: (options, title, router) => {
+                return new RouteElement(options, title, router);
+            }
+        }
+    });
+    assert.equals(instance.url.value(), "0");
+    assert.instanceof(instance.element.value(), RouteElement);
+    instance.navigate("route", { id: 1 });
+    assert.equals(instance.url.value(), "1");
+    assert.instanceof(instance.element.value(), RouteElement);
+    window.history.back();
+    assert.equals(instance.url.value(), "0");
+    assert.instanceof(instance.element.value(), RouteElement);
+    window.history.forward();
+    assert.equals(instance.url.value(), "1");
+    assert.instanceof(instance.element.value(), RouteElement);
+}));
+wtf.test(`A router should update itself properly when the current entry updates itself.`, async (assert) => mock(() => {
+    class RouteElement extends MockElement {
+    }
+    ;
+    let instance = new router.Router({
+        route: {
+            codec: router.route("<id:integer>"),
+            factory: (options, title, router) => {
+                return new RouteElement(options, title, router);
+            }
+        }
+    });
+    assert.equals(instance.url.value(), "0");
+    assert.instanceof(instance.element.value(), RouteElement);
+    let element = instance.element.value();
+    element.args[0].update({
+        id: 1
+    });
+    assert.equals(instance.url.value(), "1");
+    element.args[1].update("Title 1");
+    assert.equals(document.title, "Title 1");
+}));
+wtf.test(`A router should only update itself when the current entry updates itself.`, async (assert) => mock(() => {
+    class RouteElement extends MockElement {
+    }
+    ;
+    let instance = new router.Router({
+        route: {
+            codec: router.route("<id:integer>"),
+            factory: (options, title, router) => {
+                return new RouteElement(options, title, router);
+            }
+        }
+    });
+    assert.equals(instance.url.value(), "0");
+    assert.instanceof(instance.element.value(), RouteElement);
+    let element = instance.element.value();
+    instance.navigate("route", { id: 1 });
+    assert.equals(instance.url.value(), "1");
+    assert.instanceof(instance.element.value(), RouteElement);
+    element.args[0].update({
+        id: 2
+    });
+    assert.equals(instance.url.value(), "1");
+    element.args[1].update("Title 2");
+    assert.equals(document.title, "Title");
+}));
+wtf.test(`A router should update itself properly after dynamically setting and unsetting the default route.`, async (assert) => mock(() => {
+    class DefaultElement extends MockElement {
+    }
+    ;
+    let instance = new router.Router({
+        default: {
+            codec: router.route("default"),
+            factory: (options, title, router) => {
+                return new DefaultElement(options, title, router);
+            }
+        }
+    });
+    assert.equals(instance.url.value(), "0");
+    assert.equals(instance.element.value() == null, true);
+    instance.default("default");
+    assert.equals(instance.url.value(), "default");
+    assert.instanceof(instance.element.value(), DefaultElement);
+    instance.default(undefined);
+    assert.equals(instance.url.value(), "default");
+    assert.instanceof(instance.element.value(), DefaultElement);
+}));
+wtf.test(`A router should update itself properly after dynamically adding and removing routes.`, async (assert) => mock(() => {
+    class RouteElement extends MockElement {
+    }
+    ;
+    let instance0 = new router.Router({});
+    assert.equals(instance0.url.value(), "0");
+    assert.equals(instance0.element.value() == null, true);
+    let instance1 = instance0.add("route", {
+        codec: router.route("<id:integer>"),
+        factory: (options, title, router) => {
+            return new RouteElement(options, title, router);
+        }
+    });
+    assert.equals(instance1.url.value(), "0");
+    assert.instanceof(instance1.element.value(), RouteElement);
+    let instance2 = instance1.remove("route");
+    assert.equals(instance2.url.value(), "0");
+    assert.equals(instance2.element.value() == null, true);
+}));
