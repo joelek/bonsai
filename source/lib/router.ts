@@ -73,7 +73,7 @@ export function updateHistoryState(historyState: HistoryState): void {
 };
 
 export function getBaseHref(): string {
-	let url = new URL(document.body.baseURI);
+	let url = new URL(document.baseURI);
 	if (url.origin !== window.location.origin) {
 		throw new Error(`Expected basename origin and location origin to be identical!`);
 	}
