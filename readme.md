@@ -327,6 +327,8 @@ document.body.appendChild(
 * The router exposes the current url through the `url` state.
 * The router exposes the current element through the `element` state.
 
+Routes may be added and removed dynamically through the `add(page, factory)` and `remove(page)` methods, respectively. The default route may be set dynamically using the `default(page)` method.
+
 ## API
 
 ### Functional Element
