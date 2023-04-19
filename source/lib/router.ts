@@ -247,7 +247,7 @@ export class Router<A> {
 		let url = getUrlFromRoute(route);
 		window.history.pushState(historyState, "", url);
 		this.state.update(historyState);
-		window.scrollTo({ top: 0, left: 0 });
+		window.scrollTo(0, 0);
 		return false;
 	}
 };
