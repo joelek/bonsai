@@ -220,6 +220,22 @@ wtf.test(`State objects should be created with index signatures.`, (assert) => {
     assert.equals(state.number === state.member("number"), true);
     assert.equals(state.boolean === state.member("boolean"), true);
 });
+wtf.test(`ArrayState should support observers being added in mapped arrays.`, async (assert) => {
+    let states = (0, state_1.make_state)([]);
+    let events = new Array();
+    states.mapStates((state, index) => {
+        events.push("b");
+        states.observe("insert", (state, index) => {
+            events.push("d");
+        });
+    });
+    events.push("a");
+    states.append("one");
+    events.push("c");
+    states.append("two");
+    events.push("e");
+    assert.equals(events, ["a", "b", "c", "b", "d", "e"]);
+});
 /*
 wtf.test(`Dynamic ArrayState elements should support being updated after array is vacated.`, (assert) => {
     let state = make_state(["one"]);
