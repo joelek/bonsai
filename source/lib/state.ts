@@ -54,6 +54,8 @@ export abstract class AbstractState<A extends Value, B extends TupleRecord<B> & 
 		if (observers == null) {
 			return;
 		}
+		// Prevent issues arising from mutating the array of observers while notifying.
+		observers = [ ...observers ];
 		for (let index = 0; index < observers.length; index++) {
 			observers[index](...args);
 		}
