@@ -1,4 +1,5 @@
 import * as wtf from "@joelek/wtf";
+import { Attribute, Attributes } from "./element";
 import { make_state, State, stateify, valueify } from "./state";
 
 wtf.test(`It should support assignment from empty string literal to any string.`, (assert) => {
@@ -255,6 +256,33 @@ wtf.test(`ArrayState should support observers being added in mapped arrays.`, as
 	states.append("two");
 	events.push("e");
 	assert.equals(events, ["a", "b", "c", "b", "d", "e"]);
+});
+
+wtf.test(`Attributes should be user-friendly.`, (assert) => {
+	let value = {
+		required: {
+			required: "reqreq",
+			optional: "reqopt" as string | undefined
+		},
+		optional: {
+			required: "optreq",
+			optional: "optopt" as string | undefined
+		} as { required: string, optional: string | undefined } | undefined
+	};
+	let state = make_state(value);
+	let value_attributes: Attributes<typeof value> = value;
+	let state_attributes: Attributes<typeof value> = state;
+	let attributes = value_attributes = state_attributes;
+	let required: Attribute<{ required: string, optional: string | undefined }> = attributes.required;
+	let required_required: Attribute<string> = required.required;
+	assert.equals(valueify(required_required), "reqreq");
+	let required_optional: Attribute<string | undefined> = required.optional;
+	assert.equals(valueify(required_optional), "reqopt");
+	let optional: Attribute<{ required: string, optional: string | undefined } | undefined> = attributes.optional;
+	let optional_required: Attribute<string | undefined> = stateify(optional).compute((optional) => optional?.required);
+	assert.equals(valueify(optional_required), "optreq");
+	let optional_optional: Attribute<string | undefined> = stateify(optional).compute((optional) => optional?.optional);
+	assert.equals(valueify(optional_optional), "optopt");
 });
 
 /*
