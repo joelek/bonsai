@@ -398,6 +398,10 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 		}
 	}
 
+	spread(): Array<State<A>> {
+		return [ ...this.elements ];
+	}
+
 	update(value: Array<A>): boolean {
 		let updated = false;
 		try {
@@ -442,7 +446,7 @@ export type ObjectStateEvents<A extends Value> = AbstractStateEvents<A> & {
 
 };
 
-export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectStateEvents<A>> {
+export abstract class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectStateEvents<A>> {
 	protected members: States<A>;
 	protected updating: boolean;
 
@@ -473,6 +477,13 @@ export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectS
 		return member;
 	}
 
+	spread(): States<A> {
+		return { ...this.members };
+	}
+};
+
+// Implement the abstract methods in secret in order for TypeScript not to handle them as if they were own properties.
+export class ObjectStateImplementation<A extends RecordValue> extends ObjectState<A> {
 	update(value: A): boolean {
 		let updated = false;
 		try {
@@ -536,7 +547,7 @@ export function make_state<A extends Value>(value: A): State<A> {
 			elements.push(make_state(value[index]));
 		}
 		return new Proxy(new ArrayState(elements), {
-			get: (target: any, key: any) => {
+			get(target: any, key: any) {
 				if (key in target) {
 					return target[key];
 				} else {
@@ -550,13 +561,23 @@ export function make_state<A extends Value>(value: A): State<A> {
 		for (let key in value) {
 			members[key] = make_state((value as any)[key]);
 		}
-		return new Proxy(new ObjectState(members), {
-			get: (target: any, key: any) => {
+		return new Proxy(new ObjectStateImplementation(members), {
+			get(target: any, key: any) {
 				if (key in target) {
 					return target[key];
 				} else {
 					return target.member(key);
 				}
+			},
+			getOwnPropertyDescriptor(target, key) {
+				if (key in target) {
+					return Object.getOwnPropertyDescriptor(target, key);
+				} else {
+					return Object.getOwnPropertyDescriptor(target.spread(), key);
+				}
+			},
+			ownKeys(target) {
+				return Object.getOwnPropertyNames(target.spread());
 			}
 		});
 	}

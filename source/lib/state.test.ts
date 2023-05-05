@@ -285,6 +285,20 @@ wtf.test(`Attributes should be user-friendly.`, (assert) => {
 	assert.equals(valueify(optional_optional), "optopt");
 });
 
+wtf.test(`Array states should have spread functionality.`, (assert) => {
+	let state = make_state(["a", "b"]);
+	let spread = [ ...state ];
+	assert.equals(spread[0] === state[0], true);
+	assert.equals(spread[1] === state[1], true);
+});
+
+wtf.test(`Object states should have spread functionality.`, (assert) => {
+	let state = make_state({ one: "a", two: "b" });
+	let spread = { ...state };
+	assert.equals(spread.one === state.one, true);
+	assert.equals(spread.two === state.two, true);
+});
+
 /*
 wtf.test(`Dynamic ArrayState elements should support being updated after array is vacated.`, (assert) => {
 	let state = make_state(["one"]);
