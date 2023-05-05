@@ -81,18 +81,22 @@ export declare class ArrayState<A extends Value> extends AbstractState<Array<A>,
     mapStates<B extends Value>(mapper: StateMapper<A, B>): State<Array<B>>;
     mapValues<B extends Value>(mapper: ValueMapper<A, B>): State<Array<B>>;
     remove(index: number): void;
+    spread(): Array<State<A>>;
     update(value: Array<A>): boolean;
     vacate(): boolean;
     value(): Array<A>;
 }
 export type ObjectStateEvents<A extends Value> = AbstractStateEvents<A> & {};
-export declare class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectStateEvents<A>> {
+export declare abstract class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectStateEvents<A>> {
     protected members: States<A>;
     protected updating: boolean;
     protected onMemberUpdate: () => void;
     constructor(members: States<A>);
     member<B extends keyof A>(key: B): State<A[B]>;
     member<B extends keyof A, C extends A[B]>(key: B, defaultValue: C): State<Exclude<A[B], undefined> | C>;
+    spread(): States<A>;
+}
+export declare class ObjectStateImplementation<A extends RecordValue> extends ObjectState<A> {
     update(value: A): boolean;
     value(): A;
 }

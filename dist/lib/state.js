@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.valueify = exports.stateify = exports.computed = exports.make_state = exports.ObjectState = exports.ArrayState = exports.ReferenceState = exports.PrimitiveState = exports.AbstractState = void 0;
+exports.valueify = exports.stateify = exports.computed = exports.make_state = exports.ObjectStateImplementation = exports.ObjectState = exports.ArrayState = exports.ReferenceState = exports.PrimitiveState = exports.AbstractState = void 0;
 const utils_1 = require("./utils");
 class AbstractState {
     observers;
@@ -313,6 +313,9 @@ class ArrayState extends AbstractState {
             this.notify("update", this);
         }
     }
+    spread() {
+        return [...this.elements];
+    }
     update(value) {
         let updated = false;
         try {
@@ -378,6 +381,14 @@ class ObjectState extends AbstractState {
         }
         return member;
     }
+    spread() {
+        return { ...this.members };
+    }
+}
+exports.ObjectState = ObjectState;
+;
+// Implement the abstract methods in secret in order for TypeScript not to handle them as if they were own properties.
+class ObjectStateImplementation extends ObjectState {
     update(value) {
         let updated = false;
         try {
@@ -415,7 +426,7 @@ class ObjectState extends AbstractState {
         return lastValue;
     }
 }
-exports.ObjectState = ObjectState;
+exports.ObjectStateImplementation = ObjectStateImplementation;
 ;
 function make_state(value) {
     if (typeof value === "bigint") {
@@ -442,7 +453,7 @@ function make_state(value) {
             elements.push(make_state(value[index]));
         }
         return new Proxy(new ArrayState(elements), {
-            get: (target, key) => {
+            get(target, key) {
                 if (key in target) {
                     return target[key];
                 }
@@ -457,14 +468,25 @@ function make_state(value) {
         for (let key in value) {
             members[key] = make_state(value[key]);
         }
-        return new Proxy(new ObjectState(members), {
-            get: (target, key) => {
+        return new Proxy(new ObjectStateImplementation(members), {
+            get(target, key) {
                 if (key in target) {
                     return target[key];
                 }
                 else {
                     return target.member(key);
                 }
+            },
+            getOwnPropertyDescriptor(target, key) {
+                if (key in target) {
+                    return Object.getOwnPropertyDescriptor(target, key);
+                }
+                else {
+                    return Object.getOwnPropertyDescriptor(target.spread(), key);
+                }
+            },
+            ownKeys(target) {
+                return Object.getOwnPropertyNames(target.spread());
             }
         });
     }

@@ -236,6 +236,44 @@ wtf.test(`ArrayState should support observers being added in mapped arrays.`, as
     events.push("e");
     assert.equals(events, ["a", "b", "c", "b", "d", "e"]);
 });
+wtf.test(`Attributes should be user-friendly.`, (assert) => {
+    let value = {
+        required: {
+            required: "reqreq",
+            optional: "reqopt"
+        },
+        optional: {
+            required: "optreq",
+            optional: "optopt"
+        }
+    };
+    let state = (0, state_1.make_state)(value);
+    let value_attributes = value;
+    let state_attributes = state;
+    let attributes = value_attributes = state_attributes;
+    let required = attributes.required;
+    let required_required = required.required;
+    assert.equals((0, state_1.valueify)(required_required), "reqreq");
+    let required_optional = required.optional;
+    assert.equals((0, state_1.valueify)(required_optional), "reqopt");
+    let optional = attributes.optional;
+    let optional_required = (0, state_1.stateify)(optional).compute((optional) => optional?.required);
+    assert.equals((0, state_1.valueify)(optional_required), "optreq");
+    let optional_optional = (0, state_1.stateify)(optional).compute((optional) => optional?.optional);
+    assert.equals((0, state_1.valueify)(optional_optional), "optopt");
+});
+wtf.test(`Array states should have spread functionality.`, (assert) => {
+    let state = (0, state_1.make_state)(["a", "b"]);
+    let spread = [...state];
+    assert.equals(spread[0] === state[0], true);
+    assert.equals(spread[1] === state[1], true);
+});
+wtf.test(`Object states should have spread functionality.`, (assert) => {
+    let state = (0, state_1.make_state)({ one: "a", two: "b" });
+    let spread = { ...state };
+    assert.equals(spread.one === state.one, true);
+    assert.equals(spread.two === state.two, true);
+});
 /*
 wtf.test(`Dynamic ArrayState elements should support being updated after array is vacated.`, (assert) => {
     let state = make_state(["one"]);
