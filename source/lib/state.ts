@@ -476,8 +476,9 @@ export abstract class ObjectState<A extends RecordValue> extends AbstractState<A
 	}
 
 	member<B extends keyof A>(key: B): State<A[B]>;
-	member<B extends keyof A, C extends A[B]>(key: B, defaultValue: C): State<Exclude<A[B], undefined> | C>;
-	member<B extends keyof A, C extends A[B]>(key: B, defaultValue?: C): State<A[B]> | State<Exclude<A[B], undefined> | C> {
+	member<B extends keyof A>(key: B, defaultValue: Exclude<A[B], undefined>): State<Exclude<A[B], undefined>>;
+	member<B extends keyof A>(key: B, defaultValue: A[B]): State<A[B]>;
+	member<B extends keyof A>(key: B, defaultValue?: Exclude<A[B], undefined> | A[B]): State<A[B]> | State<Exclude<A[B], undefined>> | State<A[B]> {
 		let member = this.members[key];
 		if (member == null) {
 			this.members[key] = member = make_state(defaultValue) as any;

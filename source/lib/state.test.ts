@@ -301,12 +301,12 @@ wtf.test(`Attributes should be user-friendly.`, (assert) => {
 	let value = {
 		required: {
 			required: "reqreq",
-			optional: "reqopt" as string | undefined
-		},
+			optional: "reqopt"
+		} as { required: string, optional?: string },
 		optional: {
 			required: "optreq",
-			optional: "optopt" as string | undefined
-		} as { required: string, optional: string | undefined } | undefined
+			optional: "optopt"
+		} as { required: string, optional?: string } | undefined
 	};
 	let state = make_state(value);
 	let value_attributes: Attributes<typeof value> = value;
@@ -317,10 +317,10 @@ wtf.test(`Attributes should be user-friendly.`, (assert) => {
 	assert.equals(valueify(required_required), "reqreq");
 	let required_optional = required.optional;
 	assert.equals(valueify(required_optional), "reqopt");
-	let optional = attributes.optional;
-	let optional_required = stateify(optional).compute((optional) => optional?.required);
+	let optional = stateify(attributes).member("optional", { required: "optreq2" });
+	let optional_required = optional.required;
 	assert.equals(valueify(optional_required), "optreq");
-	let optional_optional = stateify(optional).compute((optional) => optional?.optional);
+	let optional_optional = optional.optional;
 	assert.equals(valueify(optional_optional), "optopt");
 });
 
