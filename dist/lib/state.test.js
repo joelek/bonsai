@@ -200,6 +200,22 @@ wtf.test(`Stateify should not process states.`, (assert) => {
     let state = (0, state_1.stateify)((0, state_1.make_state)("test"));
     assert.equals(state.value(), "test");
 });
+wtf.test(`Stateify should handle objects with states.`, (assert) => {
+    let state = (0, state_1.stateify)({ one: (0, state_1.make_state)("a") });
+    assert.equals(state.value(), { one: "a" });
+});
+wtf.test(`Stateify should handle objects with values and states.`, (assert) => {
+    let state = (0, state_1.stateify)({ one: (0, state_1.make_state)("a"), two: "b" });
+    assert.equals(state.value(), { one: "a", two: "b" });
+});
+wtf.test(`Stateify should handle nested objects with values and states.`, (assert) => {
+    let state = (0, state_1.stateify)({ one: { one: (0, state_1.make_state)("a"), two: "b" } });
+    assert.equals(state.value(), { one: { one: "a", two: "b" } });
+});
+wtf.test(`Stateify should handle nested objects with state objects.`, (assert) => {
+    let state = (0, state_1.stateify)({ one: (0, state_1.make_state)({ one: "a", two: "b" }) });
+    assert.equals(state.value(), { one: { one: "a", two: "b" } });
+});
 wtf.test(`Valueify should not process values.`, (assert) => {
     let value = (0, state_1.valueify)("test");
     assert.equals(value, "test");
@@ -207,6 +223,22 @@ wtf.test(`Valueify should not process values.`, (assert) => {
 wtf.test(`Valueify should convert states into values.`, (assert) => {
     let value = (0, state_1.valueify)((0, state_1.make_state)("test"));
     assert.equals(value, "test");
+});
+wtf.test(`Valueify should handle objects with states.`, (assert) => {
+    let value = (0, state_1.valueify)({ one: (0, state_1.make_state)("a") });
+    assert.equals(value, { one: "a" });
+});
+wtf.test(`Valueify should handle objects with values and states.`, (assert) => {
+    let value = (0, state_1.valueify)({ one: (0, state_1.make_state)("a"), two: "b" });
+    assert.equals(value, { one: "a", two: "b" });
+});
+wtf.test(`Valueify should handle nested objects with values and states.`, (assert) => {
+    let value = (0, state_1.valueify)({ one: { one: (0, state_1.make_state)("a"), two: "b" } });
+    assert.equals(value, { one: { one: "a", two: "b" } });
+});
+wtf.test(`Valueify should handle objects with state objects.`, (assert) => {
+    let value = (0, state_1.valueify)({ one: (0, state_1.make_state)({ one: "a", two: "b" }) });
+    assert.equals(value, { one: { one: "a", two: "b" } });
 });
 wtf.test(`State arrays should be created with index signatures.`, (assert) => {
     let state = (0, state_1.make_state)(["a", "b", "c"]);

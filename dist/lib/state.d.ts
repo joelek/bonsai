@@ -1,3 +1,10 @@
+export type Attribute<A extends Value> = A extends RecordValue ? Attributes<A> : A | State<A>;
+export type Attributes<A extends RecordValue> = A | State<A> | {
+    [B in keyof A]: Attribute<A[B]>;
+};
+export type ValueFromAttribute<A extends Attribute<Value>> = A extends RecordValue ? {
+    [B in keyof A]: ValueFromAttribute<A[B]>;
+} : A extends State<infer B> ? B : A;
 export type TupleRecord<A extends TupleRecord<A>> = {
     [C in keyof A]: any[];
 };
@@ -100,7 +107,8 @@ export declare class ObjectStateImplementation<A extends RecordValue> extends Ob
     update(value: A): boolean;
     value(): A;
 }
+export declare function make_object_state(members: States<RecordValue>): any;
 export declare function make_state<A extends Value>(value: A): State<A>;
 export declare function computed<A extends Value[], B extends Value>(states: [...States<A>], computer: (...args: [...A]) => B): State<B>;
-export declare function stateify<A extends Value>(attribute: A | State<A>): State<A>;
-export declare function valueify<A extends Value>(attribute: A | State<A>): A;
+export declare function stateify<A extends Attribute<Value>>(attribute: A): State<ValueFromAttribute<A>>;
+export declare function valueify<A extends Attribute<Value>>(attribute: A): ValueFromAttribute<A>;

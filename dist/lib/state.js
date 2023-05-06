@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.valueify = exports.stateify = exports.computed = exports.make_state = exports.ObjectStateImplementation = exports.ObjectState = exports.ArrayState = exports.ReferenceState = exports.PrimitiveState = exports.AbstractState = void 0;
+exports.valueify = exports.stateify = exports.computed = exports.make_state = exports.make_object_state = exports.ObjectStateImplementation = exports.ObjectState = exports.ArrayState = exports.ReferenceState = exports.PrimitiveState = exports.AbstractState = void 0;
 const utils_1 = require("./utils");
 class AbstractState {
     observers;
@@ -428,6 +428,30 @@ class ObjectStateImplementation extends ObjectState {
 }
 exports.ObjectStateImplementation = ObjectStateImplementation;
 ;
+function make_object_state(members) {
+    return new Proxy(new ObjectStateImplementation(members), {
+        get(target, key) {
+            if (key in target) {
+                return target[key];
+            }
+            else {
+                return target.member(key);
+            }
+        },
+        getOwnPropertyDescriptor(target, key) {
+            if (key in target) {
+                return Object.getOwnPropertyDescriptor(target, key);
+            }
+            else {
+                return Object.getOwnPropertyDescriptor(target.spread(), key);
+            }
+        },
+        ownKeys(target) {
+            return Object.getOwnPropertyNames(target.spread());
+        }
+    });
+}
+exports.make_object_state = make_object_state;
 function make_state(value) {
     if (typeof value === "bigint") {
         return new PrimitiveState(value);
@@ -468,27 +492,7 @@ function make_state(value) {
         for (let key in value) {
             members[key] = make_state(value[key]);
         }
-        return new Proxy(new ObjectStateImplementation(members), {
-            get(target, key) {
-                if (key in target) {
-                    return target[key];
-                }
-                else {
-                    return target.member(key);
-                }
-            },
-            getOwnPropertyDescriptor(target, key) {
-                if (key in target) {
-                    return Object.getOwnPropertyDescriptor(target, key);
-                }
-                else {
-                    return Object.getOwnPropertyDescriptor(target.spread(), key);
-                }
-            },
-            ownKeys(target) {
-                return Object.getOwnPropertyNames(target.spread());
-            }
-        });
+        return make_object_state(members);
     }
     if (value instanceof Object) {
         return new ReferenceState(value);
@@ -515,6 +519,13 @@ function stateify(attribute) {
     if (attribute instanceof AbstractState) {
         return attribute;
     }
+    if (attribute instanceof Object && attribute.constructor === Object) {
+        let members = {};
+        for (let key in attribute) {
+            members[key] = stateify(attribute[key]);
+        }
+        return make_object_state(members);
+    }
     return make_state(attribute);
 }
 exports.stateify = stateify;
@@ -522,6 +533,13 @@ exports.stateify = stateify;
 function valueify(attribute) {
     if (attribute instanceof AbstractState) {
         return attribute.value();
+    }
+    if (attribute instanceof Object && attribute.constructor === Object) {
+        let values = {};
+        for (let key in attribute) {
+            values[key] = valueify(attribute[key]);
+        }
+        return values;
     }
     return attribute;
 }
