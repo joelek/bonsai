@@ -117,14 +117,17 @@ export type PrimitiveStateEvents<A extends PrimitiveValue> = AbstractStateEvents
 
 };
 
-export class PrimitiveState<A extends PrimitiveValue> extends AbstractState<A, PrimitiveStateEvents<A>> {
+export abstract class PrimitiveState<A extends PrimitiveValue> extends AbstractState<A, PrimitiveStateEvents<A>> {
 	protected lastValue: A;
 
 	constructor(lastValue: A) {
 		super();
 		this.lastValue = lastValue;
 	}
+};
 
+// Implement the abstract methods in secret in order for TypeScript not to handle them as if they were own properties.
+export class PrimitiveStateImplementation<A extends PrimitiveValue> extends PrimitiveState<A> {
 	update(value: A): boolean {
 		let updated = false;
 		if (value !== this.lastValue) {
@@ -557,22 +560,22 @@ export function make_object_state(members: States<RecordValue>) {
 
 export function make_state<A extends Value>(value: A): State<A> {
 	if (typeof value === "bigint") {
-		return new PrimitiveState(value) as any;
+		return new PrimitiveStateImplementation(value) as any;
 	}
 	if (typeof value === "boolean") {
-		return new PrimitiveState(value) as any;
+		return new PrimitiveStateImplementation(value) as any;
 	}
 	if (typeof value === "number") {
-		return new PrimitiveState(value) as any;
+		return new PrimitiveStateImplementation(value) as any;
 	}
 	if (typeof value === "string") {
-		return new PrimitiveState(value) as any;
+		return new PrimitiveStateImplementation(value) as any;
 	}
 	if (value === null) {
-		return new PrimitiveState(value) as any;
+		return new PrimitiveStateImplementation(value) as any;
 	}
 	if (typeof value === "undefined") {
-		return new PrimitiveState(value) as any;
+		return new PrimitiveStateImplementation(value) as any;
 	}
 	if (value instanceof Array) {
 		let elements = [] as any;
