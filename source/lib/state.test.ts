@@ -273,16 +273,43 @@ wtf.test(`Attributes should be user-friendly.`, (assert) => {
 	let value_attributes: Attributes<typeof value> = value;
 	let state_attributes: Attributes<typeof value> = state;
 	let attributes = value_attributes = state_attributes;
-	let required: Attribute<{ required: string, optional: string | undefined }> = attributes.required;
-	let required_required: Attribute<string> = required.required;
+	let required = attributes.required;
+	let required_required = required.required;
 	assert.equals(valueify(required_required), "reqreq");
-	let required_optional: Attribute<string | undefined> = required.optional;
+	let required_optional = required.optional;
 	assert.equals(valueify(required_optional), "reqopt");
-	let optional: Attribute<{ required: string, optional: string | undefined } | undefined> = attributes.optional;
-	let optional_required: Attribute<string | undefined> = stateify(optional).compute((optional) => optional?.required);
+	let optional = attributes.optional;
+	let optional_required = stateify(optional).compute((optional) => optional?.required);
 	assert.equals(valueify(optional_required), "optreq");
-	let optional_optional: Attribute<string | undefined> = stateify(optional).compute((optional) => optional?.optional);
+	let optional_optional = stateify(optional).compute((optional) => optional?.optional);
 	assert.equals(valueify(optional_optional), "optopt");
+});
+
+wtf.test(`Attributes should be composable from nested values and states.`, (assert) => {
+	type Type = {
+		one: {
+			one: string;
+			two: string;
+		};
+		two: {
+			one: string;
+			two: string;
+		};
+	};
+	let attributes: Attributes<Type> = {
+		one: {
+			one: make_state("a"),
+			two: "b"
+		},
+		two: make_state({
+			one: "a",
+			two: "b"
+		})
+	};
+	let one_one = attributes.one.one;
+	let one_two = attributes.one.two;
+	let two_one = attributes.two.one;
+	let two_two = attributes.two.two;
 });
 
 wtf.test(`Array states should have spread functionality.`, (assert) => {
