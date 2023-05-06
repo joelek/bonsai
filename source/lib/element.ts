@@ -1,10 +1,4 @@
-import { ArrayState, AbstractState, State, CancellationToken, Value, RecordValue, ArrayValue, AbstractStateEvents } from "./state";
-
-export type Attribute<A extends Value> = A | State<A>;
-
-export type Attributes<A extends RecordValue> = State<A> | {
-	[B in keyof A]: A[B] extends RecordValue ? Attributes<A[B]> : Attribute<A[B]>;
-};
+import { ArrayState, AbstractState, State, CancellationToken, Value, RecordValue, ArrayValue, AbstractStateEvents, Attribute } from "./state";
 
 export type AttributeRecord = { [key: string]: Attribute<Value>; };
 

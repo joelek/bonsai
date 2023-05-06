@@ -1,5 +1,15 @@
 import { getOrderedIndex } from "./utils";
 
+export type Attribute<A extends Value> = A extends RecordValue ? Attributes<A> : A | State<A>;
+
+export type Attributes<A extends RecordValue> = A | State<A> | {
+	[B in keyof A]: Attribute<A[B]>;
+};
+
+export type ValueFromAttribute<A extends Attribute<Value>> = A extends RecordValue ? {
+	[B in keyof A]: ValueFromAttribute<A[B]>;
+} : A extends State<infer B> ? B : A;
+
 export type TupleRecord<A extends TupleRecord<A>> = { [C in keyof A]: any[]; };
 
 export type PrimitiveValue = void | bigint | boolean | number | string | null | undefined;
@@ -522,6 +532,28 @@ export class ObjectStateImplementation<A extends RecordValue> extends ObjectStat
 	}
 };
 
+export function make_object_state(members: States<RecordValue>) {
+	return new Proxy(new ObjectStateImplementation(members), {
+		get(target: any, key: any) {
+			if (key in target) {
+				return target[key];
+			} else {
+				return target.member(key);
+			}
+		},
+		getOwnPropertyDescriptor(target, key) {
+			if (key in target) {
+				return Object.getOwnPropertyDescriptor(target, key);
+			} else {
+				return Object.getOwnPropertyDescriptor(target.spread(), key);
+			}
+		},
+		ownKeys(target) {
+			return Object.getOwnPropertyNames(target.spread());
+		}
+	});
+}
+
 export function make_state<A extends Value>(value: A): State<A> {
 	if (typeof value === "bigint") {
 		return new PrimitiveState(value) as any;
@@ -561,25 +593,7 @@ export function make_state<A extends Value>(value: A): State<A> {
 		for (let key in value) {
 			members[key] = make_state((value as any)[key]);
 		}
-		return new Proxy(new ObjectStateImplementation(members), {
-			get(target: any, key: any) {
-				if (key in target) {
-					return target[key];
-				} else {
-					return target.member(key);
-				}
-			},
-			getOwnPropertyDescriptor(target, key) {
-				if (key in target) {
-					return Object.getOwnPropertyDescriptor(target, key);
-				} else {
-					return Object.getOwnPropertyDescriptor(target.spread(), key);
-				}
-			},
-			ownKeys(target) {
-				return Object.getOwnPropertyNames(target.spread());
-			}
-		});
+		return make_object_state(members);
 	}
 	if (value instanceof Object) {
 		return new ReferenceState(value) as any;
@@ -600,16 +614,30 @@ export function computed<A extends Value[], B extends Value>(states: [...States<
 	return computed;
 };
 
-export function stateify<A extends Value>(attribute: A | State<A>): State<A> {
+export function stateify<A extends Attribute<Value>>(attribute: A): State<ValueFromAttribute<A>> {
 	if (attribute instanceof AbstractState) {
-		return attribute;
+		return attribute as any;
 	}
-	return make_state(attribute);
+	if (attribute instanceof Object && attribute.constructor === Object) {
+		let members = {} as Record<string, State<Value>>;
+		for (let key in attribute) {
+			members[key] = stateify((attribute as any)[key]);
+		}
+		return make_object_state(members);
+	}
+	return make_state(attribute) as any;
 };
 
-export function valueify<A extends Value>(attribute: A | State<A>): A {
+export function valueify<A extends Attribute<Value>>(attribute: A): ValueFromAttribute<A> {
 	if (attribute instanceof AbstractState) {
 		return attribute.value();
 	}
-	return attribute;
+	if (attribute instanceof Object && attribute.constructor === Object) {
+		let values = {} as Record<string, Value>;
+		for (let key in attribute) {
+			values[key] = valueify((attribute as any)[key]);
+		}
+		return values as any;
+	}
+	return attribute as any;
 };

@@ -1,6 +1,5 @@
 import * as wtf from "@joelek/wtf";
-import { Attribute, Attributes } from "./element";
-import { make_state, State, stateify, valueify } from "./state";
+import { Attributes, make_state, State, stateify, valueify } from "./state";
 
 wtf.test(`It should support assignment from empty string literal to any string.`, (assert) => {
 	let string: State<string> = make_state("");
@@ -217,6 +216,26 @@ wtf.test(`Stateify should not process states.`, (assert) => {
 	assert.equals(state.value(), "test");
 });
 
+wtf.test(`Stateify should handle objects with states.`, (assert) => {
+	let state = stateify({ one: make_state("a") });
+	assert.equals(state.value(), { one: "a" });
+});
+
+wtf.test(`Stateify should handle objects with values and states.`, (assert) => {
+	let state = stateify({ one: make_state("a"), two: "b" });
+	assert.equals(state.value(), { one: "a", two: "b" });
+});
+
+wtf.test(`Stateify should handle nested objects with values and states.`, (assert) => {
+	let state = stateify({ one: { one: make_state("a"), two: "b" } });
+	assert.equals(state.value(), { one: { one: "a", two: "b" } });
+});
+
+wtf.test(`Stateify should handle nested objects with state objects.`, (assert) => {
+	let state = stateify({ one: make_state({ one: "a", two: "b" }) });
+	assert.equals(state.value(), { one: { one: "a", two: "b" } });
+});
+
 wtf.test(`Valueify should not process values.`, (assert) => {
 	let value = valueify("test");
 	assert.equals(value, "test");
@@ -225,6 +244,26 @@ wtf.test(`Valueify should not process values.`, (assert) => {
 wtf.test(`Valueify should convert states into values.`, (assert) => {
 	let value = valueify(make_state("test"));
 	assert.equals(value, "test");
+});
+
+wtf.test(`Valueify should handle objects with states.`, (assert) => {
+	let value = valueify({ one: make_state("a") });
+	assert.equals(value, { one: "a" });
+});
+
+wtf.test(`Valueify should handle objects with values and states.`, (assert) => {
+	let value = valueify({ one: make_state("a"), two: "b" });
+	assert.equals(value, { one: "a", two: "b" });
+});
+
+wtf.test(`Valueify should handle nested objects with values and states.`, (assert) => {
+	let value = valueify({ one: { one: make_state("a"), two: "b" } });
+	assert.equals(value, { one: { one: "a", two: "b" } });
+});
+
+wtf.test(`Valueify should handle objects with state objects.`, (assert) => {
+	let value = valueify({ one: make_state({ one: "a", two: "b" }) });
+	assert.equals(value, { one: { one: "a", two: "b" } });
 });
 
 wtf.test(`State arrays should be created with index signatures.`, (assert) => {
