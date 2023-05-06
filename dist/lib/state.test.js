@@ -262,6 +262,22 @@ wtf.test(`Attributes should be user-friendly.`, (assert) => {
     let optional_optional = (0, state_1.stateify)(optional).compute((optional) => optional?.optional);
     assert.equals((0, state_1.valueify)(optional_optional), "optopt");
 });
+wtf.test(`Attributes should be composable from nested values and states.`, (assert) => {
+    let attributes = {
+        one: {
+            one: (0, state_1.make_state)("a"),
+            two: "b"
+        },
+        two: (0, state_1.make_state)({
+            one: "a",
+            two: "b"
+        })
+    };
+    let one_one = attributes.one.one;
+    let one_two = attributes.one.two;
+    let two_one = attributes.two.one;
+    let two_two = attributes.two.two;
+});
 wtf.test(`Array states should have spread functionality.`, (assert) => {
     let state = (0, state_1.make_state)(["a", "b"]);
     let spread = [...state];
