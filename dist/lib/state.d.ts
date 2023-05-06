@@ -1,5 +1,5 @@
 export type Attribute<A extends Value> = A extends RecordValue ? Attributes<A> : A | State<A>;
-export type Attributes<A extends RecordValue> = A | State<A> | {
+export type Attributes<A extends RecordValue> = {
     [B in keyof A]: Attribute<A[B]>;
 };
 export type ValueFromAttribute<A extends Attribute<Value>> = A extends RecordValue ? {
@@ -100,7 +100,8 @@ export declare abstract class ObjectState<A extends RecordValue> extends Abstrac
     protected onMemberUpdate: () => void;
     constructor(members: States<A>);
     member<B extends keyof A>(key: B): State<A[B]>;
-    member<B extends keyof A, C extends A[B]>(key: B, defaultValue: C): State<Exclude<A[B], undefined> | C>;
+    member<B extends keyof A>(key: B, defaultValue: Exclude<A[B], undefined>): State<Exclude<A[B], undefined>>;
+    member<B extends keyof A>(key: B, defaultValue: A[B]): State<A[B]>;
     spread(): States<A>;
 }
 export declare class ObjectStateImplementation<A extends RecordValue> extends ObjectState<A> {

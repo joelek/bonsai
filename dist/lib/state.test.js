@@ -288,10 +288,10 @@ wtf.test(`Attributes should be user-friendly.`, (assert) => {
     assert.equals((0, state_1.valueify)(required_required), "reqreq");
     let required_optional = required.optional;
     assert.equals((0, state_1.valueify)(required_optional), "reqopt");
-    let optional = attributes.optional;
-    let optional_required = (0, state_1.stateify)(optional).compute((optional) => optional?.required);
+    let optional = (0, state_1.stateify)(attributes).member("optional", { required: "optreq2" });
+    let optional_required = optional.required;
     assert.equals((0, state_1.valueify)(optional_required), "optreq");
-    let optional_optional = (0, state_1.stateify)(optional).compute((optional) => optional?.optional);
+    let optional_optional = optional.optional;
     assert.equals((0, state_1.valueify)(optional_optional), "optopt");
 });
 wtf.test(`Attributes should be composable from nested values and states.`, (assert) => {
