@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.valueify = exports.stateify = exports.computed = exports.make_state = exports.make_object_state = exports.ObjectStateImplementation = exports.ObjectState = exports.ArrayState = exports.ReferenceState = exports.PrimitiveState = exports.AbstractState = void 0;
+exports.valueify = exports.stateify = exports.computed = exports.make_state = exports.make_object_state = exports.ObjectStateImplementation = exports.ObjectState = exports.ArrayState = exports.ReferenceState = exports.PrimitiveStateImplementation = exports.PrimitiveState = exports.AbstractState = void 0;
 const utils_1 = require("./utils");
 class AbstractState {
     observers;
@@ -58,6 +58,11 @@ class PrimitiveState extends AbstractState {
         super();
         this.lastValue = lastValue;
     }
+}
+exports.PrimitiveState = PrimitiveState;
+;
+// Implement the abstract methods in secret in order for TypeScript not to handle them as if they were own properties.
+class PrimitiveStateImplementation extends PrimitiveState {
     update(value) {
         let updated = false;
         if (value !== this.lastValue) {
@@ -73,7 +78,7 @@ class PrimitiveState extends AbstractState {
         return this.lastValue;
     }
 }
-exports.PrimitiveState = PrimitiveState;
+exports.PrimitiveStateImplementation = PrimitiveStateImplementation;
 ;
 class ReferenceState extends AbstractState {
     lastValue;
@@ -454,22 +459,22 @@ function make_object_state(members) {
 exports.make_object_state = make_object_state;
 function make_state(value) {
     if (typeof value === "bigint") {
-        return new PrimitiveState(value);
+        return new PrimitiveStateImplementation(value);
     }
     if (typeof value === "boolean") {
-        return new PrimitiveState(value);
+        return new PrimitiveStateImplementation(value);
     }
     if (typeof value === "number") {
-        return new PrimitiveState(value);
+        return new PrimitiveStateImplementation(value);
     }
     if (typeof value === "string") {
-        return new PrimitiveState(value);
+        return new PrimitiveStateImplementation(value);
     }
     if (value === null) {
-        return new PrimitiveState(value);
+        return new PrimitiveStateImplementation(value);
     }
     if (typeof value === "undefined") {
-        return new PrimitiveState(value);
+        return new PrimitiveStateImplementation(value);
     }
     if (value instanceof Array) {
         let elements = [];

@@ -48,9 +48,11 @@ export declare abstract class AbstractState<A extends Value, B extends TupleReco
     abstract value(): A;
 }
 export type PrimitiveStateEvents<A extends PrimitiveValue> = AbstractStateEvents<A> & {};
-export declare class PrimitiveState<A extends PrimitiveValue> extends AbstractState<A, PrimitiveStateEvents<A>> {
+export declare abstract class PrimitiveState<A extends PrimitiveValue> extends AbstractState<A, PrimitiveStateEvents<A>> {
     protected lastValue: A;
     constructor(lastValue: A);
+}
+export declare class PrimitiveStateImplementation<A extends PrimitiveValue> extends PrimitiveState<A> {
     update(value: A): boolean;
     value(): A;
 }
