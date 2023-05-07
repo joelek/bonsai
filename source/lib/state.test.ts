@@ -362,12 +362,34 @@ wtf.test(`Array states should have rest functionality.`, (assert) => {
 	assert.equals(spread[1] === state[1], true);
 });
 
+wtf.test(`Array states should have spread functionality.`, (assert) => {
+	let state = make_state(["a", "b"]);
+	let spread = { ...state };
+	assert.equals(Object.getOwnPropertyNames(spread), ["0", "1"]);
+	assert.equals(spread[0] === state[0], true);
+	assert.equals(spread[1] === state[1], true);
+});
+
 wtf.test(`Object states should have spread functionality.`, (assert) => {
 	let state = make_state({ one: "a", two: "b" });
 	let spread = { ...state };
 	assert.equals(Object.getOwnPropertyNames(spread), ["one", "two"]);
 	assert.equals(spread.one === state.one, true);
 	assert.equals(spread.two === state.two, true);
+});
+
+wtf.test(`Primitive states should have spread functionality.`, (assert) => {
+	let state = make_state(undefined);
+	let spread = { ...state };
+	assert.equals(Object.getOwnPropertyNames(spread), []);
+	assert.equals(spread, {});
+});
+
+wtf.test(`Reference states should have spread functionality.`, (assert) => {
+	let state = make_state(new class {});
+	let spread = { ...state };
+	assert.equals(Object.getOwnPropertyNames(spread), []);
+	assert.equals(spread, {});
 });
 
 /*

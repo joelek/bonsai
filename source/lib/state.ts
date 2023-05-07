@@ -149,14 +149,17 @@ export type ReferenceStateEvents<A extends ReferenceValue> = AbstractStateEvents
 
 };
 
-export class ReferenceState<A extends ReferenceValue> extends AbstractState<A, ReferenceStateEvents<A>> {
+export abstract class ReferenceState<A extends ReferenceValue> extends AbstractState<A, ReferenceStateEvents<A>> {
 	protected lastValue: A;
 
 	constructor(lastValue: A) {
 		super();
 		this.lastValue = lastValue;
 	}
+};
 
+// Implement the abstract methods in secret in order for TypeScript not to handle them as if they were own properties.
+export class ReferenceStateImplementation<A extends ReferenceValue> extends ReferenceState<A> {
 	update(valu: A): boolean {
 		let updated = false;
 		if (valu !== this.lastValue) {
@@ -185,7 +188,7 @@ export type ArrayStateEvents<A extends Value> = AbstractStateEvents<Array<A>> & 
 	];
 };
 
-export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArrayStateEvents<A>> {
+export abstract class ArrayState<A extends Value> extends AbstractState<Array<A>, ArrayStateEvents<A>> {
 	protected elements: Array<State<A>>;
 	protected updating: boolean;
 	protected currentLength: State<number>;
@@ -415,6 +418,13 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 		return [ ...this.elements ];
 	}
 
+	vacate(): boolean {
+		return this.update([]);
+	}
+};
+
+// Implement the abstract methods in secret in order for TypeScript not to handle them as if they were own properties.
+export class ArrayStateImplementation<A extends Value> extends ArrayState<A> {
 	update(value: Array<A>): boolean {
 		let updated = false;
 		try {
@@ -440,10 +450,6 @@ export class ArrayState<A extends Value> extends AbstractState<Array<A>, ArraySt
 			this.notify("update", this);
 		}
 		return updated;
-	}
-
-	vacate(): boolean {
-		return this.update([]);
 	}
 
 	value(): Array<A> {
@@ -536,7 +542,37 @@ export class ObjectStateImplementation<A extends RecordValue> extends ObjectStat
 	}
 };
 
-export function make_object_state(members: States<RecordValue>) {
+export function make_primitive_state<A extends PrimitiveValue>(value: A): PrimitiveState<A> {
+	return new Proxy(new PrimitiveStateImplementation(value), {
+		ownKeys(target) {
+			return [];
+		}
+	});
+};
+
+export function make_array_state<A extends Value>(elements: Array<State<A>>): ArrayState<A> {
+	return new Proxy(new ArrayStateImplementation(elements), {
+		get(target: any, key: any) {
+			if (key in target) {
+				return target[key];
+			} else {
+				return target.element(key);
+			}
+		},
+		getOwnPropertyDescriptor(target, key) {
+			if (key in target) {
+				return Object.getOwnPropertyDescriptor(target, key);
+			} else {
+				return Object.getOwnPropertyDescriptor(target.spread(), key);
+			}
+		},
+		ownKeys(target) {
+			return Object.getOwnPropertyNames(target.spread());
+		}
+	});
+};
+
+export function make_object_state<A extends RecordValue>(members: States<A>): ObjectState<A> {
 	return new Proxy(new ObjectStateImplementation(members), {
 		get(target: any, key: any) {
 			if (key in target) {
@@ -556,51 +592,51 @@ export function make_object_state(members: States<RecordValue>) {
 			return Object.getOwnPropertyNames(target.spread());
 		}
 	});
-}
+};
+
+export function make_reference_state<A extends ReferenceValue>(value: A): ReferenceState<A> {
+	return new Proxy(new ReferenceStateImplementation(value), {
+		ownKeys(target) {
+			return [];
+		}
+	});
+};
 
 export function make_state<A extends Value>(value: A): State<A> {
 	if (typeof value === "bigint") {
-		return new PrimitiveStateImplementation(value) as any;
+		return make_primitive_state(value) as any;
 	}
 	if (typeof value === "boolean") {
-		return new PrimitiveStateImplementation(value) as any;
+		return make_primitive_state(value) as any;
 	}
 	if (typeof value === "number") {
-		return new PrimitiveStateImplementation(value) as any;
+		return make_primitive_state(value) as any;
 	}
 	if (typeof value === "string") {
-		return new PrimitiveStateImplementation(value) as any;
+		return make_primitive_state(value) as any;
 	}
 	if (value === null) {
-		return new PrimitiveStateImplementation(value) as any;
+		return make_primitive_state(value) as any;
 	}
 	if (typeof value === "undefined") {
-		return new PrimitiveStateImplementation(value) as any;
+		return make_primitive_state(value) as any;
 	}
 	if (value instanceof Array) {
 		let elements = [] as any;
 		for (let index = 0; index < value.length; index++) {
 			elements.push(make_state(value[index]));
 		}
-		return new Proxy(new ArrayState(elements), {
-			get(target: any, key: any) {
-				if (key in target) {
-					return target[key];
-				} else {
-					return target.element(key);
-				}
-			}
-		});
+		return make_array_state(elements) as any;
 	}
 	if (value instanceof Object && value.constructor === Object) {
 		let members = {} as any;
 		for (let key in value) {
 			members[key] = make_state((value as any)[key]);
 		}
-		return make_object_state(members);
+		return make_object_state(members) as any;
 	}
 	if (value instanceof Object) {
-		return new ReferenceState(value) as any;
+		return make_reference_state(value) as any;
 	}
 	throw new Error(`Expected code to be unreachable!`);
 };
@@ -627,14 +663,14 @@ export function stateify<A extends Attribute<Value>>(attribute: A): State<ValueF
 		for (let key in attribute) {
 			members[key] = stateify((attribute as any)[key]);
 		}
-		return make_object_state(members);
+		return make_object_state(members) as any;
 	}
 	return make_state(attribute) as any;
 };
 
 export function valueify<A extends Attribute<Value>>(attribute: A): ValueFromAttribute<A> {
 	if (attribute instanceof AbstractState) {
-		return attribute.value();
+		return attribute.value() as any;
 	}
 	if (attribute instanceof Object && attribute.constructor === Object) {
 		let values = {} as Record<string, Value>;
