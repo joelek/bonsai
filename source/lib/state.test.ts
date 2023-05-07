@@ -365,6 +365,7 @@ wtf.test(`Array states should have rest functionality.`, (assert) => {
 wtf.test(`Object states should have spread functionality.`, (assert) => {
 	let state = make_state({ one: "a", two: "b" });
 	let spread = { ...state };
+	assert.equals(Object.getOwnPropertyNames(spread), ["one", "two"]);
 	assert.equals(spread.one === state.one, true);
 	assert.equals(spread.two === state.two, true);
 });
