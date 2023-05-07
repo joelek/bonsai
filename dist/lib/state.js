@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.valueify = exports.stateify = exports.computed = exports.make_state = exports.make_object_state = exports.ObjectStateImplementation = exports.ObjectState = exports.ArrayState = exports.ReferenceState = exports.PrimitiveStateImplementation = exports.PrimitiveState = exports.AbstractState = void 0;
+exports.valueify = exports.stateify = exports.computed = exports.make_state = exports.make_reference_state = exports.make_object_state = exports.make_array_state = exports.make_primitive_state = exports.ObjectStateImplementation = exports.ObjectState = exports.ArrayStateImplementation = exports.ArrayState = exports.ReferenceStateImplementation = exports.ReferenceState = exports.PrimitiveStateImplementation = exports.PrimitiveState = exports.AbstractState = void 0;
 const utils_1 = require("./utils");
 class AbstractState {
     observers;
@@ -86,6 +86,11 @@ class ReferenceState extends AbstractState {
         super();
         this.lastValue = lastValue;
     }
+}
+exports.ReferenceState = ReferenceState;
+;
+// Implement the abstract methods in secret in order for TypeScript not to handle them as if they were own properties.
+class ReferenceStateImplementation extends ReferenceState {
     update(valu) {
         let updated = false;
         if (valu !== this.lastValue) {
@@ -101,7 +106,7 @@ class ReferenceState extends AbstractState {
         return this.lastValue;
     }
 }
-exports.ReferenceState = ReferenceState;
+exports.ReferenceStateImplementation = ReferenceStateImplementation;
 ;
 class ArrayState extends AbstractState {
     elements;
@@ -321,6 +326,14 @@ class ArrayState extends AbstractState {
     spread() {
         return [...this.elements];
     }
+    vacate() {
+        return this.update([]);
+    }
+}
+exports.ArrayState = ArrayState;
+;
+// Implement the abstract methods in secret in order for TypeScript not to handle them as if they were own properties.
+class ArrayStateImplementation extends ArrayState {
     update(value) {
         let updated = false;
         try {
@@ -348,9 +361,6 @@ class ArrayState extends AbstractState {
         }
         return updated;
     }
-    vacate() {
-        return this.update([]);
-    }
     value() {
         let lastValue = [];
         for (let index = 0; index < this.elements.length; index++) {
@@ -359,7 +369,7 @@ class ArrayState extends AbstractState {
         return lastValue;
     }
 }
-exports.ArrayState = ArrayState;
+exports.ArrayStateImplementation = ArrayStateImplementation;
 ;
 class ObjectState extends AbstractState {
     members;
@@ -433,6 +443,40 @@ class ObjectStateImplementation extends ObjectState {
 }
 exports.ObjectStateImplementation = ObjectStateImplementation;
 ;
+function make_primitive_state(value) {
+    return new Proxy(new PrimitiveStateImplementation(value), {
+        ownKeys(target) {
+            return [];
+        }
+    });
+}
+exports.make_primitive_state = make_primitive_state;
+;
+function make_array_state(elements) {
+    return new Proxy(new ArrayStateImplementation(elements), {
+        get(target, key) {
+            if (key in target) {
+                return target[key];
+            }
+            else {
+                return target.element(key);
+            }
+        },
+        getOwnPropertyDescriptor(target, key) {
+            if (key in target) {
+                return Object.getOwnPropertyDescriptor(target, key);
+            }
+            else {
+                return Object.getOwnPropertyDescriptor(target.spread(), key);
+            }
+        },
+        ownKeys(target) {
+            return Object.getOwnPropertyNames(target.spread());
+        }
+    });
+}
+exports.make_array_state = make_array_state;
+;
 function make_object_state(members) {
     return new Proxy(new ObjectStateImplementation(members), {
         get(target, key) {
@@ -457,40 +501,41 @@ function make_object_state(members) {
     });
 }
 exports.make_object_state = make_object_state;
+;
+function make_reference_state(value) {
+    return new Proxy(new ReferenceStateImplementation(value), {
+        ownKeys(target) {
+            return [];
+        }
+    });
+}
+exports.make_reference_state = make_reference_state;
+;
 function make_state(value) {
     if (typeof value === "bigint") {
-        return new PrimitiveStateImplementation(value);
+        return make_primitive_state(value);
     }
     if (typeof value === "boolean") {
-        return new PrimitiveStateImplementation(value);
+        return make_primitive_state(value);
     }
     if (typeof value === "number") {
-        return new PrimitiveStateImplementation(value);
+        return make_primitive_state(value);
     }
     if (typeof value === "string") {
-        return new PrimitiveStateImplementation(value);
+        return make_primitive_state(value);
     }
     if (value === null) {
-        return new PrimitiveStateImplementation(value);
+        return make_primitive_state(value);
     }
     if (typeof value === "undefined") {
-        return new PrimitiveStateImplementation(value);
+        return make_primitive_state(value);
     }
     if (value instanceof Array) {
         let elements = [];
         for (let index = 0; index < value.length; index++) {
             elements.push(make_state(value[index]));
         }
-        return new Proxy(new ArrayState(elements), {
-            get(target, key) {
-                if (key in target) {
-                    return target[key];
-                }
-                else {
-                    return target.element(key);
-                }
-            }
-        });
+        return make_array_state(elements);
     }
     if (value instanceof Object && value.constructor === Object) {
         let members = {};
@@ -500,7 +545,7 @@ function make_state(value) {
         return make_object_state(members);
     }
     if (value instanceof Object) {
-        return new ReferenceState(value);
+        return make_reference_state(value);
     }
     throw new Error(`Expected code to be unreachable!`);
 }

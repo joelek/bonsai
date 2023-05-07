@@ -57,9 +57,11 @@ export declare class PrimitiveStateImplementation<A extends PrimitiveValue> exte
     value(): A;
 }
 export type ReferenceStateEvents<A extends ReferenceValue> = AbstractStateEvents<A> & {};
-export declare class ReferenceState<A extends ReferenceValue> extends AbstractState<A, ReferenceStateEvents<A>> {
+export declare abstract class ReferenceState<A extends ReferenceValue> extends AbstractState<A, ReferenceStateEvents<A>> {
     protected lastValue: A;
     constructor(lastValue: A);
+}
+export declare class ReferenceStateImplementation<A extends ReferenceValue> extends ReferenceState<A> {
     update(valu: A): boolean;
     value(): A;
 }
@@ -73,7 +75,7 @@ export type ArrayStateEvents<A extends Value> = AbstractStateEvents<Array<A>> & 
         index: number
     ];
 };
-export declare class ArrayState<A extends Value> extends AbstractState<Array<A>, ArrayStateEvents<A>> {
+export declare abstract class ArrayState<A extends Value> extends AbstractState<Array<A>, ArrayStateEvents<A>> {
     protected elements: Array<State<A>>;
     protected updating: boolean;
     protected currentLength: State<number>;
@@ -91,8 +93,10 @@ export declare class ArrayState<A extends Value> extends AbstractState<Array<A>,
     mapValues<B extends Value>(mapper: ValueMapper<A, B>): State<Array<B>>;
     remove(index: number): void;
     spread(): Array<State<A>>;
-    update(value: Array<A>): boolean;
     vacate(): boolean;
+}
+export declare class ArrayStateImplementation<A extends Value> extends ArrayState<A> {
+    update(value: Array<A>): boolean;
     value(): Array<A>;
 }
 export type ObjectStateEvents<A extends Value> = AbstractStateEvents<A> & {};
@@ -110,7 +114,10 @@ export declare class ObjectStateImplementation<A extends RecordValue> extends Ob
     update(value: A): boolean;
     value(): A;
 }
-export declare function make_object_state(members: States<RecordValue>): any;
+export declare function make_primitive_state<A extends PrimitiveValue>(value: A): PrimitiveState<A>;
+export declare function make_array_state<A extends Value>(elements: Array<State<A>>): ArrayState<A>;
+export declare function make_object_state<A extends RecordValue>(members: States<A>): ObjectState<A>;
+export declare function make_reference_state<A extends ReferenceValue>(value: A): ReferenceState<A>;
 export declare function make_state<A extends Value>(value: A): State<A>;
 export declare function computed<A extends Value[], B extends Value>(states: [...States<A>], computer: (...args: [...A]) => B): State<B>;
 export declare function stateify<A extends Attribute<Value>>(attribute: A): State<ValueFromAttribute<A>>;

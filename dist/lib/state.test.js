@@ -301,26 +301,51 @@ wtf.test(`Attributes should be composable from nested values and states.`, (asse
             two: "b"
         },
         two: (0, state_1.make_state)({
-            one: "a",
-            two: "b"
+            one: "c",
+            two: "d"
         })
     };
     let one_one = attributes.one.one;
+    assert.equals((0, state_1.valueify)(one_one), "a");
     let one_two = attributes.one.two;
+    assert.equals((0, state_1.valueify)(one_two), "b");
     let two_one = attributes.two.one;
+    assert.equals((0, state_1.valueify)(two_one), "c");
     let two_two = attributes.two.two;
+    assert.equals((0, state_1.valueify)(two_two), "d");
+});
+wtf.test(`Array states should have rest functionality.`, (assert) => {
+    let state = (0, state_1.make_state)(["a", "b"]);
+    let spread = [...state];
+    assert.equals(spread[0] === state[0], true);
+    assert.equals(spread[1] === state[1], true);
 });
 wtf.test(`Array states should have spread functionality.`, (assert) => {
     let state = (0, state_1.make_state)(["a", "b"]);
-    let spread = [...state];
+    let spread = { ...state };
+    assert.equals(Object.getOwnPropertyNames(spread), ["0", "1"]);
     assert.equals(spread[0] === state[0], true);
     assert.equals(spread[1] === state[1], true);
 });
 wtf.test(`Object states should have spread functionality.`, (assert) => {
     let state = (0, state_1.make_state)({ one: "a", two: "b" });
     let spread = { ...state };
+    assert.equals(Object.getOwnPropertyNames(spread), ["one", "two"]);
     assert.equals(spread.one === state.one, true);
     assert.equals(spread.two === state.two, true);
+});
+wtf.test(`Primitive states should have spread functionality.`, (assert) => {
+    let state = (0, state_1.make_state)(undefined);
+    let spread = { ...state };
+    assert.equals(Object.getOwnPropertyNames(spread), []);
+    assert.equals(spread, {});
+});
+wtf.test(`Reference states should have spread functionality.`, (assert) => {
+    let state = (0, state_1.make_state)(new class {
+    });
+    let spread = { ...state };
+    assert.equals(Object.getOwnPropertyNames(spread), []);
+    assert.equals(spread, {});
 });
 /*
 wtf.test(`Dynamic ArrayState elements should support being updated after array is vacated.`, (assert) => {
