@@ -341,14 +341,18 @@ wtf.test(`Attributes should be composable from nested values and states.`, (asse
 			two: "b"
 		},
 		two: make_state({
-			one: "a",
-			two: "b"
+			one: "c",
+			two: "d"
 		})
 	};
 	let one_one = attributes.one.one;
+	assert.equals(valueify(one_one), "a");
 	let one_two = attributes.one.two;
+	assert.equals(valueify(one_two), "b");
 	let two_one = attributes.two.one;
+	assert.equals(valueify(two_one), "c");
 	let two_two = attributes.two.two;
+	assert.equals(valueify(two_two), "d");
 });
 
 wtf.test(`Array states should have spread functionality.`, (assert) => {
