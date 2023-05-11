@@ -1,6 +1,8 @@
 import { getOrderedIndex } from "./utils";
 
-export type Attribute<A extends Value> = A extends RecordValue ? Attributes<A> : A | State<A>;
+export type StateOrValue<A extends Value> = A | State<A>;
+
+export type Attribute<A extends Value> = A extends RecordValue ? Attributes<A> : StateOrValue<A>;
 
 export type Attributes<A extends RecordValue> = {
 	[B in keyof A]: Attribute<A[B]>;
@@ -213,7 +215,7 @@ export abstract class ArrayState<A extends Value> extends AbstractState<Array<A>
 		return this.elements[Symbol.iterator]();
 	}
 
-	append(...items: Array<A | State<A>>): void {
+	append(...items: Array<StateOrValue<A>>): void {
 		for (let item of items) {
 			this.insert(this.elements.length, item);
 		}
@@ -333,7 +335,7 @@ export abstract class ArrayState<A extends Value> extends AbstractState<Array<A>
 		return state;
 	}
 
-	insert(index: number, item: A | State<A>): void {
+	insert(index: number, item: StateOrValue<A>): void {
 		if (index < 0 || index > this.elements.length) {
 			throw new Error(`Expected index to be within bounds!`);
 		}
