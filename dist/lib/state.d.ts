@@ -1,4 +1,5 @@
-export type Attribute<A extends Value> = A extends RecordValue ? Attributes<A> : A | State<A>;
+export type StateOrValue<A extends Value> = A | State<A>;
+export type Attribute<A extends Value> = A extends RecordValue ? Attributes<A> : StateOrValue<A>;
 export type Attributes<A extends RecordValue> = {
     [B in keyof A]: Attribute<A[B]>;
 };
@@ -82,11 +83,11 @@ export declare abstract class ArrayState<A extends Value> extends AbstractState<
     protected onElementUpdate: () => void;
     constructor(elements: Array<State<A>>);
     [Symbol.iterator](): Iterator<State<A>>;
-    append(...items: Array<A | State<A>>): void;
+    append(...items: Array<StateOrValue<A>>): void;
     element(index: number | State<number>): State<A>;
     filter(predicate: Predicate<A>): State<Array<A>>;
     first(): State<A | undefined>;
-    insert(index: number, item: A | State<A>): void;
+    insert(index: number, item: StateOrValue<A>): void;
     last(): State<A | undefined>;
     length(): State<number>;
     mapStates<B extends Value>(mapper: StateMapper<A, B>): State<Array<B>>;
