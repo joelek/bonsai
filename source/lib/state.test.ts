@@ -410,3 +410,15 @@ wtf.test(`Lazily initialized ObjectStates should supporting being cleared.`, (as
 	assert.equals(object.value(), {});
 });
  */
+/*
+wtf.test(`Lazily initialized ObjectStates should not trigger multiple updates.`, (assert) => {
+	let states = make_state<Array<{ key?: string }>>([]);
+	states.mapStates((state, index) => state.key);
+	let events = [] as Array<Array<{ key?: string }>>;
+	states.observe("update", (state) => {
+		events.push(state.value());
+	});
+	states.append({});
+	assert.equals(events, [{}]);
+});
+ */
