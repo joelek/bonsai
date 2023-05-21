@@ -256,8 +256,12 @@ class ArrayState extends AbstractState {
         this.elements.splice(index, 0, element);
         element.observe("update", this.onElementUpdate);
         this.currentLength.update(this.elements.length);
-        this.notify("insert", element, index);
-        this.notify("update", this);
+        if (true) {
+            this.notify("insert", element, index);
+        }
+        if (!this.updating) {
+            this.notify("update", this);
+        }
     }
     last() {
         let state = make_state(undefined);
@@ -319,7 +323,7 @@ class ArrayState extends AbstractState {
         if (true) {
             this.notify("remove", element, index);
         }
-        if (true) {
+        if (!this.updating) {
             this.notify("update", this);
         }
     }
