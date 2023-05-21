@@ -343,8 +343,12 @@ export abstract class ArrayState<A extends Value> extends AbstractState<Array<A>
 		this.elements.splice(index, 0, element);
 		element.observe("update", this.onElementUpdate);
 		this.currentLength.update(this.elements.length);
-		this.notify("insert", element, index);
-		this.notify("update", this);
+		if (true) {
+			this.notify("insert", element, index);
+		}
+		if (!this.updating) {
+			this.notify("update", this);
+		}
 	}
 
 	last(): State<A | undefined> {
@@ -411,7 +415,7 @@ export abstract class ArrayState<A extends Value> extends AbstractState<Array<A>
 		if (true) {
 			this.notify("remove", element, index);
 		}
-		if (true) {
+		if (!this.updating) {
 			this.notify("update", this);
 		}
 	}
