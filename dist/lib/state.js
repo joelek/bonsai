@@ -356,13 +356,6 @@ class ArrayStateImplementation extends ArrayState {
                 this.append(value[index]);
                 updated = true;
             }
-            let elements = [...this.elements];
-            for (let index = elements.length - 1; index >= 0; index--) {
-                this.remove(index);
-            }
-            for (let index = 0; index < elements.length; index++) {
-                this.append(elements[index]);
-            }
         }
         finally {
             this.updating = false;
