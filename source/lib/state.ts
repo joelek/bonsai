@@ -445,11 +445,13 @@ export class ArrayStateImplementation<A extends Value> extends ArrayState<A> {
 					}
 				}
 			}
-			for (let index = this.elements.length - 1; index >= 0; index--) {
-				this.remove(index);
-			}
-			for (let index = 0; index < (value?.length ?? 0); index++) {
-				this.append(value[index]);
+			if (updated) {
+				for (let index = this.elements.length - 1; index >= 0; index--) {
+					this.remove(index);
+				}
+				for (let index = 0; index < (value?.length ?? 0); index++) {
+					this.append(value[index]);
+				}
 			}
 		} finally {
 			this.updating = false;
