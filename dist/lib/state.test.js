@@ -347,6 +347,19 @@ wtf.test(`Reference states should have spread functionality.`, (assert) => {
     assert.equals(Object.getOwnPropertyNames(spread), []);
     assert.equals(spread, {});
 });
+wtf.test(`Dynamic array elements should update properly when accessing deferred object members.`, (assert) => {
+    let objects = (0, state_1.stateify)([
+        {
+            array: [
+                {
+                    array: []
+                }
+            ]
+        }
+    ]);
+    objects.element((0, state_1.stateify)(0)).deferred;
+    objects.element((0, state_1.stateify)(0)).array[0].deferred;
+});
 /*
 wtf.test(`Dynamic ArrayState elements should support being updated after array is vacated.`, (assert) => {
     let state = make_state(["one"]);
@@ -363,5 +376,17 @@ wtf.test(`Lazily initialized ObjectStates should supporting being cleared.`, (as
     let b = object.member("b", { key: "b" });
     object.update({});
     assert.equals(object.value(), {});
+});
+ */
+/*
+wtf.test(`Lazily initialized ObjectStates should not trigger multiple updates.`, (assert) => {
+    let states = make_state<Array<{ key?: string }>>([]);
+    states.mapStates((state, index) => state.key);
+    let events = [] as Array<Array<{ key?: string }>>;
+    states.observe("update", (state) => {
+        events.push(state.value());
+    });
+    states.append({});
+    assert.equals(events, [{}]);
 });
  */
