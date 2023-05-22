@@ -434,20 +434,22 @@ export class ArrayStateImplementation<A extends Value> extends ArrayState<A> {
 	update(value: Array<A>): boolean {
 		let updated = false;
 		try {
-			this.updating = true;
-			let length = Math.min(this.elements.length, value?.length ?? 0);
-			for (let index = 0; index < length; index++) {
-				if (this.elements[index].update(value[index])) {
-					updated = true;
+			if (this.elements.length !== value?.length) {
+				updated = true;
+			} else {
+				for (let index = 0; index < this.elements.length; index++) {
+					let copy = make_state(this.elements[index].value());
+					if (copy.update(value[index])) {
+						updated = true;
+						break;
+					}
 				}
 			}
-			for (let index = this.elements.length - 1; index >= length; index--) {
+			for (let index = this.elements.length - 1; index >= 0; index--) {
 				this.remove(index);
-				updated = true;
 			}
-			for (let index = length; index < (value?.length ?? 0); index++) {
+			for (let index = 0; index < (value?.length ?? 0); index++) {
 				this.append(value[index]);
-				updated = true;
 			}
 		} finally {
 			this.updating = false;

@@ -392,6 +392,20 @@ wtf.test(`Reference states should have spread functionality.`, (assert) => {
 	assert.equals(spread, {});
 });
 
+wtf.test(`Dynamic array elements should update properly when accessing deferred object members.`, (assert) => {
+	type Object = { deferred?: string, array: Array<Object> };
+	let objects = stateify<Array<Object>>([
+		{
+			array: [
+				{
+					array: []
+				}
+			]
+		}
+	]);
+	objects.element(stateify(0)).deferred;
+	objects.element(stateify(0)).array[0].deferred;
+});
 /*
 wtf.test(`Dynamic ArrayState elements should support being updated after array is vacated.`, (assert) => {
 	let state = make_state(["one"]);
