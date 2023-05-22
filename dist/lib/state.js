@@ -353,11 +353,13 @@ class ArrayStateImplementation extends ArrayState {
                     }
                 }
             }
-            for (let index = this.elements.length - 1; index >= 0; index--) {
-                this.remove(index);
-            }
-            for (let index = 0; index < (value?.length ?? 0); index++) {
-                this.append(value[index]);
+            if (updated) {
+                for (let index = this.elements.length - 1; index >= 0; index--) {
+                    this.remove(index);
+                }
+                for (let index = 0; index < (value?.length ?? 0); index++) {
+                    this.append(value[index]);
+                }
             }
         }
         finally {
