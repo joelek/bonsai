@@ -610,3 +610,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Fix issues with lazily initialized ObjectStates.
 * Fix issue with dynamic ArrayState elements.
 * Consider adding support for Promise<State<Value>>.
+* Prevent unwanted type distribution of Attribute<[Value, Value] | undefined>.

@@ -1,5 +1,5 @@
 import * as wtf from "@joelek/wtf";
-import { Attributes, make_state, State, stateify, valueify } from "./state";
+import { Attribute, Attributes, make_state, State, stateify, StateOrValue, valueify } from "./state";
 
 wtf.test(`It should support assignment from empty string literal to any string.`, (assert) => {
 	let string: State<string> = make_state("");
@@ -436,3 +436,26 @@ wtf.test(`Lazily initialized ObjectStates should not trigger multiple updates.`,
 	assert.equals(events, [{}]);
 });
  */
+wtf.test(`State<[string, string] | undefined> should be assignable to StateOrValue<[string, string] | undefined>.`, (assert) => {
+	let attribute: StateOrValue<[string, string] | undefined> = stateify<[string, string] | undefined>(["one", "two"]);
+});
+
+wtf.test(`State<[string, string]> should be assignable to StateOrValue<[string, string] | undefined>.`, (assert) => {
+	let attribute: StateOrValue<[string, string] | undefined> = stateify<[string, string]>(["one", "two"]);
+});
+
+wtf.test(`State<undefined> should be assignable to StateOrValue<[string, string] | undefined>.`, (assert) => {
+	let attribute: StateOrValue<[string, string] | undefined> = stateify<undefined>(undefined);
+});
+/*
+wtf.test(`State<[string, string] | undefined> should be assignable to Attribute<[string, string] | undefined>.`, (assert) => {
+	let attribute: Attribute<[string, string] | undefined> = stateify<[string, string] | undefined>(["one", "two"]);
+});
+ */
+wtf.test(`State<[string, string]> should be assignable to Attribute<[string, string] | undefined>.`, (assert) => {
+	let attribute: Attribute<[string, string] | undefined> = stateify<[string, string]>(["one", "two"]);
+});
+
+wtf.test(`State<undefined> should be assignable to Attribute<[string, string] | undefined>.`, (assert) => {
+	let attribute: Attribute<[string, string] | undefined> = stateify<undefined>(undefined);
+});
