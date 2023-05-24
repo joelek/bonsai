@@ -608,6 +608,5 @@ NB: This project targets TypeScript 4 in strict mode.
 * Consider implementing TupleState that changes once irregardless of number of members.
 * Consider implementing RecordState with "insert" and "remove" event messages.
 * Fix issues with lazily initialized ObjectStates.
-* Fix issue with dynamic ArrayState elements.
 * Consider adding support for Promise<State<Value>>.
 * Prevent unwanted type distribution of Attribute<[Value, Value] | undefined>.

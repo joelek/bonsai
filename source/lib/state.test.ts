@@ -406,15 +406,53 @@ wtf.test(`Dynamic array elements should update properly when accessing deferred 
 	objects.element(stateify(0)).deferred;
 	objects.element(stateify(0)).array[0].deferred;
 });
-/*
-wtf.test(`Dynamic ArrayState elements should support being updated after array is vacated.`, (assert) => {
-	let state = make_state(["one"]);
-	let element = state.element(stateify(0));
-	state.vacate();
-	element.update("two");
-	assert.equals(element.value(), "two");
+
+wtf.test(`Dynamic ArrayState elements should support being updated.`, (assert) => {
+	let array = make_state(["one", "two"]);
+	let index = stateify<number>(0);
+	let element = array.element(index);
+	element.update("ONE");
+	assert.equals(element.value(), "ONE");
+	assert.equals(array.value(), ["ONE", "two"]);
 });
- */
+
+wtf.test(`Dynamic ArrayState elements should throw an error when the index is invalid.`, async (assert) => {
+	let array = make_state(["one", "two"]);
+	let index = stateify<number>(2);
+	await assert.throws(async () => {
+		let element = array.element(index);
+	});
+});
+
+wtf.test(`Dynamic ArrayState elements should support being updated after the index is changed.`, (assert) => {
+	let array = make_state(["one", "two"]);
+	let index = stateify<number>(0);
+	let element = array.element(index);
+	index.update(1);
+	element.update("TWO");
+	assert.equals(element.value(), "TWO");
+	assert.equals(array.value(), ["one", "TWO"]);
+});
+
+wtf.test(`Dynamic ArrayState elements should throw an error when the index becomes invalid.`, async (assert) => {
+	let array = make_state(["one", "two"]);
+	let index = stateify<number>(0);
+	let element = array.element(index);
+	await assert.throws(async () => {
+		index.update(2);
+	});
+});
+
+wtf.test(`Dynamic ArrayState elements should support being updated after array is vacated.`, (assert) => {
+	let array = make_state(["one", "two"]);
+	let index = stateify<number>(0);
+	let element = array.element(index);
+	array.vacate();
+	element.update("ONE");
+	assert.equals(element.value(), "ONE");
+	assert.equals(array.value(), []);
+});
+
 /*
 wtf.test(`Lazily initialized ObjectStates should supporting being cleared.`, (assert) => {
 	let object = make_state({} as { a?: { key: string }, b?: { key: string } });
@@ -424,6 +462,7 @@ wtf.test(`Lazily initialized ObjectStates should supporting being cleared.`, (as
 	assert.equals(object.value(), {});
 });
  */
+
 /*
 wtf.test(`Lazily initialized ObjectStates should not trigger multiple updates.`, (assert) => {
 	let states = make_state<Array<{ key?: string }>>([]);
@@ -436,6 +475,7 @@ wtf.test(`Lazily initialized ObjectStates should not trigger multiple updates.`,
 	assert.equals(events, [{}]);
 });
  */
+
 wtf.test(`State<[string, string] | undefined> should be assignable to StateOrValue<[string, string] | undefined>.`, (assert) => {
 	let attribute: StateOrValue<[string, string] | undefined> = stateify<[string, string] | undefined>(["one", "two"]);
 });
@@ -447,11 +487,13 @@ wtf.test(`State<[string, string]> should be assignable to StateOrValue<[string, 
 wtf.test(`State<undefined> should be assignable to StateOrValue<[string, string] | undefined>.`, (assert) => {
 	let attribute: StateOrValue<[string, string] | undefined> = stateify<undefined>(undefined);
 });
+
 /*
 wtf.test(`State<[string, string] | undefined> should be assignable to Attribute<[string, string] | undefined>.`, (assert) => {
 	let attribute: Attribute<[string, string] | undefined> = stateify<[string, string] | undefined>(["one", "two"]);
 });
  */
+
 wtf.test(`State<[string, string]> should be assignable to Attribute<[string, string] | undefined>.`, (assert) => {
 	let attribute: Attribute<[string, string] | undefined> = stateify<[string, string]>(["one", "two"]);
 });
