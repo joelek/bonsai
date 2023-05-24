@@ -142,7 +142,7 @@ class ArrayState extends AbstractState {
                 that.update(state.value());
             });
             index.observe("update", (index) => {
-                let element = this.element(index.value());
+                element = this.element(index.value());
                 subscription();
                 that.update(element.value());
                 subscription = element.observe("update", (state) => {
@@ -150,7 +150,7 @@ class ArrayState extends AbstractState {
                 });
             });
             that.observe("update", (that) => {
-                this.element(index.value()).update(that.value());
+                element.update(that.value());
             });
             return that;
         }
