@@ -63,7 +63,7 @@ export declare abstract class ReferenceState<A extends ReferenceValue> extends A
     constructor(lastValue: A);
 }
 export declare class ReferenceStateImplementation<A extends ReferenceValue> extends ReferenceState<A> {
-    update(valu: A): boolean;
+    update(value: A): boolean;
     value(): A;
 }
 export type ArrayStateEvents<A extends Value> = AbstractStateEvents<Array<A>> & {
@@ -80,6 +80,7 @@ export declare abstract class ArrayState<A extends Value> extends AbstractState<
     protected elements: Array<State<A>>;
     protected updating: boolean;
     protected currentLength: State<number>;
+    protected isUndefined: boolean;
     protected onElementUpdate: () => void;
     constructor(elements: Array<State<A>>);
     [Symbol.iterator](): Iterator<State<A>>;
@@ -104,6 +105,7 @@ export type ObjectStateEvents<A extends Value> = AbstractStateEvents<A> & {};
 export declare abstract class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectStateEvents<A>> {
     protected members: States<A>;
     protected updating: boolean;
+    protected isUndefined: boolean;
     protected onMemberUpdate: () => void;
     constructor(members: States<A>);
     member<B extends keyof A>(key: B): State<A[B]>;

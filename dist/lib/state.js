@@ -91,10 +91,10 @@ exports.ReferenceState = ReferenceState;
 ;
 // Implement the abstract methods in secret in order for TypeScript not to handle them as if they were own properties.
 class ReferenceStateImplementation extends ReferenceState {
-    update(valu) {
+    update(value) {
         let updated = false;
-        if (valu !== this.lastValue) {
-            this.lastValue = valu;
+        if (value !== this.lastValue) {
+            this.lastValue = value;
             updated = true;
         }
         if (updated) {
@@ -112,6 +112,7 @@ class ArrayState extends AbstractState {
     elements;
     updating;
     currentLength;
+    isUndefined;
     onElementUpdate = () => {
         if (!this.updating) {
             this.notify("update", this);
@@ -122,6 +123,7 @@ class ArrayState extends AbstractState {
         this.elements = [...elements];
         this.updating = false;
         this.currentLength = make_state(elements.length);
+        this.isUndefined = false;
         for (let index = 0; index < this.elements.length; index++) {
             this.elements[index].observe("update", this.onElementUpdate);
         }
@@ -341,6 +343,10 @@ class ArrayStateImplementation extends ArrayState {
     update(value) {
         let updated = false;
         try {
+            this.updating = true;
+            let isUndefined = typeof value === "undefined";
+            updated = (this.isUndefined && !isUndefined) || (!this.isUndefined && isUndefined);
+            this.isUndefined = isUndefined;
             if (this.elements.length !== value?.length) {
                 updated = true;
             }
@@ -371,6 +377,9 @@ class ArrayStateImplementation extends ArrayState {
         return updated;
     }
     value() {
+        if (this.isUndefined) {
+            return undefined;
+        }
         let lastValue = [];
         for (let index = 0; index < this.elements.length; index++) {
             lastValue.push(this.elements[index].value());
@@ -383,6 +392,7 @@ exports.ArrayStateImplementation = ArrayStateImplementation;
 class ObjectState extends AbstractState {
     members;
     updating;
+    isUndefined;
     onMemberUpdate = () => {
         if (!this.updating) {
             this.notify("update", this);
@@ -392,6 +402,7 @@ class ObjectState extends AbstractState {
         super();
         this.members = { ...members };
         this.updating = false;
+        this.isUndefined = false;
         for (let key in this.members) {
             this.members[key].observe("update", this.onMemberUpdate);
         }
@@ -417,6 +428,9 @@ class ObjectStateImplementation extends ObjectState {
         let updated = false;
         try {
             this.updating = true;
+            let isUndefined = typeof value === "undefined";
+            updated = (this.isUndefined && !isUndefined) || (!this.isUndefined && isUndefined);
+            this.isUndefined = isUndefined;
             for (let key in this.members) {
                 let member = this.member(key);
                 if (member.update(value?.[key])) {
@@ -439,6 +453,9 @@ class ObjectStateImplementation extends ObjectState {
         return updated;
     }
     value() {
+        if (this.isUndefined) {
+            return undefined;
+        }
         let lastValue = {};
         for (let key in this.members) {
             let member = this.member(key);
