@@ -162,10 +162,10 @@ export abstract class ReferenceState<A extends ReferenceValue> extends AbstractS
 
 // Implement the abstract methods in secret in order for TypeScript not to handle them as if they were own properties.
 export class ReferenceStateImplementation<A extends ReferenceValue> extends ReferenceState<A> {
-	update(valu: A): boolean {
+	update(value: A): boolean {
 		let updated = false;
-		if (valu !== this.lastValue) {
-			this.lastValue = valu;
+		if (value !== this.lastValue) {
+			this.lastValue = value;
 			updated = true;
 		}
 		if (updated) {
