@@ -434,6 +434,7 @@ export class ArrayStateImplementation<A extends Value> extends ArrayState<A> {
 	update(value: Array<A>): boolean {
 		let updated = false;
 		try {
+			this.updating = true;
 			if (this.elements.length !== value?.length) {
 				updated = true;
 			} else {
