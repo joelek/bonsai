@@ -11,15 +11,23 @@ wtf.test(`It should not output undefined member values in object values.`, (asse
 });
 
 wtf.test(`It should support updating optional object members to undefined values.`, (assert) => {
-	let state = make_state({ data: { page: "" } } as { data?: { page: string } });
-	state.update({ data: undefined });
-	assert.equals(state.value(), { data: {} });
+	let state = make_state({ object: { primitive: "a" } } as { object?: { primitive: string } });
+	let object_state = state.member("object", undefined);
+	state.update({ object: undefined });
+	assert.equals(state.value(), {});
+	state.update({ object: { primitive: "b" } });
+	assert.equals(state.value(), { object: { primitive: "b" }});
+	assert.equals(object_state.value(), { primitive: "b" });
 });
 
 wtf.test(`It should support updating optional array members to undefined values.`, (assert) => {
-	let state = make_state({ data: [] } as { data?: string[] });
-	state.update({ data: undefined });
-	assert.equals(state.value(), { data: [] });
+	let state = make_state({ array: ["a"] } as { array?: string[] });
+	let array_state = state.member("array", undefined);
+	state.update({ array: undefined });
+	assert.equals(state.value(), {});
+	state.update({ array: ["b"] });
+	assert.equals(state.value(), { array: ["b"] });
+	assert.equals(array_state.value(), ["b"]);
 });
 
 wtf.test(`It should initialize optional members lazily when updated.`, (assert) => {
@@ -453,7 +461,6 @@ wtf.test(`Dynamic ArrayState elements should support being updated after array i
 	assert.equals(array.value(), []);
 });
 
-/*
 wtf.test(`Lazily initialized ObjectStates should supporting being cleared.`, (assert) => {
 	let object = make_state({} as { a?: { key: string }, b?: { key: string } });
 	let a = object.member("a", { key: "a" });
@@ -461,7 +468,6 @@ wtf.test(`Lazily initialized ObjectStates should supporting being cleared.`, (as
 	object.update({});
 	assert.equals(object.value(), {});
 });
- */
 
 /*
 wtf.test(`Lazily initialized ObjectStates should not trigger multiple updates.`, (assert) => {
