@@ -34,6 +34,8 @@ export type Observer<A extends any[]> = (...args: A) => void;
 
 export type Computer<A extends Value, B extends Value> = (value: A) => B;
 
+export type TypeChecker<A extends Value, B extends A> = (value: A) => value is B;
+
 export type CancellationToken = () => void;
 
 export type State<A extends Value> = AbstractState<A, AbstractStateEvents<A>> & (
@@ -81,6 +83,26 @@ export abstract class AbstractState<A extends Value, B extends TupleRecord<B> & 
 		let computed = make_state(computer(this.value()));
 		this.observe("update", (state) => {
 			computed.update(computer(state.value()));
+		});
+		return computed;
+	}
+
+	fallback<C extends A>(typeChecker: TypeChecker<A, C>, defaultValue: C): State<C> {
+		let computer = ((value) => typeChecker(value) ? value : defaultValue) as Computer<A, C>;
+		let computed = make_state(computer(this.value()));
+		let propagating = false;
+		this.observe("update", (state) => {
+			try {
+				propagating = true;
+				computed.update(computer(state.value()));
+			} finally {
+				propagating = false;
+			}
+		});
+		computed.observe("update", (state) => {
+			if (!propagating) {
+				this.update(state.value());
+			}
 		});
 		return computed;
 	}
