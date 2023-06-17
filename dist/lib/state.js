@@ -25,6 +25,26 @@ class AbstractState {
         });
         return computed;
     }
+    fallback(typeChecker, defaultValue) {
+        let computer = ((value) => typeChecker(value) ? value : defaultValue);
+        let computed = make_state(computer(this.value()));
+        let propagating = false;
+        this.observe("update", (state) => {
+            try {
+                propagating = true;
+                computed.update(computer(state.value()));
+            }
+            finally {
+                propagating = false;
+            }
+        });
+        computed.observe("update", (state) => {
+            if (!propagating) {
+                this.update(state.value());
+            }
+        });
+        return computed;
+    }
     observe(type, observer) {
         let observers = this.observers[type];
         if (observers == null) {
