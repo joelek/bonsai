@@ -23,7 +23,6 @@ export type ValueMapper<A extends Value, B extends Value> = (value: A, index: nu
 export type Predicate<A extends Value> = (state: State<A>, index: State<number>) => State<boolean>;
 export type Observer<A extends any[]> = (...args: A) => void;
 export type Computer<A extends Value, B extends Value> = (value: A) => B;
-export type TypeChecker<A extends Value, B extends A> = (value: A) => value is B;
 export type CancellationToken = () => void;
 export type State<A extends Value> = AbstractState<A, AbstractStateEvents<A>> & (A extends PrimitiveValue ? PrimitiveState<A> : A extends Array<infer B extends Value> ? IndexStates<A> & ArrayState<B> : A extends RecordValue ? States<A> & ObjectState<A> : A extends ReferenceValue ? ReferenceState<A> : never);
 export type IndexStates<A> = {
@@ -44,7 +43,7 @@ export declare abstract class AbstractState<A extends Value, B extends TupleReco
     protected notify<C extends keyof B>(type: C, ...args: [...B[C]]): void;
     constructor();
     compute<C extends Value>(computer: Computer<A, C>): State<C>;
-    fallback<C extends A>(typeChecker: TypeChecker<A, C>, defaultValue: C): State<C>;
+    fallback(defaultValue: Exclude<A, undefined>): State<Exclude<A, undefined>>;
     observe<C extends keyof B>(type: C, observer: Observer<B[C]>): CancellationToken;
     unobserve<C extends keyof B>(type: C, observer: Observer<B[C]>): void;
     abstract update(value: A): boolean;

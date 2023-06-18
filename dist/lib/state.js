@@ -25,8 +25,8 @@ class AbstractState {
         });
         return computed;
     }
-    fallback(typeChecker, defaultValue) {
-        let computer = ((value) => typeChecker(value) ? value : defaultValue);
+    fallback(defaultValue) {
+        let computer = ((value) => typeof value !== "undefined" ? value : defaultValue);
         let computed = make_state(computer(this.value()));
         let propagating = false;
         this.observe("update", (state) => {

@@ -448,21 +448,21 @@ wtf.test(`State<[string, string]> should be assignable to Attribute<[string, str
 wtf.test(`State<undefined> should be assignable to Attribute<[string, string] | undefined>.`, (assert) => {
     let attribute = (0, state_1.stateify)(undefined);
 });
-wtf.test(`Fallback states should use the underlying value when the underlying value passes the typecheck.`, (assert) => {
+wtf.test(`Fallback states should use the underlying value when the underlying value is not undefined.`, (assert) => {
     let underlying = (0, state_1.make_state)("underlying");
-    let fallback = underlying.fallback((value) => typeof value === "string", "default");
+    let fallback = underlying.fallback("default");
     assert.equals(underlying.value(), "underlying");
     assert.equals(fallback.value(), "underlying");
 });
-wtf.test(`Fallback states should use the default value when the underlying value fails the typecheck.`, (assert) => {
+wtf.test(`Fallback states should use the default value when the underlying value is undefined.`, (assert) => {
     let underlying = (0, state_1.make_state)(undefined);
-    let fallback = underlying.fallback((value) => typeof value === "string", "default");
+    let fallback = underlying.fallback("default");
     assert.equals(underlying.value(), undefined);
     assert.equals(fallback.value(), "default");
 });
 wtf.test(`Fallback states should propagate updated values back to the underlying state.`, (assert) => {
     let underlying = (0, state_1.make_state)(undefined);
-    let fallback = underlying.fallback((value) => typeof value === "string", "default");
+    let fallback = underlying.fallback("default");
     assert.equals(underlying.value(), undefined);
     assert.equals(fallback.value(), "default");
     fallback.update("updated");
@@ -471,7 +471,7 @@ wtf.test(`Fallback states should propagate updated values back to the underlying
 });
 wtf.test(`Fallback states should propagate updated values identical to the default value back to the underlying state.`, (assert) => {
     let underlying = (0, state_1.make_state)("underlying");
-    let fallback = underlying.fallback((value) => typeof value === "string", "default");
+    let fallback = underlying.fallback("default");
     assert.equals(underlying.value(), "underlying");
     assert.equals(fallback.value(), "underlying");
     fallback.update("default");
@@ -480,7 +480,7 @@ wtf.test(`Fallback states should propagate updated values identical to the defau
 });
 wtf.test(`Fallback states should not propagate the default value back to the underlying state.`, (assert) => {
     let underlying = (0, state_1.make_state)("underlying");
-    let fallback = underlying.fallback((value) => typeof value === "string", "default");
+    let fallback = underlying.fallback("default");
     assert.equals(underlying.value(), "underlying");
     assert.equals(fallback.value(), "underlying");
     underlying.update(undefined);
