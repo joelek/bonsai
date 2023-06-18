@@ -611,3 +611,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Consider adding support for Promise<State<Value>>.
 * Prevent unwanted type distribution of Attribute<[Value, Value] | undefined>.
 * Consider removing object member default values.
+* Document fallback functionality.
