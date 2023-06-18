@@ -34,8 +34,6 @@ export type Observer<A extends any[]> = (...args: A) => void;
 
 export type Computer<A extends Value, B extends Value> = (value: A) => B;
 
-export type TypeChecker<A extends Value, B extends A> = (value: A) => value is B;
-
 export type CancellationToken = () => void;
 
 export type State<A extends Value> = AbstractState<A, AbstractStateEvents<A>> & (
@@ -87,8 +85,8 @@ export abstract class AbstractState<A extends Value, B extends TupleRecord<B> & 
 		return computed;
 	}
 
-	fallback<C extends A>(typeChecker: TypeChecker<A, C>, defaultValue: C): State<C> {
-		let computer = ((value) => typeChecker(value) ? value : defaultValue) as Computer<A, C>;
+	fallback(defaultValue: Exclude<A, undefined>):  State<Exclude<A, undefined>> {
+		let computer = ((value) => typeof value !== "undefined" ? value : defaultValue) as Computer<A, Exclude<A, undefined>>;
 		let computed = make_state(computer(this.value()));
 		let propagating = false;
 		this.observe("update", (state) => {
@@ -537,7 +535,7 @@ export abstract class ObjectState<A extends RecordValue> extends AbstractState<A
 			this.members[key].observe("update", this.onMemberUpdate);
 			this.onMemberUpdate();
 		}
-		return member;
+		return member as any;
 	}
 
 	spread(): States<A> {
@@ -710,7 +708,7 @@ export function stateify<A extends Attribute<Value>>(attribute: A): State<ValueF
 	if (attribute instanceof Object && attribute.constructor === Object) {
 		let members = {} as Record<string, State<Value>>;
 		for (let key in attribute) {
-			members[key] = stateify((attribute as any)[key]);
+			members[key] = stateify((attribute as any)[key]) as any;
 		}
 		return make_object_state(members) as any;
 	}
