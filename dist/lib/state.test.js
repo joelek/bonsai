@@ -11,7 +11,7 @@ wtf.test(`It should not output undefined member values in object values.`, (asse
 });
 wtf.test(`It should support updating optional object members to undefined values.`, (assert) => {
     let state = (0, state_1.make_state)({ object: { primitive: "a" } });
-    let object_state = state.member("object", undefined);
+    let object_state = state.member("object");
     state.update({ object: undefined });
     assert.equals(state.value(), {});
     state.update({ object: { primitive: "b" } });
@@ -20,7 +20,7 @@ wtf.test(`It should support updating optional object members to undefined values
 });
 wtf.test(`It should support updating optional array members to undefined values.`, (assert) => {
     let state = (0, state_1.make_state)({ array: ["a"] });
-    let array_state = state.member("array", undefined);
+    let array_state = state.member("array");
     state.update({ array: undefined });
     assert.equals(state.value(), {});
     state.update({ array: ["b"] });
@@ -30,12 +30,15 @@ wtf.test(`It should support updating optional array members to undefined values.
 wtf.test(`It should initialize optional members lazily when updated.`, (assert) => {
     let state = (0, state_1.make_state)({});
     state.update({ optional: undefined });
-    let optional = state.member("optional", false);
+    let optional = state.member("optional");
+    assert.equals(state.value(), {});
     assert.equals(optional.value(), undefined);
 });
-wtf.test(`It should initialize optional members lazily when accessed.`, (assert) => {
+wtf.test(`Lazily initialized optional members should propagate changes back to the object.`, (assert) => {
     let state = (0, state_1.make_state)({});
-    let optional = state.member("optional", false);
+    let optional = state.member("optional");
+    optional.update(false);
+    assert.equals(state.value(), { optional: false });
     assert.equals(optional.value(), false);
 });
 wtf.test(`It should filter arrays.`, (assert) => {
@@ -296,7 +299,7 @@ wtf.test(`Attributes should be user-friendly.`, (assert) => {
     assert.equals((0, state_1.valueify)(required_required), "reqreq");
     let required_optional = required.optional;
     assert.equals((0, state_1.valueify)(required_optional), "reqopt");
-    let optional = (0, state_1.stateify)(attributes).member("optional", { required: "optreq2" });
+    let optional = (0, state_1.stateify)(attributes).member("optional").fallback({ required: "optreq2" });
     let optional_required = optional.required;
     assert.equals((0, state_1.valueify)(optional_required), "optreq");
     let optional_optional = optional.optional;
@@ -411,10 +414,14 @@ wtf.test(`Dynamic ArrayState elements should support being updated after array i
 });
 wtf.test(`Lazily initialized ObjectStates should supporting being cleared.`, (assert) => {
     let object = (0, state_1.make_state)({});
-    let a = object.member("a", { key: "a" });
-    let b = object.member("b", { key: "b" });
+    let a = object.member("a");
+    a.update({ key: "a" });
+    let b = object.member("b");
+    b.update({ key: "b" });
     object.update({});
     assert.equals(object.value(), {});
+    assert.equals(a.value(), undefined);
+    assert.equals(b.value(), undefined);
 });
 /*
 wtf.test(`Lazily initialized ObjectStates should not trigger multiple updates.`, (assert) => {
@@ -448,7 +455,7 @@ wtf.test(`State<[string, string]> should be assignable to Attribute<[string, str
 wtf.test(`State<undefined> should be assignable to Attribute<[string, string] | undefined>.`, (assert) => {
     let attribute = (0, state_1.stateify)(undefined);
 });
-wtf.test(`Fallback states should use the underlying value when the underlying value is not undefined.`, (assert) => {
+wtf.test(`Fallback states should use the underlying value when the underlying value is defined.`, (assert) => {
     let underlying = (0, state_1.make_state)("underlying");
     let fallback = underlying.fallback("default");
     assert.equals(underlying.value(), "underlying");
@@ -469,16 +476,16 @@ wtf.test(`Fallback states should propagate updated values back to the underlying
     assert.equals(underlying.value(), "updated");
     assert.equals(fallback.value(), "updated");
 });
-wtf.test(`Fallback states should propagate updated values identical to the default value back to the underlying state.`, (assert) => {
+wtf.test(`Fallback states should not propagate the default value back to the underlying state when the fallback state is updated.`, (assert) => {
     let underlying = (0, state_1.make_state)("underlying");
     let fallback = underlying.fallback("default");
     assert.equals(underlying.value(), "underlying");
     assert.equals(fallback.value(), "underlying");
     fallback.update("default");
-    assert.equals(underlying.value(), "default");
+    assert.equals(underlying.value(), "underlying");
     assert.equals(fallback.value(), "default");
 });
-wtf.test(`Fallback states should not propagate the default value back to the underlying state.`, (assert) => {
+wtf.test(`Fallback states should not propagate the default value back to the underlying state when the underlying state is updated.`, (assert) => {
     let underlying = (0, state_1.make_state)("underlying");
     let fallback = underlying.fallback("default");
     assert.equals(underlying.value(), "underlying");

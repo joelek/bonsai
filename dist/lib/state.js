@@ -27,20 +27,11 @@ class AbstractState {
     }
     fallback(defaultValue) {
         let computer = ((value) => typeof value !== "undefined" ? value : defaultValue);
-        let computed = make_state(computer(this.value()));
-        let propagating = false;
-        this.observe("update", (state) => {
-            try {
-                propagating = true;
-                computed.update(computer(state.value()));
-            }
-            finally {
-                propagating = false;
-            }
-        });
+        let computed = this.compute(computer);
         computed.observe("update", (state) => {
-            if (!propagating) {
-                this.update(state.value());
+            let value = state.value();
+            if (make_state(defaultValue).update(value)) {
+                this.update(value);
             }
         });
         return computed;
@@ -427,10 +418,10 @@ class ObjectState extends AbstractState {
             this.members[key].observe("update", this.onMemberUpdate);
         }
     }
-    member(key, defaultValue) {
+    member(key) {
         let member = this.members[key];
         if (member == null) {
-            this.members[key] = member = make_state(defaultValue);
+            this.members[key] = member = make_state(undefined);
             this.members[key].observe("update", this.onMemberUpdate);
             this.onMemberUpdate();
         }
@@ -459,7 +450,8 @@ class ObjectStateImplementation extends ObjectState {
             }
             for (let key in value) {
                 if (!(key in this.members)) {
-                    let member = this.member(key, value[key]);
+                    let member = this.member(key);
+                    member.update(value[key]);
                     updated = true;
                 }
             }

@@ -110,8 +110,6 @@ export declare abstract class ObjectState<A extends RecordValue> extends Abstrac
     protected onMemberUpdate: () => void;
     constructor(members: States<A>);
     member<B extends keyof A>(key: B): State<A[B]>;
-    member<B extends keyof A>(key: B, defaultValue: Exclude<A[B], undefined>): State<Exclude<A[B], undefined>>;
-    member<B extends keyof A>(key: B, defaultValue: A[B]): State<A[B]>;
     spread(): States<A>;
 }
 export declare class ObjectStateImplementation<A extends RecordValue> extends ObjectState<A> {
