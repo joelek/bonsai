@@ -482,7 +482,7 @@ wtf.test(`Fallback states should not propagate the default value back to the und
     assert.equals(underlying.value(), "underlying");
     assert.equals(fallback.value(), "underlying");
     fallback.update("default");
-    assert.equals(underlying.value(), "underlying");
+    assert.equals(underlying.value(), undefined);
     assert.equals(fallback.value(), "default");
 });
 wtf.test(`Fallback states should not propagate the default value back to the underlying state when the underlying state is updated.`, (assert) => {

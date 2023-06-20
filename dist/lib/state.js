@@ -33,6 +33,9 @@ class AbstractState {
             if (make_state(defaultValue).update(value)) {
                 this.update(value);
             }
+            else {
+                this.update(undefined);
+            }
         });
         return computed;
     }
