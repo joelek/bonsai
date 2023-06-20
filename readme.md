@@ -423,6 +423,12 @@ New state may be computed from existing state through the `compute(computer)` me
 
 * The `computer` argument must be used to specify how the new value should be computed from the existing value.
 
+#### Fallback
+
+New state may be computed from existing state through the `fallback(defaultValue)` method. The method returns a new state that is updated whenever the original state is updated. The new state also updates the original state whenever it is updated as long as the value of the new state is different from the default value. The new state may never assume the undefined value making it useful in logic handling optional data.
+
+* The `defaultValue` argument must be used to specify a defined default value.
+
 #### Observe
 
 State may be observed for events through the `observe(type, observer)` method. The method returns a cancellation token that may be used to remove the corresponding observer from the state.
@@ -609,4 +615,3 @@ NB: This project targets TypeScript 4 in strict mode.
 * Fix issue with lazily initialized ObjectStates triggering multiple updates.
 * Consider adding support for Promise<State<Value>>.
 * Prevent unwanted type distribution of Attribute<[Value, Value] | undefined>.
-* Document fallback functionality.
