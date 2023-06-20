@@ -85,21 +85,13 @@ export abstract class AbstractState<A extends Value, B extends TupleRecord<B> & 
 		return computed;
 	}
 
-	fallback(defaultValue: Exclude<A, undefined>):  State<Exclude<A, undefined>> {
+	fallback(defaultValue: Exclude<A, undefined>): State<Exclude<A, undefined>> {
 		let computer = ((value) => typeof value !== "undefined" ? value : defaultValue) as Computer<A, Exclude<A, undefined>>;
-		let computed = make_state(computer(this.value()));
-		let propagating = false;
-		this.observe("update", (state) => {
-			try {
-				propagating = true;
-				computed.update(computer(state.value()));
-			} finally {
-				propagating = false;
-			}
-		});
+		let computed = this.compute(computer);
 		computed.observe("update", (state) => {
-			if (!propagating) {
-				this.update(state.value());
+			let value = state.value();
+			if (make_state(defaultValue).update(value)) {
+				this.update(value);
 			}
 		});
 		return computed;

@@ -539,17 +539,17 @@ wtf.test(`Fallback states should propagate updated values back to the underlying
 	assert.equals(fallback.value(), "updated");
 });
 
-wtf.test(`Fallback states should propagate updated values identical to the default value back to the underlying state.`, (assert) => {
+wtf.test(`Fallback states should not propagate the default value back to the underlying state when the fallback state is updated.`, (assert) => {
 	let underlying = make_state("underlying" as string | undefined);
 	let fallback = underlying.fallback("default");
 	assert.equals(underlying.value(), "underlying");
 	assert.equals(fallback.value(), "underlying");
 	fallback.update("default");
-	assert.equals(underlying.value(), "default");
+	assert.equals(underlying.value(), "underlying");
 	assert.equals(fallback.value(), "default");
 });
 
-wtf.test(`Fallback states should not propagate the default value back to the underlying state.`, (assert) => {
+wtf.test(`Fallback states should not propagate the default value back to the underlying state when the underlying state is updated.`, (assert) => {
 	let underlying = make_state("underlying" as string | undefined);
 	let fallback = underlying.fallback("default");
 	assert.equals(underlying.value(), "underlying");
