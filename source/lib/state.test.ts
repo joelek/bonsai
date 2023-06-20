@@ -12,7 +12,7 @@ wtf.test(`It should not output undefined member values in object values.`, (asse
 
 wtf.test(`It should support updating optional object members to undefined values.`, (assert) => {
 	let state = make_state({ object: { primitive: "a" } } as { object?: { primitive: string } });
-	let object_state = state.member("object", undefined);
+	let object_state = state.member("object");
 	state.update({ object: undefined });
 	assert.equals(state.value(), {});
 	state.update({ object: { primitive: "b" } });
@@ -22,7 +22,7 @@ wtf.test(`It should support updating optional object members to undefined values
 
 wtf.test(`It should support updating optional array members to undefined values.`, (assert) => {
 	let state = make_state({ array: ["a"] } as { array?: string[] });
-	let array_state = state.member("array", undefined);
+	let array_state = state.member("array");
 	state.update({ array: undefined });
 	assert.equals(state.value(), {});
 	state.update({ array: ["b"] });
@@ -33,13 +33,16 @@ wtf.test(`It should support updating optional array members to undefined values.
 wtf.test(`It should initialize optional members lazily when updated.`, (assert) => {
 	let state = make_state({} as { optional?: boolean });
 	state.update({ optional: undefined });
-	let optional = state.member("optional", false);
+	let optional = state.member("optional");
+	assert.equals(state.value(), {});
 	assert.equals(optional.value(), undefined);
 });
 
-wtf.test(`It should initialize optional members lazily when accessed.`, (assert) => {
+wtf.test(`Lazily initialized optional members should propagate changes back to the object.`, (assert) => {
 	let state = make_state({} as { optional?: boolean });
-	let optional = state.member("optional", false);
+	let optional = state.member("optional");
+	optional.update(false);
+	assert.equals(state.value(), { optional: false });
 	assert.equals(optional.value(), false);
 });
 
@@ -325,7 +328,7 @@ wtf.test(`Attributes should be user-friendly.`, (assert) => {
 	assert.equals(valueify(required_required), "reqreq");
 	let required_optional = required.optional;
 	assert.equals(valueify(required_optional), "reqopt");
-	let optional = stateify(attributes).member("optional", { required: "optreq2" });
+	let optional = stateify(attributes).member("optional").fallback({ required: "optreq2" });
 	let optional_required = optional.required;
 	assert.equals(valueify(optional_required), "optreq");
 	let optional_optional = optional.optional;
@@ -463,10 +466,14 @@ wtf.test(`Dynamic ArrayState elements should support being updated after array i
 
 wtf.test(`Lazily initialized ObjectStates should supporting being cleared.`, (assert) => {
 	let object = make_state({} as { a?: { key: string }, b?: { key: string } });
-	let a = object.member("a", { key: "a" });
-	let b = object.member("b", { key: "b" });
+	let a = object.member("a");
+	a.update({ key: "a" });
+	let b = object.member("b");
+	b.update({ key: "b" });
 	object.update({});
 	assert.equals(object.value(), {});
+	assert.equals(a.value(), undefined);
+	assert.equals(b.value(), undefined);
 });
 
 /*

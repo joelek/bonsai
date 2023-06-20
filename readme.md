@@ -560,10 +560,9 @@ An instance of `ObjectState` is created when an object is passed to the `stateif
 
 #### Member
 
-Members may be retrieved from the object through the `member(key, defaultValue?)` method.
+Members may be retrieved from the object through the `member(key)` method.
 
 * The `key` argument must be used to specify the key of the member.
-* The `defaultValue` argument may be used to specify the defaultValue of the member.
 
 ### ReferenceState
 
@@ -610,5 +609,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Fix issue with lazily initialized ObjectStates triggering multiple updates.
 * Consider adding support for Promise<State<Value>>.
 * Prevent unwanted type distribution of Attribute<[Value, Value] | undefined>.
-* Consider removing object member default values.
 * Document fallback functionality.
