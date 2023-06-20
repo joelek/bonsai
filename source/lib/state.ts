@@ -92,6 +92,8 @@ export abstract class AbstractState<A extends Value, B extends TupleRecord<B> & 
 			let value = state.value();
 			if (make_state(defaultValue).update(value)) {
 				this.update(value);
+			} else {
+				this.update(undefined as any);
 			}
 		});
 		return computed;
