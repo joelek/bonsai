@@ -8,7 +8,9 @@ export type AttributeArray = Attribute<Value>[];
 
 export type AttributeArrayMapper = (attributes: AttributeArray) => AttributeArray;
 
-export type Children = Array<ArrayState<Node | Value> | Value | Node | State<Value | Node>>;
+export type Child = ArrayState<Node | Value> | Value | Node | State<Value | Node>;
+
+export type Children = Array<Child>;
 
 export type FunctionalElementListener<A extends Event, B extends Element> = (event: A, element: B) => void;
 
