@@ -264,7 +264,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 		}
 	}
 
-	augment(augmentations: Augmentations<A, this>): this {
+	augment(augmentations: Augmentations<A, this>, ...children: Children): this {
 		for (let key in augmentations) {
 			let augmentation = augmentations[key as keyof Augmentations<A, this>];
 			if (/^on(.+)/.test(key)) {
@@ -273,6 +273,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 				this.attribute(key, augmentation);
 			}
 		}
+		this.nodes(...children);
 		return this;
 	}
 
