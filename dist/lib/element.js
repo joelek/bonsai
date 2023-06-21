@@ -240,6 +240,18 @@ class FunctionalElementImplementation extends Element {
             return set(key, attribute);
         }
     }
+    augment(augmentations) {
+        for (let key in augmentations) {
+            let augmentation = augmentations[key];
+            if (/^on(.+)/.test(key)) {
+                this.listener(key, augmentation);
+            }
+            else {
+                this.attribute(key, augmentation);
+            }
+        }
+        return this;
+    }
     listener(type, listener) {
         if (typeof listener === "undefined") {
             this[type] = undefined;

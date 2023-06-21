@@ -10,6 +10,19 @@ export type FunctionalElementListener<A extends Event, B extends Element> = (eve
 export type FunctionalElementEventMap<A> = {
     [B in keyof A]: Event;
 };
+export type AttributeAugmentations<A extends FunctionalElementEventMap<A>, B extends Element> = {
+    [key: string]: Attribute<Value>;
+};
+export type ClassAugmentations<A extends FunctionalElementEventMap<A>, B extends Element> = {
+    ["class"]?: AttributeArray | AttributeArrayMapper;
+};
+export type StyleAugmentations<A extends FunctionalElementEventMap<A>, B extends Element> = {
+    ["style"]?: AttributeRecord | AttributeRecordMapper;
+};
+export type ListenerAugmentations<A extends FunctionalElementEventMap<A>, B extends Element> = {
+    [C in `on${keyof A & string}`]?: C extends `on${infer D extends keyof A & string}` ? FunctionalElementListener<A[D], B> : never;
+};
+export type Augmentations<A extends FunctionalElementEventMap<A>, B extends Element> = AttributeAugmentations<A, B> & ClassAugmentations<A, B> & StyleAugmentations<A, B> & ListenerAugmentations<A, B>;
 export declare function serializeValue(value: Value): string;
 export declare function createNode(value: Value | Node): Node;
 export declare function parseClass(value: string): Array<string>;
@@ -31,13 +44,14 @@ export declare class FunctionalElementImplementation<A extends FunctionalElement
     attribute<A extends string>(key: A extends "class" | "style" ? never : A, attribute: Attribute<Value>): this;
     attribute<A extends AttributeArray>(key: "class", attribute: A | AttributeArrayMapper | undefined): this;
     attribute<A extends AttributeRecord>(key: "style", attribute: A | AttributeRecordMapper | undefined): this;
+    augment(augmentations: Augmentations<A, this>): this;
     listener<B extends keyof A & string>(type: `on${B}`, listener: FunctionalElementListener<A[B], this> | undefined): this;
     nodes(...children: Children): this;
     process(callback: (element: this) => void): this;
     setAttribute(key: string, value: string): void;
 }
 export type FunctionalElement<A extends FunctionalElementEventMap<A>, B extends Element> = FunctionalElementImplementation<A> & B;
-export type FunctionalElementFactory<A extends FunctionalElementEventMap<A>, B extends Element> = (...children: Children) => FunctionalElement<A, B>;
+export type FunctionalElementFactory<A extends FunctionalElementEventMap<A>, B extends Element> = (/* augmentations: Augmentations<A, B>,  */ ...children: Children) => FunctionalElement<A, B>;
 export type Namespace = "http://www.w3.org/1999/xhtml" | "http://www.w3.org/2000/svg";
 export declare function makeFunctionalElementFactory<A extends FunctionalElementEventMap<A>, B extends Element>(namespace: Namespace, tag: string): FunctionalElementFactory<A, B>;
 export type FunctionalHTMLElement<A extends HTMLElement> = FunctionalElement<HTMLElementEventMap, A>;
