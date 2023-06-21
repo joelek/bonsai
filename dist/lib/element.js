@@ -240,7 +240,7 @@ class FunctionalElementImplementation extends Element {
             return set(key, attribute);
         }
     }
-    augment(augmentations) {
+    augment(augmentations, ...children) {
         for (let key in augmentations) {
             let augmentation = augmentations[key];
             if (/^on(.+)/.test(key)) {
@@ -250,6 +250,7 @@ class FunctionalElementImplementation extends Element {
                 this.attribute(key, augmentation);
             }
         }
+        this.nodes(...children);
         return this;
     }
     listener(type, listener) {
