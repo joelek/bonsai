@@ -45,7 +45,7 @@ export declare class FunctionalElementImplementation<A extends FunctionalElement
     attribute<A extends string>(key: A extends "class" | "style" ? never : A, attribute: Attribute<Value>): this;
     attribute<A extends AttributeArray>(key: "class", attribute: A | AttributeArrayMapper | undefined): this;
     attribute<A extends AttributeRecord>(key: "style", attribute: A | AttributeRecordMapper | undefined): this;
-    augment(augmentations: Augmentations<A, this>, ...children: Children): this;
+    augment(augmentations: Augmentations<A, this>): this;
     listener<B extends keyof A & string>(type: `on${B}`, listener: FunctionalElementListener<A[B], this> | undefined): this;
     nodes(...children: Children): this;
     process(callback: (element: this) => void): this;
