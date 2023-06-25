@@ -364,6 +364,26 @@ The attribute with the given `key` may be removed from the element by explicitly
 The `class` attribute must be specified as, and will be retrieved as, an array of attribute values or states. The attribute may also be specified using a mapper.
 The `style` attribute must be specified as, and will be retrieved as, a record of attribute values or states. The attribute may also be specified using a mapper.
 
+#### Augment
+
+An element may be augmented with attributes and listeners using the `augment(augmentations)` method. The method is a compact short-hand for simultaneously specifying both attributes and listeners.
+
+* The `augmentations` argument must be used to specify a record of attributes and listeners. Attributes are specified through attribute keys. Listeners are specified through keys using the `on*` format.
+
+The `class` attribute must be specified as an array of attribute values or states. The attribute may also be specified using a mapper.
+The `style` attribute must be specified as a record of attribute values or states. The attribute may also be specified using a mapper.
+
+```ts
+let div = html.div().augment({
+	"class": ["my-class"],
+	"style": {
+		"padding": "20px"
+	},
+	"data-test": true,
+	"onclick": (event, element) => { /* ... */ }
+});
+```
+
 #### Listener
 
 A listener may be added to the element through the `listener(type, listener)` method.
@@ -615,4 +635,3 @@ NB: This project targets TypeScript 4 in strict mode.
 * Fix issue with lazily initialized ObjectStates triggering multiple updates.
 * Consider adding support for Promise<State<Value>>.
 * Prevent unwanted type distribution of Attribute<[Value, Value] | undefined>.
-* Document agument() functionality.
