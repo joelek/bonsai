@@ -361,8 +361,8 @@ An attribute value or state may be set for the element through the `attribute(ke
 
 The attribute with the given `key` may be removed from the element by explicitly specifying the `attribute` as undefined.
 
-The `class` attribute must be specified as, and will be retrieved as, an array of attribute values or states.
-The `style` attribute must be specified as, and will be retrieved as, a record of attribute values or states.
+The `class` attribute must be specified as, and will be retrieved as, an array of attribute values or states. The attribute may also be specified using a mapper.
+The `style` attribute must be specified as, and will be retrieved as, a record of attribute values or states. The attribute may also be specified using a mapper.
 
 #### Listener
 
