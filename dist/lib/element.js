@@ -386,7 +386,7 @@ function makeFunctionalElementFactory(namespace, tag) {
             }
         });
     }
-    return (...children) => {
+    return (agumentations, ...children) => {
         let element = document.createElementNS(namespace, tag);
         Object.setPrototypeOf(element, prototype);
         if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
@@ -394,6 +394,9 @@ function makeFunctionalElementFactory(namespace, tag) {
             that.addEventListener("change", (event) => {
                 that.setAttribute("value", that.value);
             });
+        }
+        if (agumentations != null) {
+            element.augment(agumentations);
         }
         element.nodes(...children);
         return element;
