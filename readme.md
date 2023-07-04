@@ -648,4 +648,3 @@ NB: This project targets TypeScript 4 in strict mode.
 * Fix issue with lazily initialized ObjectStates triggering multiple updates.
 * Consider adding support for Promise<State<Value>>.
 * Prevent unwanted type distribution of Attribute<[Value, Value] | undefined>.
-* Add support for specifying element augmentations directly in factory.
