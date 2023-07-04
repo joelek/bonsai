@@ -378,7 +378,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 };
 
 export type FunctionalElement<A extends FunctionalElementEventMap<A>, B extends Element> = FunctionalElementImplementation<A> & B;
-export type FunctionalElementFactory<A extends FunctionalElementEventMap<A>, B extends Element> = (...children: Children) => FunctionalElement<A, B>;
+export type FunctionalElementFactory<A extends FunctionalElementEventMap<A>, B extends Element> = (agumentations?: Augmentations<A, B>, ...children: Children) => FunctionalElement<A, B>;
 
 export type Namespace = "http://www.w3.org/1999/xhtml" | "http://www.w3.org/2000/svg";
 
@@ -411,7 +411,7 @@ export function makeFunctionalElementFactory<A extends FunctionalElementEventMap
 			}
 		});
 	}
-	return (...children: Children) => {
+	return (agumentations?: Augmentations<A, B>, ...children: Children) => {
 		let element = document.createElementNS(namespace, tag) as FunctionalElement<A, B>;
 		Object.setPrototypeOf(element, prototype);
 		if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
@@ -419,6 +419,9 @@ export function makeFunctionalElementFactory<A extends FunctionalElementEventMap
 			that.addEventListener("change", (event) => {
 				that.setAttribute("value", that.value);
 			});
+		}
+		if (agumentations != null) {
+			element.augment(agumentations);
 		}
 		element.nodes(...children);
 		return element;
