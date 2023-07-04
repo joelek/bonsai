@@ -657,3 +657,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Prevent unwanted type distribution of Attribute<[Value, Value] | undefined>.
 * Improve life-cycle management of elements.
 * Implement getter and mapped setter for `augment()`.
+* Fix type signature for object state members accessed using dot notation.

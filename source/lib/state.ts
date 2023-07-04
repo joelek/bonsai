@@ -49,7 +49,8 @@ export type IndexStates<A> = {
 };
 
 export type States<A> = {
-	[B in keyof A]: A[B] extends Value ? State<A[B]> : never;
+	// The correct type signature is with optionals removed but this breaks TypeScript performance.
+	[B in keyof A]/* -? */: A[B] extends Value ? State<A[B]> : never;
 };
 
 export type AbstractStateEvents<A extends Value> = {
