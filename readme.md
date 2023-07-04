@@ -397,6 +397,8 @@ let div = html.div().augment({
 });
 ```
 
+All attributes and listeners previously set for the element will be retained unless explicitly specified.
+
 #### Listener
 
 A listener may be added to the element through the `listener(type, listener)` method.
@@ -411,6 +413,8 @@ There may only be a single listener added to each element for each unique event 
 Child nodes may be set for the element through the `nodes(...children)` method.
 
 * The `children` argument may be used to specify the child nodes. State is bound to the element and may be used to update the child nodes dynamically.
+
+All child nodes previously set for the element will be replaced by the new children.
 
 #### Process
 
