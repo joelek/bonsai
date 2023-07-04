@@ -543,9 +543,9 @@ import { html, stateify } from "@joelek/bonsai";
 
 let state = stateify([{ name: "Joel Ek" }]);
 
-state.mapStates((state) => html.p(state.member("name")));
+state.mapStates((state) => html.p(state.name)));
 
-state.update([{ name: "Someone Else" }]); // State instantly updates the paragraph element.
+state[0].update({ name: "Someone Else" }); // State instantly updates the paragraph element.
 ```
 
 #### MapValues
@@ -563,7 +563,7 @@ let state = stateify([{ name: "Joel Ek" }]);
 
 state.mapValues((value) => html.p(value.name));
 
-state.update([{ name: "Someone Else" }]); // State instantly creates a new paragraph element.
+state[0].update({ name: "Someone Else" }); // State instantly creates a new paragraph element.
 ```
 
 #### Remove
