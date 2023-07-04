@@ -5,13 +5,13 @@ Lightweight, functional and robust library for creating reactive web components.
 ```ts
 import { html } from "@joelek/bonsai";
 
-let ul = html.ul()
-	.attribute("class", ["my-list"])
-	.listener("onclick", (event, element) => {})
-	.nodes(
-		html.li("One"),
-		html.li("Two")
-	);
+let ul = html.ul({
+	class: ["my-list"],
+	onclick: (event, element) => {}
+},
+	html.li({}, "One"),
+	html.li({}, "Two")
+);
 ```
 
 ## Background
@@ -81,13 +81,13 @@ Bonsai uses a pure, code-based approach for solving the isolation, scalability a
 ```ts
 import { html } from "@joelek/bonsai";
 
-let ul = html.ul()
-	.attribute("class", ["my-list"])
-	.listener("onclick", (event, element) => {})
-	.nodes(
-		html.li("One"),
-		html.li("Two")
-	);
+let ul = html.ul({
+	class: ["my-list"],
+	onclick: (event, element) => {}
+},
+	html.li({}, "One"),
+	html.li({}, "Two")
+);
 ```
 
 Bonsai provides functional subclasses for all HTML and SVG element classes in the DOM. The subclasses are safe, scalable and have great interoperability with other libraries or existing code.
@@ -105,12 +105,12 @@ import { html, stateify } from "@joelek/bonsai";
 
 let state = stateify(["my-list"]); // State with type Array<string> is created.
 
-let ul = html.ul()
-	.attribute("class", state) // State is implicitly bound to the class attribute.
-	.nodes(
-		html.li("One"),
-		html.li("Two")
-	);
+let ul = html.ul({
+	class: state // State is implicitly bound to the class attribute.
+},
+	html.li({}, "One"),
+	html.li({}, "Two")
+);
 
 state.update(["my-new-list"]); // State instantly updates the class attribute.
 ```
@@ -122,11 +122,11 @@ import { html, stateify } from "@joelek/bonsai";
 
 let state = stateify(["One", "Two"]); // State with type Array<string> is created.
 
-let ul = html.ul()
-	.attribute("class", ["my-list"])
-	.nodes(state.mapStates((state) => // State is mapped for each element in the array.
-		html.li(state) // State is implicitly bound to the child nodes.
-	));
+let ul = html.ul({
+	class: ["my-list"]
+}, state.mapStates((state) => // State is mapped for each element in the array.
+	html.li({}, state) // State is implicitly bound to the child nodes.
+));
 
 state.append("Three"); // State instantly updates the child nodes.
 ```
@@ -161,7 +161,7 @@ import { html, stateify, State, Children } from "@joelek/bonsai";
 
 const CLASS_NAME = "my-list";
 
-document.head.appendChild(html.style(`
+document.head.appendChild(html.style({}, `
 	.${CLASS_NAME} {
 
 	}
@@ -172,11 +172,11 @@ export type MyList = {
 };
 
 export function MyList({ items }: MyList, /* ...children: Children */) {
-	return html.ul()
-		.attribute("class", [CLASS_NAME])
-		.nodes(items.mapStates((item) =>
-			html.li(item)
-		));
+	return html.ul({
+		class: [CLASS_NAME]
+	}, items.mapStates((item) =>
+		html.li({}, item)
+	));
 };
 ```
 
@@ -228,7 +228,7 @@ export type StartPageOptions = {};
 export const StartPage = {
 	codec: route("start"),
 	factory(model: State<StartPageOptions>, title: State<string>, router: Router<any>) {
-		return html.h1("Start Page");
+		return html.h1({}, "Start Page");
 	}
 };
 ```
@@ -243,7 +243,7 @@ export type ContactPageOptions = {};
 export const ContactPage = {
 	codec: route("contact"),
 	factory(model: State<ContactPageOptions>, title: State<string>, router: Router<any>) {
-		return html.h1("Contact Page");
+		return html.h1({}, "Contact Page");
 	}
 };
 ```
@@ -311,14 +311,16 @@ The router may be used to show the active element and can be used to create inst
 
 ```ts
 document.body.appendChild(
-	html.div(
-		html.p(
-			html.a("Start")
-				.listener("onclick", (event, element) => ROUTER.navigate("start", {})),
-			html.a("Contact")
-				.listener("onclick", (event, element) => ROUTER.navigate("contact", {}))
+	html.div({},
+		html.p({},
+			html.a({
+				onclick: (event, element) => ROUTER.navigate("start", {})
+			}, "Start")
+			html.a({
+				onclick: (event, element) => ROUTER.navigate("contact", {})
+			}, "Contact")
 		),
-		html.p("Current route:", ROUTER.url),
+		html.p({}, "Current route:", ROUTER.url),
 		ROUTER.element
 	)
 );
@@ -342,10 +344,22 @@ let div = html.div();
 let circle = svg.circle();
 ```
 
+Attributes and listeners may be specified for an element through the factory function.
+
+```ts
+let p = html.p({
+	class: ["my-class"],
+	style: {
+		"padding": "20px"
+	},
+	onclick: (event, element) => {}
+});
+```
+
 Child nodes may be set for an element through the factory function.
 
 ```ts
-let p = html.p("One", "Two");
+let p = html.p({}, "One", "Two");
 ```
 
 #### Attribute
@@ -375,12 +389,11 @@ The `style` attribute must be specified as a record of attribute values or state
 
 ```ts
 let div = html.div().augment({
-	"class": ["my-class"],
-	"style": {
+	class: ["my-class"],
+	style: {
 		"padding": "20px"
 	},
-	"data-test": true,
-	"onclick": (event, element) => { /* ... */ }
+	onclick: (event, element) => {}
 });
 ```
 
@@ -410,8 +423,8 @@ An element may be processed in a processing block through the `process(callback)
 Values set as attributes or child nodes will be serialized into the document using a simple algorithm. The algorithm serializes primitive values into strings and uses JSON-serialization for composite values. This provides maximum flexibility for the programmer with one caveat which is illustrated in the example below.
 
 ```ts
-let p1 = html.p(1, 2); // Creates a paragraph with two text nodes containing "1" and "2", respectively.
-let p2 = html.p([1, 2]); // Creates a paragraph with one text node containing "[1, 2]".
+let p1 = html.p({}, 1, 2); // Creates a paragraph with two text nodes containing "1" and "2", respectively.
+let p2 = html.p({}, [1, 2]); // Creates a paragraph with one text node containing "[1, 2]".
 ```
 
 Please note that the `class` and `style` attributes use custom serialization rules and also support deserialization in contrast to regular attributes.
@@ -543,7 +556,7 @@ import { html, stateify } from "@joelek/bonsai";
 
 let state = stateify([{ name: "Joel Ek" }]);
 
-state.mapStates((state) => html.p(state.name)));
+state.mapStates((state) => html.p({}, state.name)));
 
 state[0].update({ name: "Someone Else" }); // State instantly updates the paragraph element.
 ```
@@ -561,7 +574,7 @@ import { html, stateify } from "@joelek/bonsai";
 
 let state = stateify([{ name: "Joel Ek" }]);
 
-state.mapValues((value) => html.p(value.name));
+state.mapValues((value) => html.p({}, value.name));
 
 state[0].update({ name: "Someone Else" }); // State instantly creates a new paragraph element.
 ```
