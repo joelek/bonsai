@@ -157,7 +157,7 @@ All three algoritms produce mutation sets that when applied update the fragment 
 Bonsai can be used to create reactive web components by combining functional elements with interactive state. A scalable pattern is demonstrated in the example below.
 
 ```ts
-import { html, stateify, State, Children } from "@joelek/bonsai";
+import { html, stateify, Attributes, Children } from "@joelek/bonsai";
 
 const CLASS_NAME = "my-list";
 
@@ -168,15 +168,18 @@ document.head.appendChild(html.style({}, `
 `));
 
 export type MyList = {
-	items: State<Array<string>>;
+	items: Array<string>;
 };
 
-export function MyList({ items }: MyList, /* ...children: Children */) {
-	return html.ul({
-		class: [CLASS_NAME]
-	}, items.mapStates((item) =>
-		html.li({}, item)
-	));
+export function MyList(attributes: Attributes<MyList>, /* ...children: Children */) {
+	let items = stateify(attributes.items); // Convert items to state if not already state.
+	return (
+		html.ul({
+			class: [CLASS_NAME]
+		}, items.mapStates((item) =>
+			html.li({}, item)
+		))
+	);
 };
 ```
 
