@@ -26,7 +26,7 @@ export type PrimitiveValue = void | bigint | boolean | number | string | null | 
 
 export type ReferenceValue = Object;
 
-export type Value = PrimitiveValue | ReferenceValue | Value[] | { [key: string]: Value; };
+export type Value = any;
 
 export type ArrayValue = Value[];
 
@@ -664,7 +664,7 @@ export function make_state<A extends Value>(value: A): State<A> {
 		return make_primitive_state(value) as any;
 	}
 	if (value === null) {
-		return make_primitive_state(value) as any;
+		return make_primitive_state(value as any) as any;
 	}
 	if (typeof value === "undefined") {
 		return make_primitive_state(value) as any;
