@@ -18,12 +18,7 @@ export type ValueFromAttribute<A> =
 	A extends Value ? A :
 	never;
 
-export type StateFromAttribute<A> =
-	A extends State<infer B> ? State<B> :
-	A extends any[] ? State<{ [B in keyof A]: ValueFromAttribute<A[B]>; }> :
-	A extends { [key: string]: any; } ? State<{ [B in keyof A]: ValueFromAttribute<A[B]>; }> :
-	A extends Value ? State<A> :
-	never;
+export type StateFromAttribute<A> = State<ValueFromAttribute<A>>;
 
 export type TupleRecord<A extends TupleRecord<A>> = { [C in keyof A]: any[]; };
 
