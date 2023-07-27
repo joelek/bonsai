@@ -610,12 +610,19 @@ function stateify(attribute) {
     if (attribute instanceof AbstractState) {
         return attribute;
     }
-    if (attribute instanceof Object && attribute.constructor === Object) {
-        let members = {};
-        for (let key in attribute) {
-            members[key] = stateify(attribute[key]);
+    if (attribute instanceof Array) {
+        let states = [];
+        for (let element of attribute) {
+            states.push(stateify(element));
         }
-        return make_object_state(members);
+        return make_array_state(states);
+    }
+    if (attribute instanceof Object && attribute.constructor === Object) {
+        let states = {};
+        for (let key in attribute) {
+            states[key] = stateify(attribute[key]);
+        }
+        return make_object_state(states);
     }
     return make_state(attribute);
 }
@@ -624,6 +631,13 @@ exports.stateify = stateify;
 function valueify(attribute) {
     if (attribute instanceof AbstractState) {
         return attribute.value();
+    }
+    if (attribute instanceof Array) {
+        let values = [];
+        for (let element of attribute) {
+            values.push(valueify(element));
+        }
+        return values;
     }
     if (attribute instanceof Object && attribute.constructor === Object) {
         let values = {};
