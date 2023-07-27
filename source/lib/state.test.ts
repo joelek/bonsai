@@ -1,6 +1,44 @@
 import * as wtf from "@joelek/wtf";
 import { Attribute, Attributes, make_state, State, stateify, StateOrValue, valueify } from "./state";
 
+wtf.test(`Attributes<A> should support complex values.`, (assert) => {
+	type MyValueType = {
+		array: {
+			string: string;
+		}[];
+		tuple: [string, number];
+		object: {
+			string: string;
+		};
+		union: "a" | "b";
+	};
+	let attributes: Attributes<MyValueType> = {
+		array: [
+			{
+				string: "a"
+			}
+		],
+		tuple: ["a", 0],
+		object: {
+			string: "a"
+		},
+		union: "a"
+	};
+	let array = stateify(attributes.array);
+	array.update([{ string: "b" }]);
+	array.observe("insert", (state) => {});
+	assert.equals(array.value(), [{ string: "b" }]);
+	let tuple = stateify(attributes.tuple);
+	tuple.update(["b", 1]);
+	assert.equals(tuple.value(), ["b", 1]);
+	let object = stateify(attributes.object);
+	object.update({ string: "b" });
+	assert.equals(object.value(), { string: "b" });
+	let union = stateify(attributes.union);
+	union.update("b");
+	assert.equals(union.value(), "b");
+});
+
 wtf.test(`It should support assignment from empty string literal to any string.`, (assert) => {
 	let string: State<string> = make_state("");
 });

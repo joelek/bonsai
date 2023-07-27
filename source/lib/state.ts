@@ -2,22 +2,23 @@ import { getOrderedIndex } from "./utils";
 
 export type StateOrValue<A extends Value> = A | State<A>;
 
-export type Attribute<A> = State<A> | (
-	A extends { [key: PropertyKey]: Value } ? { [B in keyof A]: Attribute<A[B]>; } :
+export type Attribute<A extends Value> = State<A> | (
+	A extends ArrayValue ? { [B in keyof A]: A[B] extends Value ? Attribute<A[B]> : never; } :
+	A extends RecordValue ? { [B in keyof A]: A[B] extends Value ? Attribute<A[B]> : never; } :
 	A
 );
 
 // TODO: Remove.
 export type Attributes<A extends Value> = Attribute<A>;
 
-export type ValueFromAttribute<A> =
+export type ValueFromAttribute<A extends Attribute<Value>> =
 	A extends State<infer B> ? B :
-	A extends any[] ? { [B in keyof A]: ValueFromAttribute<A[B]>; } :
-	A extends { [key: string]: any; } ? { [B in keyof A]: ValueFromAttribute<A[B]>; } :
-	A extends Value ? A :
-	never;
+	A extends ArrayValue ? { [B in keyof A]: A[B] extends Attribute<infer C> ? ValueFromAttribute<C> : never; } :
+	A extends RecordValue ? { [B in keyof A]: A[B] extends Attribute<infer C> ? ValueFromAttribute<C> : never; } :
+	A
+;
 
-export type StateFromAttribute<A> = State<ValueFromAttribute<A>>;
+export type StateFromAttribute<A extends Attribute<Value>> = State<ValueFromAttribute<A>>;
 
 export type TupleRecord<A extends TupleRecord<A>> = { [C in keyof A]: any[]; };
 
@@ -25,7 +26,7 @@ export type PrimitiveValue = void | bigint | boolean | number | string | null | 
 
 export type ReferenceValue = Object;
 
-export type Value = any;
+export type Value = PrimitiveValue | ReferenceValue | any[] | { [key: string]: any };
 
 export type ArrayValue = Value[];
 
