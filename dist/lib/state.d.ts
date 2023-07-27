@@ -1,8 +1,8 @@
 export type StateOrValue<A extends Value> = A | State<A>;
-export type Attribute<A extends Value> = State<A> | (A extends RecordValue ? {
+export type Attribute<A> = State<A> | (A extends {
+    [key: PropertyKey]: Value;
+} ? {
     [B in keyof A]: Attribute<A[B]>;
-} : A extends ArrayValue ? {
-    [B in keyof A & number]: Attribute<A[B]>;
 } : A);
 export type Attributes<A extends Value> = Attribute<A>;
 export type ValueFromAttribute<A> = A extends State<infer B> ? B : A extends any[] ? {
@@ -18,9 +18,7 @@ export type TupleRecord<A extends TupleRecord<A>> = {
 };
 export type PrimitiveValue = void | bigint | boolean | number | string | null | undefined;
 export type ReferenceValue = Object;
-export type Value = PrimitiveValue | ReferenceValue | Value[] | {
-    [key: string]: Value;
-};
+export type Value = any;
 export type ArrayValue = Value[];
 export type RecordValue = {
     [key: string]: Value;
