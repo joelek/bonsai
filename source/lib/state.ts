@@ -2,9 +2,8 @@ import { getOrderedIndex } from "./utils";
 
 export type StateOrValue<A extends Value> = A | State<A>;
 
-export type Attribute<A extends Value> = State<A> | (
-	A extends RecordValue ? { [B in keyof A]: Attribute<A[B]>; } :
-	A extends ArrayValue ? { [B in keyof A & number]: Attribute<A[B]>; } :
+export type Attribute<A> = State<A> | (
+	A extends { [key: PropertyKey]: Value } ? { [B in keyof A]: Attribute<A[B]>; } :
 	A
 );
 
