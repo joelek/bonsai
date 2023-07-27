@@ -571,11 +571,9 @@ wtf.test(`State<undefined> should be assignable to StateOrValue<[string, string]
 	let attribute: StateOrValue<[string, string] | undefined> = stateify<undefined>(undefined);
 });
 
-/*
 wtf.test(`State<[string, string] | undefined> should be assignable to Attribute<[string, string] | undefined>.`, (assert) => {
 	let attribute: Attribute<[string, string] | undefined> = stateify<[string, string] | undefined>(["one", "two"]);
 });
- */
 
 wtf.test(`State<[string, string]> should be assignable to Attribute<[string, string] | undefined>.`, (assert) => {
 	let attribute: Attribute<[string, string] | undefined> = stateify<[string, string]>(["one", "two"]);

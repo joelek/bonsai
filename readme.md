@@ -654,7 +654,6 @@ NB: This project targets TypeScript 4 in strict mode.
 * Consider implementing RecordState with "insert" and "remove" event messages.
 * Fix issue with lazily initialized ObjectStates triggering multiple updates.
 * Consider adding support for Promise<State<Value>>.
-* Prevent unwanted type distribution of Attribute<[Value, Value] | undefined>.
 * Improve life-cycle management of elements.
 * Implement getter and mapped setter for `augment()`.
 * Fix type signature for object state members accessed using dot notation.
