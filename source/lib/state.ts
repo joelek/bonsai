@@ -8,9 +8,19 @@ export type Attributes<A extends RecordValue> = {
 	[B in keyof A]: Attribute<A[B]>;
 };
 
-export type ValueFromAttribute<A extends Attribute<Value>> = A extends RecordValue ? {
-	[B in keyof A]: ValueFromAttribute<A[B]>;
-} : A extends State<infer B> ? B : A;
+export type ValueFromAttribute<A> =
+	A extends State<infer B> ? B :
+	A extends any[] ? { [B in keyof A]: ValueFromAttribute<A[B]>; } :
+	A extends { [key: string]: any; } ? { [B in keyof A]: ValueFromAttribute<A[B]>; } :
+	A extends Value ? A :
+	never;
+
+export type StateFromAttribute<A> =
+	A extends State<infer B> ? State<B> :
+	A extends any[] ? State<{ [B in keyof A]: ValueFromAttribute<A[B]>; }> :
+	A extends { [key: string]: any; } ? State<{ [B in keyof A]: ValueFromAttribute<A[B]>; }> :
+	A extends Value ? State<A> :
+	never;
 
 export type TupleRecord<A extends TupleRecord<A>> = { [C in keyof A]: any[]; };
 
@@ -694,16 +704,23 @@ export function computed<A extends Value[], B extends Value>(states: [...States<
 	return computed;
 };
 
-export function stateify<A extends Attribute<Value>>(attribute: A): State<ValueFromAttribute<A>> {
+export function stateify<A extends Attribute<Value>>(attribute: A): StateFromAttribute<A> {
 	if (attribute instanceof AbstractState) {
 		return attribute as any;
 	}
-	if (attribute instanceof Object && attribute.constructor === Object) {
-		let members = {} as Record<string, State<Value>>;
-		for (let key in attribute) {
-			members[key] = stateify((attribute as any)[key]) as any;
+	if (attribute instanceof Array) {
+		let states = [] as Array<State<Value>>;
+		for (let element of attribute) {
+			states.push(stateify(element) as any);
 		}
-		return make_object_state(members) as any;
+		return make_array_state(states) as any;
+	}
+	if (attribute instanceof Object && attribute.constructor === Object) {
+		let states = {} as Record<string, State<Value>>;
+		for (let key in attribute) {
+			states[key] = stateify((attribute as any)[key]) as any;
+		}
+		return make_object_state(states) as any;
 	}
 	return make_state(attribute) as any;
 };
@@ -711,6 +728,13 @@ export function stateify<A extends Attribute<Value>>(attribute: A): State<ValueF
 export function valueify<A extends Attribute<Value>>(attribute: A): ValueFromAttribute<A> {
 	if (attribute instanceof AbstractState) {
 		return attribute.value() as any;
+	}
+	if (attribute instanceof Array) {
+		let values = [] as Array<Value>;
+		for (let element of attribute) {
+			values.push(valueify(element) as any);
+		}
+		return values as any;
 	}
 	if (attribute instanceof Object && attribute.constructor === Object) {
 		let values = {} as Record<string, Value>;
