@@ -415,6 +415,14 @@ wtf.test(`Attributes should be composable from nested values and states.`, (asse
 			one: string;
 			two: string;
 		};
+		three: Array<{
+			one: string;
+			two: string;
+		}>;
+		four: Array<{
+			one: string;
+			two: string;
+		}>;
 	};
 	let attributes: Attributes<Type> = {
 		one: {
@@ -424,7 +432,19 @@ wtf.test(`Attributes should be composable from nested values and states.`, (asse
 		two: make_state({
 			one: "c",
 			two: "d"
-		})
+		}),
+		three: [
+			{
+				one:  make_state("e"),
+				two: "f"
+			}
+		],
+		four: make_state([
+			{
+				one: "g",
+				two: "h"
+			}
+		])
 	};
 	let one_one = attributes.one.one;
 	assert.equals(valueify(one_one), "a");
@@ -434,6 +454,8 @@ wtf.test(`Attributes should be composable from nested values and states.`, (asse
 	assert.equals(valueify(two_one), "c");
 	let two_two = attributes.two.two;
 	assert.equals(valueify(two_two), "d");
+	assert.equals(valueify(attributes.three), [{ one: "e", two: "f" }]);
+	assert.equals(valueify(attributes.four), [{ one: "g", two: "h" }]);
 });
 
 wtf.test(`Array states should have rest functionality.`, (assert) => {
