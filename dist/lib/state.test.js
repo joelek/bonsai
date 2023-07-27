@@ -2,6 +2,33 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const wtf = require("@joelek/wtf");
 const state_1 = require("./state");
+wtf.test(`Attributes<A> should support complex values.`, (assert) => {
+    let attributes = {
+        array: [
+            {
+                string: "a"
+            }
+        ],
+        tuple: ["a", 0],
+        object: {
+            string: "a"
+        },
+        union: "a"
+    };
+    let array = (0, state_1.stateify)(attributes.array);
+    array.update([{ string: "b" }]);
+    array.observe("insert", (state) => { });
+    assert.equals(array.value(), [{ string: "b" }]);
+    let tuple = (0, state_1.stateify)(attributes.tuple);
+    tuple.update(["b", 1]);
+    assert.equals(tuple.value(), ["b", 1]);
+    let object = (0, state_1.stateify)(attributes.object);
+    object.update({ string: "b" });
+    assert.equals(object.value(), { string: "b" });
+    let union = (0, state_1.stateify)(attributes.union);
+    union.update("b");
+    assert.equals(union.value(), "b");
+});
 wtf.test(`It should support assignment from empty string literal to any string.`, (assert) => {
     let string = (0, state_1.make_state)("");
 });
