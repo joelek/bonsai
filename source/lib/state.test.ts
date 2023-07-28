@@ -26,16 +26,27 @@ wtf.test(`Attributes<A> should support complex values.`, (assert) => {
 	};
 	let array = stateify(attributes.array);
 	array.update([{ string: "b" }]);
+	array.observe("update", (state) => {});
 	array.observe("insert", (state) => {});
+	array.observe("remove", (state) => {});
+	assert.equals(array[0].value(), { string: "b" });
 	assert.equals(array.value(), [{ string: "b" }]);
 	let tuple = stateify(attributes.tuple);
 	tuple.update(["b", 1]);
+	tuple.observe("update", (state) => {});
+	tuple.observe("insert", (state) => {});
+	tuple.observe("remove", (state) => {});
+	assert.equals(tuple[0].value(), "b");
 	assert.equals(tuple.value(), ["b", 1]);
 	let object = stateify(attributes.object);
 	object.update({ string: "b" });
+	object.observe("update", (state) => {});
+	assert.equals(object.string.value(), "b");
 	assert.equals(object.value(), { string: "b" });
 	let union = stateify(attributes.union);
+	union.update("a");
 	union.update("b");
+	union.observe("update", (state) => {});
 	assert.equals(union.value(), "b");
 });
 
