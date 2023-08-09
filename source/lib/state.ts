@@ -1,5 +1,7 @@
 import { getOrderedIndex } from "./utils";
 
+type ExpansionOf<A> = A extends infer B ? { [C in keyof B]: B[C] } : never;
+
 export type StateOrValue<A extends Value> = A | State<A>;
 
 export type Attribute<A extends Value> = State<A> | (
@@ -742,4 +744,43 @@ export function valueify<A extends Attribute<Value>>(attribute: A): ValueFromAtt
 		return values as any;
 	}
 	return attribute as any;
+};
+
+export type Merged<A extends RecordValue, B extends RecordValue> = ExpansionOf<{
+	[C in keyof A | keyof B]: C extends keyof A & keyof B
+		? undefined extends B[C]
+			? Exclude<B[C], undefined> | A[C]
+			: B[C]
+		: C extends keyof A
+			? A[C]
+			: C extends keyof B
+				? B[C]
+				: never;
+}>;
+
+export function merge<A extends RecordValue, B extends RecordValue>(one: Attributes<A>, two: Attributes<B>): Attributes<Merged<A, B>> {
+	let one_state = stateify(one);
+	let two_state = stateify(two);
+	let merged = stateify({}) as State<Merged<A, B>>;
+	(merged as any).members = new Proxy({} as RecordValue, {
+		get(target, key) {
+			if (!(key in target)) {
+				let one_member = two_state.member(key as any) as State<Value>;
+				let two_member = one_state.member(key as any) as State<Value>;
+				target[key as any] = computed([one_member, two_member], (one_member, two_member) => one_member ?? two_member) as State<Value>;
+			}
+			return target[key as any];
+		}
+	});
+	one_state.compute((one) => {
+		for (let key in one_state) {
+			merged.member(key as never);
+		}
+	});
+	two_state.compute((two) => {
+		for (let key in two_state) {
+			merged.member(key as never);
+		}
+	});
+	return merged;
 };
