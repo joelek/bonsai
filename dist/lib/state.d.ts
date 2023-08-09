@@ -1,3 +1,6 @@
+type ExpansionOf<A> = A extends infer B ? {
+    [C in keyof B]: B[C];
+} : never;
 export type StateOrValue<A extends Value> = A | State<A>;
 export type Attribute<A extends Value> = State<A> | (A extends ArrayValue ? {
     [B in keyof A]: A[B] extends Value ? Attribute<A[B]> : never;
@@ -129,3 +132,8 @@ export declare function make_state<A extends Value>(value: A): State<A>;
 export declare function computed<A extends Value[], B extends Value>(states: [...States<A>], computer: (...args: [...A]) => B): State<B>;
 export declare function stateify<A extends Attribute<Value>>(attribute: A): StateFromAttribute<A>;
 export declare function valueify<A extends Attribute<Value>>(attribute: A): ValueFromAttribute<A>;
+export type Merged<A extends RecordValue, B extends RecordValue> = ExpansionOf<{
+    [C in keyof A | keyof B]: C extends keyof A & keyof B ? undefined extends B[C] ? Exclude<B[C], undefined> | A[C] : B[C] : C extends keyof A ? A[C] : C extends keyof B ? B[C] : never;
+}>;
+export declare function merge<A extends RecordValue, B extends RecordValue>(one: Attributes<A>, two: Attributes<B>): Attributes<Merged<A, B>>;
+export {};

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.valueify = exports.stateify = exports.computed = exports.make_state = exports.make_reference_state = exports.make_object_state = exports.make_array_state = exports.make_primitive_state = exports.ObjectStateImplementation = exports.ObjectState = exports.ArrayStateImplementation = exports.ArrayState = exports.ReferenceStateImplementation = exports.ReferenceState = exports.PrimitiveStateImplementation = exports.PrimitiveState = exports.AbstractState = void 0;
+exports.merge = exports.valueify = exports.stateify = exports.computed = exports.make_state = exports.make_reference_state = exports.make_object_state = exports.make_array_state = exports.make_primitive_state = exports.ObjectStateImplementation = exports.ObjectState = exports.ArrayStateImplementation = exports.ArrayState = exports.ReferenceStateImplementation = exports.ReferenceState = exports.PrimitiveStateImplementation = exports.PrimitiveState = exports.AbstractState = void 0;
 const utils_1 = require("./utils");
 class AbstractState {
     observers;
@@ -649,4 +649,32 @@ function valueify(attribute) {
     return attribute;
 }
 exports.valueify = valueify;
+;
+function merge(one, two) {
+    let one_state = stateify(one);
+    let two_state = stateify(two);
+    let merged = stateify({});
+    merged.members = new Proxy({}, {
+        get(target, key) {
+            if (!(key in target)) {
+                let one_member = two_state.member(key);
+                let two_member = one_state.member(key);
+                target[key] = computed([one_member, two_member], (one_member, two_member) => one_member ?? two_member);
+            }
+            return target[key];
+        }
+    });
+    one_state.compute((one) => {
+        for (let key in one_state) {
+            merged.member(key);
+        }
+    });
+    two_state.compute((two) => {
+        for (let key in two_state) {
+            merged.member(key);
+        }
+    });
+    return merged;
+}
+exports.merge = merge;
 ;
