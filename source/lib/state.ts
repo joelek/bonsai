@@ -765,9 +765,9 @@ export function merge<A extends RecordValue, B extends RecordValue>(one: Attribu
 	(merged as any).members = new Proxy({} as RecordValue, {
 		get(target, key) {
 			if (!(key in target)) {
-				let one_member = two_state.member(key as any) as State<Value>;
-				let two_member = one_state.member(key as any) as State<Value>;
-				target[key as any] = computed([one_member, two_member], (one_member, two_member) => one_member ?? two_member) as State<Value>;
+				let one_member = one_state.member(key as any) as State<Value>;
+				let two_member = two_state.member(key as any) as State<Value>;
+				target[key as any] = computed([one_member, two_member], (one_member, two_member) => two_member ?? one_member) as State<Value>;
 			}
 			return target[key as any];
 		}
