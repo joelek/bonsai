@@ -1,6 +1,7 @@
 import { getOrderedIndex } from "./utils";
 
 type ExpansionOf<A> = A extends infer B ? { [C in keyof B]: B[C] } : never;
+type Mutable<A> = { -readonly [B in keyof A]: Mutable<A[B]> };
 
 export type StateOrValue<A extends Value> = A | State<A>;
 
