@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.merge = exports.valueify = exports.stateify = exports.computed = exports.make_state = exports.make_reference_state = exports.make_object_state = exports.make_array_state = exports.make_primitive_state = exports.ObjectStateImplementation = exports.ObjectState = exports.ArrayStateImplementation = exports.ArrayState = exports.ReferenceStateImplementation = exports.ReferenceState = exports.PrimitiveStateImplementation = exports.PrimitiveState = exports.AbstractState = void 0;
+exports.merge = exports.fallback = exports.valueify = exports.stateify = exports.computed = exports.make_state = exports.make_reference_state = exports.make_object_state = exports.make_array_state = exports.make_primitive_state = exports.ObjectStateImplementation = exports.ObjectState = exports.ArrayStateImplementation = exports.ArrayState = exports.ReferenceStateImplementation = exports.ReferenceState = exports.PrimitiveStateImplementation = exports.PrimitiveState = exports.AbstractState = void 0;
 const utils_1 = require("./utils");
 class AbstractState {
     observers;
@@ -22,20 +22,6 @@ class AbstractState {
         let computed = make_state(computer(this.value()));
         this.observe("update", (state) => {
             computed.update(computer(state.value()));
-        });
-        return computed;
-    }
-    fallback(defaultValue) {
-        let computer = ((value) => typeof value !== "undefined" ? value : defaultValue);
-        let computed = this.compute(computer);
-        computed.observe("update", (state) => {
-            let value = state.value();
-            if (make_state(defaultValue).update(value)) {
-                this.update(value);
-            }
-            else {
-                this.update(undefined);
-            }
         });
         return computed;
     }
@@ -650,6 +636,22 @@ function valueify(attribute) {
 }
 exports.valueify = valueify;
 ;
+function fallback(state, defaultValue) {
+    let computer = ((value) => typeof value !== "undefined" ? value : defaultValue);
+    let computed_state = state.compute(computer);
+    computed_state.observe("update", (computed_state) => {
+        let value = computed_state.value();
+        if (make_state(defaultValue).update(value)) {
+            state.update(value);
+        }
+        else {
+            state.update(undefined);
+        }
+    });
+    return computed_state;
+}
+exports.fallback = fallback;
+;
 function merge(one, two) {
     let one_state = stateify(one);
     let two_state = stateify(two);
@@ -657,9 +659,9 @@ function merge(one, two) {
     merged.members = new Proxy({}, {
         get(target, key) {
             if (!(key in target)) {
-                let one_member = two_state.member(key);
-                let two_member = one_state.member(key);
-                target[key] = computed([one_member, two_member], (one_member, two_member) => one_member ?? two_member);
+                let one_member = one_state.member(key);
+                let two_member = two_state.member(key);
+                target[key] = computed([one_member, two_member], (one_member, two_member) => typeof two_member !== "undefined" ? two_member : one_member);
             }
             return target[key];
         }

@@ -2,6 +2,18 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const wtf = require("@joelek/wtf");
 const state_1 = require("./state");
+wtf.test(`Computed should compute a new state from two string states.`, (assert) => {
+    let one = (0, state_1.stateify)("one");
+    let two = (0, state_1.stateify)("two");
+    let computed_state = (0, state_1.computed)([one, two], (one, two) => {
+        return `${one} ${two}`;
+    });
+    assert.equals(computed_state.value(), "one two");
+    one.update("ONE");
+    assert.equals(computed_state.value(), "ONE two");
+    two.update("TWO");
+    assert.equals(computed_state.value(), "ONE TWO");
+});
 wtf.test(`Attributes<A> should support complex values.`, (assert) => {
     let attributes = {
         array: [
@@ -393,7 +405,7 @@ wtf.test(`Attributes should be user-friendly.`, (assert) => {
     assert.equals((0, state_1.valueify)(required_required), "reqreq");
     let required_optional = required.optional;
     assert.equals((0, state_1.valueify)(required_optional), "reqopt");
-    let optional = (0, state_1.stateify)(attributes).member("optional").fallback({ required: "optreq2" });
+    let optional = (0, state_1.fallback)((0, state_1.stateify)(attributes).member("optional"), { required: "optreq2" });
     let optional_required = optional.required;
     assert.equals((0, state_1.valueify)(optional_required), "optreq");
     let optional_optional = optional.optional;
@@ -563,42 +575,42 @@ wtf.test(`State<undefined> should be assignable to Attribute<[string, string] | 
 });
 wtf.test(`Fallback states should use the underlying value when the underlying value is defined.`, (assert) => {
     let underlying = (0, state_1.make_state)("underlying");
-    let fallback = underlying.fallback("default");
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
     assert.equals(underlying.value(), "underlying");
-    assert.equals(fallback.value(), "underlying");
+    assert.equals(fallbacked.value(), "underlying");
 });
 wtf.test(`Fallback states should use the default value when the underlying value is undefined.`, (assert) => {
     let underlying = (0, state_1.make_state)(undefined);
-    let fallback = underlying.fallback("default");
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
     assert.equals(underlying.value(), undefined);
-    assert.equals(fallback.value(), "default");
+    assert.equals(fallbacked.value(), "default");
 });
 wtf.test(`Fallback states should propagate updated values back to the underlying state.`, (assert) => {
     let underlying = (0, state_1.make_state)(undefined);
-    let fallback = underlying.fallback("default");
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
     assert.equals(underlying.value(), undefined);
-    assert.equals(fallback.value(), "default");
-    fallback.update("updated");
+    assert.equals(fallbacked.value(), "default");
+    fallbacked.update("updated");
     assert.equals(underlying.value(), "updated");
-    assert.equals(fallback.value(), "updated");
+    assert.equals(fallbacked.value(), "updated");
 });
 wtf.test(`Fallback states should not propagate the default value back to the underlying state when the fallback state is updated.`, (assert) => {
     let underlying = (0, state_1.make_state)("underlying");
-    let fallback = underlying.fallback("default");
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
     assert.equals(underlying.value(), "underlying");
-    assert.equals(fallback.value(), "underlying");
-    fallback.update("default");
+    assert.equals(fallbacked.value(), "underlying");
+    fallbacked.update("default");
     assert.equals(underlying.value(), undefined);
-    assert.equals(fallback.value(), "default");
+    assert.equals(fallbacked.value(), "default");
 });
 wtf.test(`Fallback states should not propagate the default value back to the underlying state when the underlying state is updated.`, (assert) => {
     let underlying = (0, state_1.make_state)("underlying");
-    let fallback = underlying.fallback("default");
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
     assert.equals(underlying.value(), "underlying");
-    assert.equals(fallback.value(), "underlying");
+    assert.equals(fallbacked.value(), "underlying");
     underlying.update(undefined);
     assert.equals(underlying.value(), undefined);
-    assert.equals(fallback.value(), "default");
+    assert.equals(fallbacked.value(), "default");
 });
 wtf.test(`Merge should merge value { a: "one" } with value { a: "two" }.`, (assert) => {
     let one = (0, state_1.valueify)({ a: "one" });
@@ -672,6 +684,54 @@ wtf.test(`Merge should merge state { a: "one" } with state {}.`, (assert) => {
     let merged = (0, state_1.merge)(one, two);
     assert.equals((0, state_1.valueify)(merged), { a: "one" });
 });
+wtf.test(`Merge should merge value { a: null } with value { a: "two" }.`, (assert) => {
+    let one = (0, state_1.valueify)({ a: null });
+    let two = (0, state_1.valueify)({ a: "two" });
+    let merged = (0, state_1.merge)(one, two);
+    assert.equals((0, state_1.valueify)(merged), { a: "two" });
+});
+wtf.test(`Merge should merge value { a: null } with state { a: "two" }.`, (assert) => {
+    let one = (0, state_1.valueify)({ a: null });
+    let two = (0, state_1.stateify)({ a: "two" });
+    let merged = (0, state_1.merge)(one, two);
+    assert.equals((0, state_1.valueify)(merged), { a: "two" });
+});
+wtf.test(`Merge should merge state { a: null } with value { a: "two" }.`, (assert) => {
+    let one = (0, state_1.stateify)({ a: null });
+    let two = (0, state_1.valueify)({ a: "two" });
+    let merged = (0, state_1.merge)(one, two);
+    assert.equals((0, state_1.valueify)(merged), { a: "two" });
+});
+wtf.test(`Merge should merge state { a: null } with state { a: "two" }.`, (assert) => {
+    let one = (0, state_1.stateify)({ a: null });
+    let two = (0, state_1.stateify)({ a: "two" });
+    let merged = (0, state_1.merge)(one, two);
+    assert.equals((0, state_1.valueify)(merged), { a: "two" });
+});
+wtf.test(`Merge should merge value { a: "one" } with value { "a": null }.`, (assert) => {
+    let one = (0, state_1.valueify)({ a: "one" });
+    let two = (0, state_1.valueify)({ a: null });
+    let merged = (0, state_1.merge)(one, two);
+    assert.equals((0, state_1.valueify)(merged), { a: null });
+});
+wtf.test(`Merge should merge value { a: "one" } with state { "a": null }.`, (assert) => {
+    let one = (0, state_1.valueify)({ a: "one" });
+    let two = (0, state_1.stateify)({ a: null });
+    let merged = (0, state_1.merge)(one, two);
+    assert.equals((0, state_1.valueify)(merged), { a: null });
+});
+wtf.test(`Merge should merge state { a: "one" } with value { "a": null }.`, (assert) => {
+    let one = (0, state_1.stateify)({ a: "one" });
+    let two = (0, state_1.valueify)({ a: null });
+    let merged = (0, state_1.merge)(one, two);
+    assert.equals((0, state_1.valueify)(merged), { a: null });
+});
+wtf.test(`Merge should merge state { a: "one" } with state { "a": null }.`, (assert) => {
+    let one = (0, state_1.stateify)({ a: "one" });
+    let two = (0, state_1.stateify)({ a: null });
+    let merged = (0, state_1.merge)(one, two);
+    assert.equals((0, state_1.valueify)(merged), { a: null });
+});
 wtf.test(`Merge should return the correct type for { a: string } and { a: string }.`, (assert) => {
     let one = (0, state_1.valueify)({ a: "one" });
     let two = (0, state_1.valueify)({ a: "two" });
@@ -730,6 +790,16 @@ wtf.test(`Merge should return the correct type for { a: number } and { a?: strin
 wtf.test(`Merge should return the correct type for { a?: number } and { a?: string }.`, (assert) => {
     let one = (0, state_1.valueify)({});
     let two = (0, state_1.valueify)({});
+    let merged = (0, state_1.merge)(one, two);
+});
+wtf.test(`Merge should return the correct type for { a: number } and { a: null }.`, (assert) => {
+    let one = (0, state_1.valueify)({ a: 1 });
+    let two = (0, state_1.valueify)({ a: null });
+    let merged = (0, state_1.merge)(one, two);
+});
+wtf.test(`Merge should return the correct type for { a: number } and { a: string | null }.`, (assert) => {
+    let one = (0, state_1.valueify)({ a: 1 });
+    let two = (0, state_1.valueify)({ a: null });
     let merged = (0, state_1.merge)(one, two);
 });
 wtf.test(`Merged objects created from {} and {} should update properly when the first object is updated.`, (assert) => {
@@ -803,4 +873,63 @@ wtf.test(`Merged objects created from { key: "one" } and { key: "two" } should u
     assert.equals((0, state_1.valueify)(merged), { key: "TWO" });
     two.update({});
     assert.equals((0, state_1.valueify)(merged), { key: "one" });
+});
+wtf.test(`Object state members accessed using dot notation should have the correct type.`, (assert) => {
+    let state = (0, state_1.stateify)({});
+    let member = state.a;
+});
+wtf.test(`Object state members accessed using member() should have the correct type.`, (assert) => {
+    let state = (0, state_1.stateify)({});
+    let member = state.member("a");
+});
+wtf.test(`Array state elements accessed using brace notation should have the correct type.`, (assert) => {
+    let state = (0, state_1.stateify)(["a"]);
+    let element = state[0];
+});
+wtf.test(`Array state elements accessed using element() should have the correct type.`, (assert) => {
+    let state = (0, state_1.stateify)(["a"]);
+    let element = state.element(0);
+});
+wtf.test(`Generic types should be handled properly.`, (assert) => {
+    function test(array) {
+        let element = array[0];
+    }
+});
+wtf.test(`Objects with readonly members should be handled properly.`, (assert) => {
+    let value = { a: "" };
+    let value_cast_to_mutable = value;
+    let value_assigned_to_mutable = value;
+    let state = (0, state_1.stateify)(value);
+    let state_cast_to_mutable = state;
+    let state_assigned_to_mutable = state;
+    let member = state.member("a");
+});
+wtf.test(`Readonly arrays should be handled properly.`, (assert) => {
+    let value = [""];
+    let value_cast_to_mutable = value;
+    // Assignment to mutable array from readonly array requires cast.
+    // let value_assigned_to_mutable: ""[] = value;
+    let state = (0, state_1.stateify)(value);
+    let state_cast_to_mutable = state;
+    let state_assigned_to_mutable = state;
+    let element = state.element(0);
+});
+wtf.test(`Arrays containing objects with readonly members should be handled properly.`, (assert) => {
+    let value = [{ a: "" }];
+    let value_cast_to_mutable = value;
+    let value_assigned_to_mutable = value;
+    let state = (0, state_1.stateify)(value);
+    let state_cast_to_mutable = state;
+    let state_assigned_to_mutable = state;
+    let element = state.element(0);
+});
+wtf.test(`Readonly arrays containing objects with readonly members should be handled properly.`, (assert) => {
+    let value = [{ a: "" }];
+    let value_cast_to_mutable = value;
+    // Assignment to mutable array from readonly array requires cast.
+    // let value_assigned_to_mutable: { a: "" }[] = value;
+    let state = (0, state_1.stateify)(value);
+    let state_cast_to_mutable = state;
+    let state_assigned_to_mutable = state;
+    let element = state.element(0);
 });

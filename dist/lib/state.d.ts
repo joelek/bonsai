@@ -32,12 +32,15 @@ export type Predicate<A extends Value> = (state: State<A>, index: State<number>)
 export type Observer<A extends any[]> = (...args: A) => void;
 export type Computer<A extends Value, B extends Value> = (value: A) => B;
 export type CancellationToken = () => void;
-export type State<A extends Value> = AbstractState<A, AbstractStateEvents<A>> & (A extends PrimitiveValue ? PrimitiveState<A> : A extends Array<infer B extends Value> ? IndexStates<A> & ArrayState<B> : A extends RecordValue ? States<A> & ObjectState<A> : A extends ReferenceValue ? ReferenceState<A> : never);
-export type IndexStates<A> = {
+export type State<A extends Value> = AbstractState<A, AbstractStateEvents<A>> & (A extends PrimitiveValue ? PrimitiveState<A> : A extends ReadonlyArray<infer B extends Value> | Array<infer B extends Value> ? ElementStates<A> & ArrayState<B> : A extends RecordValue ? MemberStates<A> & ObjectState<A> : A extends ReferenceValue ? ReferenceState<A> : never);
+export type StateTupleFromValueTuple<A extends Value[]> = {
+    [B in keyof A]: State<A[B]>;
+};
+export type ElementStates<A> = {
     [B in keyof A & number]: A[B] extends Value ? State<A[B]> : never;
 };
-export type States<A> = {
-    [B in keyof A]: A[B] extends Value ? State<A[B]> : never;
+export type MemberStates<A> = {
+    [B in keyof A]-?: A[B] extends Value ? State<A[B]> : never;
 };
 export type AbstractStateEvents<A extends Value> = {
     "update": [
@@ -51,7 +54,6 @@ export declare abstract class AbstractState<A extends Value, B extends TupleReco
     protected notify<C extends keyof B>(type: C, ...args: [...B[C]]): void;
     constructor();
     compute<C extends Value>(computer: Computer<A, C>): State<C>;
-    fallback(defaultValue: Exclude<A, undefined>): State<Exclude<A, undefined>>;
     observe<C extends keyof B>(type: C, observer: Observer<B[C]>): CancellationToken;
     unobserve<C extends keyof B>(type: C, observer: Observer<B[C]>): void;
     abstract update(value: A): boolean;
@@ -112,13 +114,13 @@ export declare class ArrayStateImplementation<A extends Value> extends ArrayStat
 }
 export type ObjectStateEvents<A extends Value> = AbstractStateEvents<A> & {};
 export declare abstract class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectStateEvents<A>> {
-    protected members: States<A>;
+    protected members: MemberStates<A>;
     protected updating: boolean;
     protected isUndefined: boolean;
     protected onMemberUpdate: () => void;
-    constructor(members: States<A>);
+    constructor(members: MemberStates<A>);
     member<B extends keyof A>(key: B): State<A[B]>;
-    spread(): States<A>;
+    spread(): MemberStates<A>;
 }
 export declare class ObjectStateImplementation<A extends RecordValue> extends ObjectState<A> {
     update(value: A): boolean;
@@ -126,14 +128,15 @@ export declare class ObjectStateImplementation<A extends RecordValue> extends Ob
 }
 export declare function make_primitive_state<A extends PrimitiveValue>(value: A): PrimitiveState<A>;
 export declare function make_array_state<A extends Value>(elements: Array<State<A>>): ArrayState<A>;
-export declare function make_object_state<A extends RecordValue>(members: States<A>): ObjectState<A>;
+export declare function make_object_state<A extends RecordValue>(members: MemberStates<A>): ObjectState<A>;
 export declare function make_reference_state<A extends ReferenceValue>(value: A): ReferenceState<A>;
 export declare function make_state<A extends Value>(value: A): State<A>;
-export declare function computed<A extends Value[], B extends Value>(states: [...States<A>], computer: (...args: [...A]) => B): State<B>;
+export declare function computed<A extends Value[], B extends Value>(states: [...StateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): State<B>;
 export declare function stateify<A extends Attribute<Value>>(attribute: A): StateFromAttribute<A>;
 export declare function valueify<A extends Attribute<Value>>(attribute: A): ValueFromAttribute<A>;
 export type Merged<A extends RecordValue, B extends RecordValue> = ExpansionOf<{
     [C in keyof A | keyof B]: C extends keyof A & keyof B ? undefined extends B[C] ? Exclude<B[C], undefined> | A[C] : B[C] : C extends keyof A ? A[C] : C extends keyof B ? B[C] : never;
 }>;
+export declare function fallback<A extends Value>(state: State<A | undefined>, defaultValue: Exclude<A, undefined>): State<Exclude<A, undefined>>;
 export declare function merge<A extends RecordValue, B extends RecordValue>(one: Attributes<A>, two: Attributes<B>): Attributes<Merged<A, B>>;
 export {};
