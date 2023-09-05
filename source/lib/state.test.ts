@@ -1,5 +1,18 @@
 import * as wtf from "@joelek/wtf";
-import { Attribute, Attributes, merge, make_state, State, stateify, StateOrValue, valueify } from "./state";
+import { Attribute, Attributes, merge, make_state, State, stateify, StateOrValue, valueify, computed } from "./state";
+
+wtf.test(`Computed should compute a new state from two string states.`, (assert) => {
+	let one = stateify("one" as string);
+	let two = stateify("two" as string);
+	let computed_state = computed([one, two], (one, two) => {
+		return `${one} ${two}`;
+	});
+	assert.equals(computed_state.value(), "one two");
+	one.update("ONE");
+	assert.equals(computed_state.value(), "ONE two");
+	two.update("TWO");
+	assert.equals(computed_state.value(), "ONE TWO");
+});
 
 wtf.test(`Attributes<A> should support complex values.`, (assert) => {
 	type MyValueType = {
