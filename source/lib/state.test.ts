@@ -1041,7 +1041,7 @@ wtf.test(`Generic types should be handled properly.`, (assert) => {
 	}
 });
 
-wtf.test(`Objects with readonly members should be handled properly.`, (assert) => {
+wtf.test(`Objects with readonly members should be assigned and cast properly.`, (assert) => {
 	let value = { a: "" } as { readonly a: "" };
 	let value_cast_to_mutable = value as { a: "" };
 	let value_assigned_to_mutable: { a: "" } = value;
@@ -1051,18 +1051,20 @@ wtf.test(`Objects with readonly members should be handled properly.`, (assert) =
 	let member = state.member("a");
 });
 
-wtf.test(`Readonly arrays should be handled properly.`, (assert) => {
+wtf.test(`Readonly arrays should be assigned and cast properly.`, (assert) => {
 	let value = [""] as readonly ""[];
 	let value_cast_to_mutable = value as ""[];
-	// Assignment to mutable array from readonly array requires cast.
-	// let value_assigned_to_mutable: ""[] = value;
+	// Assignment to mutable array type from readonly array type requires cast.
+	// @ts-expect-error
+	let value_assigned_to_mutable: ""[] = value;
 	let state = stateify(value);
 	let state_cast_to_mutable = state as State<""[]>;
+	// This should ideally throw an error while still being castable.
 	let state_assigned_to_mutable: State<""[]> = state;
 	let element = state.element(0);
 });
 
-wtf.test(`Arrays containing objects with readonly members should be handled properly.`, (assert) => {
+wtf.test(`Arrays containing objects with readonly members should be assigned and cast properly.`, (assert) => {
 	let value = [{ a: "" }] as { readonly a: "" }[];
 	let value_cast_to_mutable = value as { a: "" }[];
 	let value_assigned_to_mutable: { a: "" }[] = value;
@@ -1072,18 +1074,27 @@ wtf.test(`Arrays containing objects with readonly members should be handled prop
 	let element = state.element(0);
 });
 
-wtf.test(`Readonly arrays containing objects with readonly members should be handled properly.`, (assert) => {
+wtf.test(`Readonly arrays containing objects with readonly members should be assigned and cast properly.`, (assert) => {
 	let value = [{ a: "" }] as readonly { readonly a: "" }[];
 	let value_cast_to_mutable = value as { a: "" }[];
-	// Assignment to mutable array from readonly array requires cast.
-	// let value_assigned_to_mutable: { a: "" }[] = value;
+	// Assignment to mutable array type from readonly array type requires cast.
+	// @ts-expect-error
+	let value_assigned_to_mutable: { a: "" }[] = value;
 	let state = stateify(value);
 	let state_cast_to_mutable = state as State<{ a: "" }[]>;
+	// This should ideally throw an error while still being castable.
 	let state_assigned_to_mutable: State<{ a: "" }[]> = state;
 	let element = state.element(0);
 });
 
-wtf.test(`Object states should be castable to similar object states with optional members.`, (assert) => {
-	let state = make_state({ one: "one" });
-	let state_cast_to_similar = state as State<{ one: string, two?: string }>;
+wtf.test(`Object states with optional members should be assigned and cast properly.`, (assert) => {
+	let value = { a: "" } as { a: "" };
+	let value_cast_to_similar = value as { a: "", b: "" | undefined };
+	// Assignment to object type with required member from object type with optional member requires cast.
+	// @ts-expect-error
+	let value_assigned_to_similar: { a: "", b: "" | undefined } = value;
+	let state = make_state(value);
+	let state_cast_to_similar = state as State<{ a: "", b?: "" }>;
+	// @ts-expect-error
+	let state_assigned_to_similar: State<{ a: "", b?: "" }> = state;
 });
