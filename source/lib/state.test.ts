@@ -1082,3 +1082,8 @@ wtf.test(`Readonly arrays containing objects with readonly members should be han
 	let state_assigned_to_mutable: State<{ a: "" }[]> = state;
 	let element = state.element(0);
 });
+
+wtf.test(`Object states should be castable to similar object states with optional members.`, (assert) => {
+	let state = make_state({ one: "one" });
+	let state_cast_to_similar = state as State<{ one: string, two?: string }>;
+});
