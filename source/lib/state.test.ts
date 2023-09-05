@@ -1014,12 +1014,12 @@ wtf.test(`Merged objects created from { key: "one" } and { key: "two" } should u
 	two.update({});
 	assert.equals(valueify(merged), { key: "one" });
 });
-/*
+
 wtf.test(`Object state members accessed using dot notation should have the correct type.`, (assert) => {
 	let state = stateify({} as { a?: string });
 	let member: State<string | undefined> = state.a;
 });
- */
+
 wtf.test(`Object state members accessed using member() should have the correct type.`, (assert) => {
 	let state = stateify({} as { a?: string });
 	let member: State<string | undefined> = state.member("a");
