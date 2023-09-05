@@ -48,8 +48,8 @@ export type CancellationToken = () => void;
 
 export type State<A extends Value> = AbstractState<A, AbstractStateEvents<A>> & (
 	A extends PrimitiveValue ? PrimitiveState<A> :
-	A extends Array<infer B extends Value> ? IndexStates<A> & ArrayState<B> :
-	A extends RecordValue ? States<A> & ObjectState<A> :
+	A extends Array<infer B extends Value> ? ElementStates<A> & ArrayState<B> :
+	A extends RecordValue ? MemberStates<A> & ObjectState<A> :
 	A extends ReferenceValue ? ReferenceState<A> :
 	never
 );
@@ -58,11 +58,11 @@ export type StateTupleFromValueTuple<A extends Value[]> = {
 	[B in keyof A]: State<A[B]>;
 };
 
-export type IndexStates<A> = {
+export type ElementStates<A> = {
 	[B in keyof A & number]: A[B] extends Value ? State<A[B]> : never;
 };
 
-export type States<A> = {
+export type MemberStates<A> = {
 	// The correct type signature is with optionals removed but this breaks TypeScript performance.
 	[B in keyof A]/* -? */: A[B] extends Value ? State<A[B]> : never;
 };
@@ -500,7 +500,7 @@ export type ObjectStateEvents<A extends Value> = AbstractStateEvents<A> & {
 };
 
 export abstract class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectStateEvents<A>> {
-	protected members: States<A>;
+	protected members: MemberStates<A>;
 	protected updating: boolean;
 	protected isUndefined: boolean;
 
@@ -510,7 +510,7 @@ export abstract class ObjectState<A extends RecordValue> extends AbstractState<A
 		}
 	};
 
-	constructor(members: States<A>) {
+	constructor(members: MemberStates<A>) {
 		super();
 		this.members = { ...members };
 		this.updating = false;
@@ -530,7 +530,7 @@ export abstract class ObjectState<A extends RecordValue> extends AbstractState<A
 		return member as any;
 	}
 
-	spread(): States<A> {
+	spread(): MemberStates<A> {
 		return { ...this.members };
 	}
 };
@@ -612,7 +612,7 @@ export function make_array_state<A extends Value>(elements: Array<State<A>>): Ar
 	});
 };
 
-export function make_object_state<A extends RecordValue>(members: States<A>): ObjectState<A> {
+export function make_object_state<A extends RecordValue>(members: MemberStates<A>): ObjectState<A> {
 	return new Proxy(new ObjectStateImplementation(members), {
 		get(target: any, key: any) {
 			if (key in target) {
