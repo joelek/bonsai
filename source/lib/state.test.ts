@@ -1034,3 +1034,9 @@ wtf.test(`Array state elements accessed using element() should have the correct 
 	let state = stateify(["a" as string | undefined]);
 	let element: State<string | undefined> = state.element(0);
 });
+
+wtf.test(`Generic types should be handled properly.`, (assert) => {
+	function test<A extends Value>(array: State<Array<A>>): void {
+		let element: State<A> = array[0];
+	}
+});
