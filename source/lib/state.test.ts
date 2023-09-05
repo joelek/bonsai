@@ -1040,3 +1040,23 @@ wtf.test(`Generic types should be handled properly.`, (assert) => {
 		let element: State<A> = array[0];
 	}
 });
+
+wtf.test(`Objects with readonly members should be handled properly.`, (assert) => {
+	let value = { a: "" } as { readonly a: "" };
+	let value_cast_to_mutable = value as { a: "" };
+	let value_assigned_to_mutable: { a: "" } = value;
+	let state = stateify(value);
+	let state_cast_to_mutable = state as State<{ a: "" }>;
+	let state_assigned_to_mutable: State<{ a: "" }> = state;
+	let member = state.member("a");
+});
+
+wtf.test(`Arrays containing objects with readonly members should be handled properly.`, (assert) => {
+	let value = [{ a: "" }] as { readonly a: "" }[];
+	let value_cast_to_mutable = value as { a: "" }[];
+	let value_assigned_to_mutable: { a: "" }[] = value;
+	let state = stateify(value);
+	let state_cast_to_mutable = state as State<{ a: "" }[]>;
+	let state_assigned_to_mutable: State<{ a: "" }[]> = state;
+	let element = state.element(0);
+});
