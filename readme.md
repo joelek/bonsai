@@ -656,6 +656,5 @@ NB: This project targets TypeScript 4 in strict mode.
 * Consider adding support for Promise<State<Value>>.
 * Improve life-cycle management of elements.
 * Implement getter and mapped setter for `augment()`.
-* Fix type signature for object state members accessed using dot notation.
 * Improve handling of readonly values.
 * Improve handling of generic values.
