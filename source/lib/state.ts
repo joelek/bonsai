@@ -54,6 +54,10 @@ export type State<A extends Value> = AbstractState<A, AbstractStateEvents<A>> & 
 	never
 );
 
+export type StateTupleFromValueTuple<A extends Value[]> = {
+	[B in keyof A]: State<A[B]>;
+};
+
 export type IndexStates<A> = {
 	[B in keyof A & number]: A[B] extends Value ? State<A[B]> : never;
 };
@@ -691,7 +695,7 @@ export function make_state<A extends Value>(value: A): State<A> {
 	throw new Error(`Expected code to be unreachable!`);
 };
 
-export function computed<A extends Value[], B extends Value>(states: [...States<A>], computer: (...args: [...A]) => B): State<B> {
+export function computed<A extends Value[], B extends Value>(states: [...StateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): State<B> {
 	let values = states.map((state) => state.value()) as [...A];
 	let computed = make_state(computer(...values));
 	for (let index = 0; index < states.length; index++) {
