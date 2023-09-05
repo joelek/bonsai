@@ -1,5 +1,5 @@
 import * as wtf from "@joelek/wtf";
-import { Attribute, Attributes, merge, make_state, State, stateify, StateOrValue, valueify, computed } from "./state";
+import { Attribute, Attributes, merge, make_state, State, stateify, StateOrValue, valueify, Value, computed, fallback } from "./state";
 
 wtf.test(`Computed should compute a new state from two string states.`, (assert) => {
 	let one = stateify("one" as string);
@@ -460,7 +460,7 @@ wtf.test(`Attributes should be user-friendly.`, (assert) => {
 	assert.equals(valueify(required_required), "reqreq");
 	let required_optional = required.optional;
 	assert.equals(valueify(required_optional), "reqopt");
-	let optional = stateify(attributes).member("optional").fallback({ required: "optreq2" });
+	let optional = fallback(stateify(attributes).member("optional"), { required: "optreq2" });
 	let optional_required = optional.required;
 	assert.equals(valueify(optional_required), "optreq");
 	let optional_optional = optional.optional;
@@ -669,46 +669,46 @@ wtf.test(`State<undefined> should be assignable to Attribute<[string, string] | 
 
 wtf.test(`Fallback states should use the underlying value when the underlying value is defined.`, (assert) => {
 	let underlying = make_state("underlying" as string | undefined);
-	let fallback = underlying.fallback("default");
+	let fallbacked = fallback(underlying, "default");
 	assert.equals(underlying.value(), "underlying");
-	assert.equals(fallback.value(), "underlying");
+	assert.equals(fallbacked.value(), "underlying");
 });
 
 wtf.test(`Fallback states should use the default value when the underlying value is undefined.`, (assert) => {
 	let underlying = make_state(undefined as string | undefined);
-	let fallback = underlying.fallback("default");
+	let fallbacked = fallback(underlying, "default");
 	assert.equals(underlying.value(), undefined);
-	assert.equals(fallback.value(), "default");
+	assert.equals(fallbacked.value(), "default");
 });
 
 wtf.test(`Fallback states should propagate updated values back to the underlying state.`, (assert) => {
 	let underlying = make_state(undefined as string | undefined);
-	let fallback = underlying.fallback("default");
+	let fallbacked = fallback(underlying, "default");
 	assert.equals(underlying.value(), undefined);
-	assert.equals(fallback.value(), "default");
-	fallback.update("updated");
+	assert.equals(fallbacked.value(), "default");
+	fallbacked.update("updated");
 	assert.equals(underlying.value(), "updated");
-	assert.equals(fallback.value(), "updated");
+	assert.equals(fallbacked.value(), "updated");
 });
 
 wtf.test(`Fallback states should not propagate the default value back to the underlying state when the fallback state is updated.`, (assert) => {
 	let underlying = make_state("underlying" as string | undefined);
-	let fallback = underlying.fallback("default");
+	let fallbacked = fallback(underlying, "default");
 	assert.equals(underlying.value(), "underlying");
-	assert.equals(fallback.value(), "underlying");
-	fallback.update("default");
+	assert.equals(fallbacked.value(), "underlying");
+	fallbacked.update("default");
 	assert.equals(underlying.value(), undefined);
-	assert.equals(fallback.value(), "default");
+	assert.equals(fallbacked.value(), "default");
 });
 
 wtf.test(`Fallback states should not propagate the default value back to the underlying state when the underlying state is updated.`, (assert) => {
 	let underlying = make_state("underlying" as string | undefined);
-	let fallback = underlying.fallback("default");
+	let fallbacked = fallback(underlying, "default");
 	assert.equals(underlying.value(), "underlying");
-	assert.equals(fallback.value(), "underlying");
+	assert.equals(fallbacked.value(), "underlying");
 	underlying.update(undefined);
 	assert.equals(underlying.value(), undefined);
-	assert.equals(fallback.value(), "default");
+	assert.equals(fallbacked.value(), "default");
 });
 
 wtf.test(`Merge should merge value { a: "one" } with value { a: "two" }.`, (assert) => {

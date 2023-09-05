@@ -100,20 +100,6 @@ export abstract class AbstractState<A extends Value, B extends TupleRecord<B> & 
 		return computed;
 	}
 
-	fallback(defaultValue: Exclude<A, undefined>): State<Exclude<A, undefined>> {
-		let computer = ((value) => typeof value !== "undefined" ? value : defaultValue) as Computer<A, Exclude<A, undefined>>;
-		let computed = this.compute(computer);
-		computed.observe("update", (state) => {
-			let value = state.value();
-			if (make_state(defaultValue).update(value)) {
-				this.update(value);
-			} else {
-				this.update(undefined as any);
-			}
-		});
-		return computed;
-	}
-
 	observe<C extends keyof B>(type: C, observer: Observer<B[C]>): CancellationToken {
 		let observers = this.observers[type];
 		if (observers == null) {
@@ -761,6 +747,20 @@ export type Merged<A extends RecordValue, B extends RecordValue> = ExpansionOf<{
 				? B[C]
 				: never;
 }>;
+
+export function fallback<A extends Value>(state: State<A | undefined>, defaultValue: Exclude<A, undefined>): State<Exclude<A, undefined>> {
+	let computer = ((value) => typeof value !== "undefined" ? value : defaultValue) as Computer<A | undefined, Exclude<A, undefined>>;
+	let computed_state = state.compute(computer);
+	computed_state.observe("update", (computed_state) => {
+		let value = computed_state.value();
+		if (make_state(defaultValue).update(value)) {
+			state.update(value);
+		} else {
+			state.update(undefined);
+		}
+	});
+	return computed_state;
+};
 
 export function merge<A extends RecordValue, B extends RecordValue>(one: Attributes<A>, two: Attributes<B>): Attributes<Merged<A, B>> {
 	let one_state = stateify(one);
