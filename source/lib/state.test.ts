@@ -1051,10 +1051,32 @@ wtf.test(`Objects with readonly members should be handled properly.`, (assert) =
 	let member = state.member("a");
 });
 
+wtf.test(`Readonly arrays should be handled properly.`, (assert) => {
+	let value = [""] as readonly ""[];
+	let value_cast_to_mutable = value as ""[];
+	// Assignment to mutable array from readonly array requires cast.
+	// let value_assigned_to_mutable: ""[] = value;
+	let state = stateify(value);
+	let state_cast_to_mutable = state as State<""[]>;
+	let state_assigned_to_mutable: State<""[]> = state;
+	let element = state.element(0);
+});
+
 wtf.test(`Arrays containing objects with readonly members should be handled properly.`, (assert) => {
 	let value = [{ a: "" }] as { readonly a: "" }[];
 	let value_cast_to_mutable = value as { a: "" }[];
 	let value_assigned_to_mutable: { a: "" }[] = value;
+	let state = stateify(value);
+	let state_cast_to_mutable = state as State<{ a: "" }[]>;
+	let state_assigned_to_mutable: State<{ a: "" }[]> = state;
+	let element = state.element(0);
+});
+
+wtf.test(`Readonly arrays containing objects with readonly members should be handled properly.`, (assert) => {
+	let value = [{ a: "" }] as readonly { readonly a: "" }[];
+	let value_cast_to_mutable = value as { a: "" }[];
+	// Assignment to mutable array from readonly array requires cast.
+	// let value_assigned_to_mutable: { a: "" }[] = value;
 	let state = stateify(value);
 	let state_cast_to_mutable = state as State<{ a: "" }[]>;
 	let state_assigned_to_mutable: State<{ a: "" }[]> = state;

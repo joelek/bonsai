@@ -49,7 +49,7 @@ export type CancellationToken = () => void;
 
 export type State<A extends Value> = AbstractState<A, AbstractStateEvents<A>> & (
 	A extends PrimitiveValue ? PrimitiveState<A> :
-	A extends Array<infer B extends Value> ? ElementStates<A> & ArrayState<B> :
+	A extends ReadonlyArray<infer B extends Value> | Array<infer B extends Value> ? ElementStates<A> & ArrayState<B> :
 	A extends RecordValue ? MemberStates<A> & ObjectState<A> :
 	A extends ReferenceValue ? ReferenceState<A> :
 	never
