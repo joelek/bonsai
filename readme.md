@@ -427,12 +427,7 @@ An element may be processed in a processing block through the `process(callback)
 
 #### Serialization
 
-Values set as attributes or child nodes will be serialized into the document using a simple algorithm. The algorithm serializes primitive values into strings and uses JSON-serialization for composite values. This provides maximum flexibility for the programmer with one caveat which is illustrated in the example below.
-
-```ts
-let p1 = html.p({}, 1, 2); // Creates a paragraph with two text nodes containing "1" and "2", respectively.
-let p2 = html.p({}, [1, 2]); // Creates a paragraph with one text node containing "[1, 2]".
-```
+Values set as attributes will be serialized into the document using a simple algorithm. The algorithm serializes primitive values into plain strings and uses JSON-serialization for composite values.
 
 Please note that the `class` and `style` attributes use custom serialization rules and also support deserialization in contrast to regular attributes.
 
