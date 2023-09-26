@@ -463,6 +463,26 @@ let two = stateify(2);
 let sum = computed([one, two], (one, two) => one + two);
 ```
 
+Nested array states may be flattened into a single array state using the `flatten()` function. The function retains the original states and is updated whenever either of the nested states update.
+
+```ts
+import { stateify, flatten } from "@joelek/bonsai";
+
+let array = stateify([
+	[
+		"one",
+		[
+			"two"
+		],
+		"three",
+	],
+	[
+		"four"
+	]
+]);
+let flattened = flatten(array); // The resulting type is State<Array<string>>.
+```
+
 #### Compute
 
 New state may be computed from existing state through the `compute(computer)` method. The method returns the new state.
@@ -656,5 +676,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Consider adding support for Promise<State<Value>>.
 * Improve life-cycle management of elements.
 * Implement getter and mapped setter for `augment()`.
-* Document `flatten()`.
 * Investigate usability of a promise to state shim.
