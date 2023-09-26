@@ -301,7 +301,9 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 			let node = createNode(child.value());
 			this.appendChild(node);
 			update_bindings.push(child.observe("update", (state) => {
-				this.replaceChild(createNode(state.value()), node);
+				let new_node = createNode(state.value());
+				this.replaceChild(new_node, node);
+				node = new_node;
 			}));
 		}
 		let insert_bindings = bindings[INSERT] = bindings[INSERT] ?? [];
@@ -309,7 +311,9 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 			let node = createNode(state.value());
 			this.insertBefore(node, this.childNodes.item(index));
 			update_bindings.splice(index, 0, state.observe("update", (state) => {
-				this.replaceChild(createNode(state.value()), node);
+				let new_node = createNode(state.value());
+				this.replaceChild(new_node, node);
+				node = new_node;
 			}))
 		}));
 		let remove_bindings = bindings[REMOVE] = bindings[REMOVE] ?? [];
