@@ -1,6 +1,7 @@
 type ExpansionOf<A> = A extends infer B ? {
     [C in keyof B]: B[C];
 } : never;
+type RecursiveArray<A> = Array<A | RecursiveArray<A>>;
 export type StateOrValue<A extends Value> = A | State<A>;
 export type Attribute<A extends Value> = State<A> | (A extends ArrayValue ? {
     [B in keyof A]: A[B] extends Value ? Attribute<A[B]> : never;
@@ -139,4 +140,5 @@ export type Merged<A extends RecordValue, B extends RecordValue> = ExpansionOf<{
 }>;
 export declare function fallback<A extends Value>(state: State<A | undefined>, defaultValue: Exclude<A, undefined>): State<Exclude<A, undefined>>;
 export declare function merge<A extends RecordValue, B extends RecordValue>(one: Attributes<A>, two: Attributes<B>): Attributes<Merged<A, B>>;
+export declare function flatten<A extends PrimitiveValue | ReferenceValue>(states: State<Array<A | RecursiveArray<A>>>): State<Array<A>>;
 export {};

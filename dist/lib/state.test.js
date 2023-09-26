@@ -895,7 +895,7 @@ wtf.test(`Generic types should be handled properly.`, (assert) => {
         let element = array[0];
     }
 });
-wtf.test(`Objects with readonly members should be handled properly.`, (assert) => {
+wtf.test(`Objects with readonly members should be assigned and cast properly.`, (assert) => {
     let value = { a: "" };
     let value_cast_to_mutable = value;
     let value_assigned_to_mutable = value;
@@ -904,17 +904,19 @@ wtf.test(`Objects with readonly members should be handled properly.`, (assert) =
     let state_assigned_to_mutable = state;
     let member = state.member("a");
 });
-wtf.test(`Readonly arrays should be handled properly.`, (assert) => {
+wtf.test(`Readonly arrays should be assigned and cast properly.`, (assert) => {
     let value = [""];
     let value_cast_to_mutable = value;
-    // Assignment to mutable array from readonly array requires cast.
-    // let value_assigned_to_mutable: ""[] = value;
+    // Assignment to mutable array type from readonly array type requires cast.
+    // @ts-expect-error
+    let value_assigned_to_mutable = value;
     let state = (0, state_1.stateify)(value);
     let state_cast_to_mutable = state;
+    // This should ideally throw an error while still being castable.
     let state_assigned_to_mutable = state;
     let element = state.element(0);
 });
-wtf.test(`Arrays containing objects with readonly members should be handled properly.`, (assert) => {
+wtf.test(`Arrays containing objects with readonly members should be assigned and cast properly.`, (assert) => {
     let value = [{ a: "" }];
     let value_cast_to_mutable = value;
     let value_assigned_to_mutable = value;
@@ -923,13 +925,132 @@ wtf.test(`Arrays containing objects with readonly members should be handled prop
     let state_assigned_to_mutable = state;
     let element = state.element(0);
 });
-wtf.test(`Readonly arrays containing objects with readonly members should be handled properly.`, (assert) => {
+wtf.test(`Readonly arrays containing objects with readonly members should be assigned and cast properly.`, (assert) => {
     let value = [{ a: "" }];
     let value_cast_to_mutable = value;
-    // Assignment to mutable array from readonly array requires cast.
-    // let value_assigned_to_mutable: { a: "" }[] = value;
+    // Assignment to mutable array type from readonly array type requires cast.
+    // @ts-expect-error
+    let value_assigned_to_mutable = value;
     let state = (0, state_1.stateify)(value);
     let state_cast_to_mutable = state;
+    // This should ideally throw an error while still being castable.
     let state_assigned_to_mutable = state;
     let element = state.element(0);
+});
+wtf.test(`Object states with optional members should be assigned and cast properly.`, (assert) => {
+    let value = { a: "" };
+    let value_cast_to_similar = value;
+    // Assignment to object type with required member from object type with optional member requires cast.
+    // @ts-expect-error
+    let value_assigned_to_similar = value;
+    let state = (0, state_1.make_state)(value);
+    let state_cast_to_similar = state;
+    // @ts-expect-error
+    let state_assigned_to_similar = state;
+});
+wtf.test(`Flatten should flatten three levels of arrays.`, (asserts) => {
+    let array_00 = (0, state_1.stateify)(["a", "b"]);
+    let array_01 = (0, state_1.stateify)(["c", "d"]);
+    let array_10 = (0, state_1.stateify)(["e", "f"]);
+    let array_11 = (0, state_1.stateify)(["g", "h"]);
+    let array_0 = (0, state_1.stateify)([array_00, array_01]);
+    let array_1 = (0, state_1.stateify)([array_10, array_11]);
+    let array = (0, state_1.stateify)([array_0, array_1]);
+    let flattened = (0, state_1.flatten)(array);
+    asserts.equals(flattened.value(), ["a", "b", "c", "d", "e", "f", "g", "h"]);
+});
+wtf.test(`Flattened arrays should contain states from the original arrays.`, (asserts) => {
+    let array_00 = (0, state_1.stateify)(["a", "b"]);
+    let array_01 = (0, state_1.stateify)(["c", "d"]);
+    let array_10 = (0, state_1.stateify)(["e", "f"]);
+    let array_11 = (0, state_1.stateify)(["g", "h"]);
+    let array_0 = (0, state_1.stateify)([array_00, array_01]);
+    let array_1 = (0, state_1.stateify)([array_10, array_11]);
+    let array = (0, state_1.stateify)([array_0, array_1]);
+    let flattened = (0, state_1.flatten)(array);
+    array_00[0].update("A");
+    array_00[1].update("B");
+    array_01[0].update("C");
+    array_01[1].update("D");
+    array_10[0].update("E");
+    array_10[1].update("F");
+    array_11[0].update("G");
+    array_11[1].update("H");
+    asserts.equals(flattened.value(), ["A", "B", "C", "D", "E", "F", "G", "H"]);
+});
+wtf.test(`Flattened arrays should contain items inserted into the original arrays.`, (asserts) => {
+    let array_00 = (0, state_1.stateify)(["b"]);
+    let array_01 = (0, state_1.stateify)(["e"]);
+    let array_10 = (0, state_1.stateify)(["h"]);
+    let array_11 = (0, state_1.stateify)(["k"]);
+    let array_0 = (0, state_1.stateify)([array_00, array_01]);
+    let array_1 = (0, state_1.stateify)([array_10, array_11]);
+    let array = (0, state_1.stateify)([array_0, array_1]);
+    let flattened = (0, state_1.flatten)(array);
+    array_00.insert(0, "a");
+    array_00.insert(2, "c");
+    array_01.insert(0, "d");
+    array_01.insert(2, "f");
+    array_10.insert(0, "g");
+    array_10.insert(2, "i");
+    array_11.insert(0, "j");
+    array_11.insert(2, "l");
+    asserts.equals(flattened.value(), ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"]);
+});
+wtf.test(`Flattened arrays should not contain items removed from the original arrays.`, (asserts) => {
+    let array_00 = (0, state_1.stateify)(["a", "b", "c"]);
+    let array_01 = (0, state_1.stateify)(["d", "e", "f"]);
+    let array_10 = (0, state_1.stateify)(["g", "h", "i"]);
+    let array_11 = (0, state_1.stateify)(["j", "k", "l"]);
+    let array_0 = (0, state_1.stateify)([array_00, array_01]);
+    let array_1 = (0, state_1.stateify)([array_10, array_11]);
+    let array = (0, state_1.stateify)([array_0, array_1]);
+    let flattened = (0, state_1.flatten)(array);
+    array_00.remove(1);
+    array_01.remove(1);
+    array_10.remove(1);
+    array_11.remove(1);
+    asserts.equals(flattened.value(), ["a", "c", "d", "f", "g", "i", "j", "l"]);
+});
+wtf.test(`Flattened arrays should contain arrays inserted into the original arrays.`, (asserts) => {
+    let array_00 = (0, state_1.stateify)(["a"]);
+    let array_01 = (0, state_1.stateify)(["b"]);
+    let array_02 = (0, state_1.stateify)(["c"]);
+    let array_10 = (0, state_1.stateify)(["d"]);
+    let array_11 = (0, state_1.stateify)(["e"]);
+    let array_12 = (0, state_1.stateify)(["f"]);
+    let array_20 = (0, state_1.stateify)(["g"]);
+    let array_21 = (0, state_1.stateify)(["h"]);
+    let array_22 = (0, state_1.stateify)(["i"]);
+    let array_0 = (0, state_1.stateify)([array_00, array_02]);
+    let array_1 = (0, state_1.stateify)([array_10, array_12]);
+    let array_2 = (0, state_1.stateify)([array_20, array_22]);
+    let array = (0, state_1.stateify)([array_0, array_2]);
+    let flattened = (0, state_1.flatten)(array);
+    array_0.insert(1, array_01);
+    array_1.insert(1, array_11);
+    array_2.insert(1, array_21);
+    array.insert(1, array_1);
+    asserts.equals(flattened.value(), ["a", "b", "c", "d", "e", "f", "g", "h", "i"]);
+});
+wtf.test(`Flattened arrays should not contain arrays removed from the original arrays.`, (asserts) => {
+    let array_00 = (0, state_1.stateify)(["a"]);
+    let array_01 = (0, state_1.stateify)(["b"]);
+    let array_02 = (0, state_1.stateify)(["c"]);
+    let array_10 = (0, state_1.stateify)(["d"]);
+    let array_11 = (0, state_1.stateify)(["e"]);
+    let array_12 = (0, state_1.stateify)(["f"]);
+    let array_20 = (0, state_1.stateify)(["g"]);
+    let array_21 = (0, state_1.stateify)(["h"]);
+    let array_22 = (0, state_1.stateify)(["i"]);
+    let array_0 = (0, state_1.stateify)([array_00, array_01, array_02]);
+    let array_1 = (0, state_1.stateify)([array_10, array_11, array_12]);
+    let array_2 = (0, state_1.stateify)([array_20, array_21, array_22]);
+    let array = (0, state_1.stateify)([array_0, array_1, array_2]);
+    let flattened = (0, state_1.flatten)(array);
+    array_0.remove(1);
+    array_1.remove(1);
+    array_2.remove(1);
+    array.remove(1);
+    asserts.equals(flattened.value(), ["a", "c", "g", "i"]);
 });

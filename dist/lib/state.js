@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.merge = exports.fallback = exports.valueify = exports.stateify = exports.computed = exports.make_state = exports.make_reference_state = exports.make_object_state = exports.make_array_state = exports.make_primitive_state = exports.ObjectStateImplementation = exports.ObjectState = exports.ArrayStateImplementation = exports.ArrayState = exports.ReferenceStateImplementation = exports.ReferenceState = exports.PrimitiveStateImplementation = exports.PrimitiveState = exports.AbstractState = void 0;
+exports.flatten = exports.merge = exports.fallback = exports.valueify = exports.stateify = exports.computed = exports.make_state = exports.make_reference_state = exports.make_object_state = exports.make_array_state = exports.make_primitive_state = exports.ObjectStateImplementation = exports.ObjectState = exports.ArrayStateImplementation = exports.ArrayState = exports.ReferenceStateImplementation = exports.ReferenceState = exports.PrimitiveStateImplementation = exports.PrimitiveState = exports.AbstractState = void 0;
 const utils_1 = require("./utils");
 class AbstractState {
     observers;
@@ -679,4 +679,90 @@ function merge(one, two) {
     return merged;
 }
 exports.merge = merge;
+;
+function flatten(states) {
+    let offsets = [];
+    let lengths = [];
+    let subscriptions_from_state = new Map();
+    let flattened_states = make_state([]);
+    function insert(state, index) {
+        let offset = (offsets[index - 1] ?? 0) + (lengths[index - 1] ?? 0);
+        let length = 0;
+        if (state instanceof ArrayState) {
+            state = state;
+            let flattened = flatten(state);
+            length = flattened.length().value();
+            for (let i = 0; i < length; i++) {
+                flattened_states.insert(offset + i, flattened.element(i));
+            }
+            let subscriptions = [];
+            subscriptions.push(flattened.observe("insert", (substate, subindex) => {
+                offset = offsets[index];
+                flattened_states.insert(offset + subindex, substate);
+                lengths[index] += 1;
+                for (let i = index + 1; i < offsets.length; i++) {
+                    offsets[i] += 1;
+                }
+            }));
+            subscriptions.push(flattened.observe("remove", (substate, subindex) => {
+                offset = offsets[index];
+                flattened_states.remove(offset + subindex);
+                lengths[index] -= 1;
+                for (let i = index + 1; i < offsets.length; i++) {
+                    offsets[i] -= 1;
+                }
+            }));
+            subscriptions_from_state.set(state, subscriptions);
+        }
+        else {
+            state = state;
+            length = 1;
+            flattened_states.insert(offset, state);
+        }
+        offsets.splice(index, 0, offset);
+        lengths.splice(index, 0, length);
+        for (let i = index + 1; i < offsets.length; i++) {
+            offsets[i] += length;
+        }
+    }
+    ;
+    function remove(state, index) {
+        let offset = offsets[index];
+        let length = 0;
+        if (state instanceof ArrayState) {
+            state = state;
+            length = state.length().value();
+            for (let i = length - 1; i >= 0; i--) {
+                flattened_states.remove(offset + i);
+            }
+            let subscriptions = subscriptions_from_state.get(state) ?? [];
+            for (let subscription of subscriptions) {
+                subscription();
+            }
+            subscriptions_from_state.delete(state);
+        }
+        else {
+            state = state;
+            length = 1;
+            flattened_states.remove(offset);
+        }
+        for (let i = index + 1; i < offsets.length; i++) {
+            offsets[i] -= length;
+        }
+        offsets.splice(index, 1);
+        lengths.splice(index, 1);
+    }
+    ;
+    for (let i = 0; i < states.length().value(); i++) {
+        insert(states.element(i), i);
+    }
+    states.observe("insert", (state, index) => {
+        insert(state, index);
+    });
+    states.observe("remove", (state, index) => {
+        remove(state, index);
+    });
+    return flattened_states;
+}
+exports.flatten = flatten;
 ;
