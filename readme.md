@@ -662,3 +662,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Improve life-cycle management of elements.
 * Implement getter and mapped setter for `augment()`.
 * Document `flatten()`.
+* Investigate usability of a promise to state shim.
