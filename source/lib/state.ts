@@ -2,6 +2,7 @@ import { getOrderedIndex } from "./utils";
 
 type ExpansionOf<A> = A extends infer B ? { [C in keyof B]: B[C] } : never;
 type Mutable<A> = { -readonly [B in keyof A]: Mutable<A[B]> };
+type RecursiveArray<A> = Array<A | RecursiveArray<A>>;
 
 export type StateOrValue<A extends Value> = A | State<A>;
 
@@ -787,4 +788,85 @@ export function merge<A extends RecordValue, B extends RecordValue>(one: Attribu
 		}
 	});
 	return merged;
+};
+
+export function flatten<A extends PrimitiveValue | ReferenceValue>(states: State<Array<A | RecursiveArray<A>>>): State<Array<A>> {
+	let offsets = [] as Array<number>;
+	let lengths = [] as Array<number>;
+	let subscriptions_from_state = new Map<State<Array<A> | RecursiveArray<A>>, Array<CancellationToken>>();
+	let flattened_states = make_state([] as Array<A>);
+	function insert(state: State<A | RecursiveArray<A>>, index: number): void {
+		let offset = (offsets[index - 1] ?? 0) + (lengths[index-1] ?? 0);
+		let length = 0;
+		if (state instanceof ArrayState) {
+			state = state as State<Array<A | RecursiveArray<A>>>;
+			let flattened = flatten(state as State<Array<A | RecursiveArray<A>>>);
+			length = flattened.length().value();
+			for (let i = 0; i < length; i++) {
+				flattened_states.insert(offset + i, flattened.element(i));
+			}
+			let subscriptions = [] as Array<CancellationToken>;
+			subscriptions.push(flattened.observe("insert", (substate, subindex) => {
+				offset = offsets[index];
+				flattened_states.insert(offset + subindex, substate);
+				lengths[index] += 1;
+				for (let i = index + 1; i < offsets.length; i++) {
+					offsets[i] += 1;
+				}
+			}));
+			subscriptions.push(flattened.observe("remove", (substate, subindex) => {
+				offset = offsets[index];
+				flattened_states.remove(offset + subindex);
+				lengths[index] -= 1;
+				for (let i = index + 1; i < offsets.length; i++) {
+					offsets[i] -= 1;
+				}
+			}));
+			subscriptions_from_state.set(state, subscriptions);
+		} else {
+			state = state as State<A>;
+			length = 1;
+			flattened_states.insert(offset, state as State<A>);
+		}
+		offsets.splice(index, 0, offset);
+		lengths.splice(index, 0, length);
+		for (let i = index + 1; i < offsets.length; i++) {
+			offsets[i] += length;
+		}
+	};
+	function remove(state: State<A | RecursiveArray<A>>, index: number): void {
+		let offset = offsets[index];
+		let length = 0;
+		if (state instanceof ArrayState) {
+			state = state as State<Array<A | RecursiveArray<A>>>;
+			length = state.length().value();
+			for (let i = length - 1; i >= 0; i--) {
+				flattened_states.remove(offset + i);
+			}
+			let subscriptions = subscriptions_from_state.get(state) ?? [];
+			for (let subscription of subscriptions) {
+				subscription();
+			}
+			subscriptions_from_state.delete(state);
+		} else {
+			state = state as State<A>;
+			length = 1;
+			flattened_states.remove(offset);
+		}
+		for (let i = index + 1; i < offsets.length; i++) {
+			offsets[i] -= length;
+		}
+		offsets.splice(index, 1);
+		lengths.splice(index, 1);
+	};
+	for (let i = 0; i < states.length().value(); i++) {
+		insert(states.element(i), i);
+	}
+	states.observe("insert", (state, index) => {
+		insert(state, index);
+	});
+	states.observe("remove", (state, index) => {
+		remove(state, index);
+	});
+	return flattened_states;
 };

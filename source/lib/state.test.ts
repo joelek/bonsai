@@ -1,5 +1,5 @@
 import * as wtf from "@joelek/wtf";
-import { Attribute, Attributes, merge, make_state, State, stateify, StateOrValue, valueify, Value, computed, fallback } from "./state";
+import { Attribute, Attributes, merge, make_state, State, stateify, StateOrValue, valueify, Value, computed, fallback, flatten } from "./state";
 
 wtf.test(`Computed should compute a new state from two string states.`, (assert) => {
 	let one = stateify("one" as string);
@@ -1097,4 +1097,116 @@ wtf.test(`Object states with optional members should be assigned and cast proper
 	let state_cast_to_similar = state as State<{ a: "", b?: "" }>;
 	// @ts-expect-error
 	let state_assigned_to_similar: State<{ a: "", b?: "" }> = state;
+});
+
+wtf.test(`Flatten should flatten three levels of arrays.`, (asserts) => {
+	let array_00 = stateify(["a", "b"]);
+	let array_01 = stateify(["c", "d"]);
+	let array_10 = stateify(["e", "f"]);
+	let array_11 = stateify(["g", "h"]);
+	let array_0 = stateify([array_00, array_01]);
+	let array_1 = stateify([array_10, array_11]);
+	let array = stateify([array_0, array_1 ]);
+	let flattened = flatten(array);
+	asserts.equals(flattened.value(), ["a", "b", "c", "d", "e", "f", "g", "h"]);
+});
+
+wtf.test(`Flattened arrays should contain states from the original arrays.`, (asserts) => {
+	let array_00 = stateify(["a", "b"]);
+	let array_01 = stateify(["c", "d"]);
+	let array_10 = stateify(["e", "f"]);
+	let array_11 = stateify(["g", "h"]);
+	let array_0 = stateify([array_00, array_01]);
+	let array_1 = stateify([array_10, array_11]);
+	let array = stateify([array_0, array_1]);
+	let flattened = flatten(array);
+	array_00[0].update("A");
+	array_00[1].update("B");
+	array_01[0].update("C");
+	array_01[1].update("D");
+	array_10[0].update("E");
+	array_10[1].update("F");
+	array_11[0].update("G");
+	array_11[1].update("H");
+	asserts.equals(flattened.value(), ["A", "B", "C", "D", "E", "F", "G", "H"]);
+});
+
+wtf.test(`Flattened arrays should contain items inserted into the original arrays.`, (asserts) => {
+	let array_00 = stateify(["b"]);
+	let array_01 = stateify(["e"]);
+	let array_10 = stateify(["h"]);
+	let array_11 = stateify(["k"]);
+	let array_0 = stateify([array_00,array_01]);
+	let array_1 = stateify([array_10, array_11]);
+	let array = stateify([array_0, array_1]);
+	let flattened = flatten(array);
+	array_00.insert(0, "a");
+	array_00.insert(2, "c");
+	array_01.insert(0, "d");
+	array_01.insert(2, "f");
+	array_10.insert(0, "g");
+	array_10.insert(2, "i");
+	array_11.insert(0, "j");
+	array_11.insert(2, "l");
+	asserts.equals(flattened.value(), ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"]);
+});
+
+wtf.test(`Flattened arrays should not contain items removed from the original arrays.`, (asserts) => {
+	let array_00 = stateify(["a", "b", "c"]);
+	let array_01 = stateify(["d", "e", "f"]);
+	let array_10 = stateify(["g", "h", "i"]);
+	let array_11 = stateify(["j", "k", "l"]);
+	let array_0 = stateify([array_00, array_01]);
+	let array_1 = stateify([array_10, array_11]);
+	let array = stateify([array_0, array_1]);
+	let flattened = flatten(array);
+	array_00.remove(1);
+	array_01.remove(1);
+	array_10.remove(1);
+	array_11.remove(1);
+	asserts.equals(flattened.value(), ["a", "c", "d", "f", "g", "i", "j", "l"]);
+});
+
+wtf.test(`Flattened arrays should contain arrays inserted into the original arrays.`, (asserts) => {
+	let array_00 = stateify(["a"]);
+	let array_01 = stateify(["b"]);
+	let array_02 = stateify(["c"]);
+	let array_10 = stateify(["d"]);
+	let array_11 = stateify(["e"]);
+	let array_12 = stateify(["f"]);
+	let array_20 = stateify(["g"]);
+	let array_21 = stateify(["h"]);
+	let array_22 = stateify(["i"]);
+	let array_0 = stateify([array_00, array_02]);
+	let array_1 = stateify([array_10, array_12]);
+	let array_2 = stateify([array_20, array_22]);
+	let array = stateify([array_0, array_2]);
+	let flattened = flatten(array);
+	array_0.insert(1, array_01);
+	array_1.insert(1, array_11);
+	array_2.insert(1, array_21)
+	array.insert(1, array_1);
+	asserts.equals(flattened.value(), ["a", "b", "c", "d", "e", "f", "g", "h", "i"]);
+});
+
+wtf.test(`Flattened arrays should not contain arrays removed from the original arrays.`, (asserts) => {
+	let array_00 = stateify(["a"]);
+	let array_01 = stateify(["b"]);
+	let array_02 = stateify(["c"]);
+	let array_10 = stateify(["d"]);
+	let array_11 = stateify(["e"]);
+	let array_12 = stateify(["f"]);
+	let array_20 = stateify(["g"]);
+	let array_21 = stateify(["h"]);
+	let array_22 = stateify(["i"]);
+	let array_0 = stateify([array_00, array_01, array_02]);
+	let array_1 = stateify([array_10, array_11, array_12]);
+	let array_2 = stateify([array_20, array_21, array_22]);
+	let array = stateify([array_0, array_1, array_2]);
+	let flattened = flatten(array);
+	array_0.remove(1);
+	array_1.remove(1);
+	array_2.remove(1)
+	array.remove(1);
+	asserts.equals(flattened.value(), ["a", "c", "g", "i"]);
 });

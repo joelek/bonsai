@@ -661,3 +661,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Consider adding support for Promise<State<Value>>.
 * Improve life-cycle management of elements.
 * Implement getter and mapped setter for `augment()`.
+* Document `flatten()`.
