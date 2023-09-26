@@ -1,12 +1,12 @@
-import { ArrayState, State, CancellationToken, Value, Attribute } from "./state";
+import { Attribute, CancellationToken, State, Value } from "./state";
 export type AttributeRecord = {
     [key: string]: Attribute<Value>;
 };
 export type AttributeRecordMapper = (attributes: AttributeRecord) => AttributeRecord;
 export type AttributeArray = Attribute<Value>[];
 export type AttributeArrayMapper = (attributes: AttributeArray) => AttributeArray;
-export type Child = ArrayState<Node | Value> | Value | Node | State<Value | Node>;
-export type Children = Array<Child>;
+export type Child = Array<Child> | (Value | Node) | State<Value | Node>;
+export type Children = Array<Child | State<Child>>;
 export type FunctionalElementListener<A extends Event, B extends Element> = (event: A, element: B) => void;
 export type FunctionalElementEventMap<A> = {
     [B in keyof A]: Event;
