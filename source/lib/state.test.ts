@@ -667,6 +667,15 @@ wtf.test(`State<undefined> should be assignable to Attribute<[string, string] | 
 	let attribute: Attribute<[string, string] | undefined> = stateify<undefined>(undefined);
 });
 
+wtf.test(`Fallback states should be constructible from other fallback states.`, (asserts) => {
+	let state = make_state({} as { object?: { string?: string } });
+	let object = fallback(state.member("object"), {});
+	let string = fallback(object.member("string"), "string");
+	asserts.equals(state.value(), {});
+	asserts.equals(object.value(), {});
+	asserts.equals(string.value(), "string");
+});
+
 wtf.test(`Fallback states should use the underlying value when the underlying value is defined.`, (assert) => {
 	let underlying = make_state("underlying" as string | undefined);
 	let fallbacked = fallback(underlying, "default");
