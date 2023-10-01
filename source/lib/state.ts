@@ -521,14 +521,34 @@ export abstract class ObjectState<A extends RecordValue> extends AbstractState<A
 		}
 	}
 
-	member<B extends keyof A>(key: B): State<A[B]> {
-		let member = this.members[key];
-		if (member == null) {
-			this.members[key] = member = make_state(undefined) as any;
-			this.members[key].observe("update", this.onMemberUpdate);
-			this.onMemberUpdate();
+	member<B extends keyof A>(key: B | State<B>): State<A[B]> {
+		if (key instanceof AbstractState) {
+			let member = this.member(key.value());
+			let that = make_state(member.value());
+			let subscription = member.observe("update", (state) => {
+				that.update(state.value());
+			});
+			key.observe("update", (key) => {
+				member = this.member(key.value());
+				subscription();
+				that.update(member.value());
+				subscription = member.observe("update", (state) => {
+					that.update(state.value());
+				});
+			});
+			that.observe("update", (that) => {
+				member.update(that.value());
+			});
+			return that;
+		} else {
+			let member = this.members[key];
+			if (member == null) {
+				this.members[key] = member = make_state(undefined) as any;
+				this.members[key].observe("update", this.onMemberUpdate);
+				this.onMemberUpdate();
+			}
+			return member as any;
 		}
-		return member as any;
 	}
 
 	spread(): MemberStates<A> {
@@ -576,7 +596,7 @@ export class ObjectStateImplementation<A extends RecordValue> extends ObjectStat
 			let member = this.member(key);
 			let value = member.value();
 			if (typeof value !== "undefined") {
-				lastValue[key] = value;
+				lastValue[key as keyof A] = value;
 			}
 		}
 		return lastValue;

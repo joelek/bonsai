@@ -1210,3 +1210,41 @@ wtf.test(`Flattened arrays should not contain arrays removed from the original a
 	array.remove(1);
 	asserts.equals(flattened.value(), ["a", "c", "g", "i"]);
 });
+
+wtf.test(`Dynamic members should be updated when the dynamic key is updated.`, (asserts) => {
+	let state = make_state({ one: "one", two: "two" });
+	let key = make_state("one" as "one" | "two");
+	let member = state.member(key);
+	asserts.equals(member.value(), "one");
+	key.update("two");
+	asserts.equals(member.value(), "two");
+	key.update("one");
+	asserts.equals(member.value(), "one");
+});
+
+wtf.test(`Dynamic members should be updated when the active member is updated.`, (asserts) => {
+	let state = make_state({ one: "one", two: "two" });
+	let key = make_state("one" as "one" | "two");
+	let one = state.one;
+	let two = state.two;
+	let member = state.member(key);
+	key.update("two");
+	key.update("one");
+	one.update("ONE");
+	asserts.equals(member.value(), "ONE");
+	two.update("TWO");
+	asserts.equals(member.value(), "ONE");
+});
+
+wtf.test(`Dynamic members being updated should propagate the changes back to the active member.`, (asserts) => {
+	let state = make_state({ one: "one", two: "two" });
+	let key = make_state("one" as "one" | "two");
+	let one = state.one;
+	let two = state.two;
+	let member = state.member(key);
+	key.update("two");
+	key.update("one");
+	member.update("ONE");
+	asserts.equals(one.value(), "ONE");
+	asserts.equals(two.value(), "two");
+});
