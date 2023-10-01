@@ -67,16 +67,16 @@ wtf.test(`It should support assignment from empty string literal to any string.`
 	let string: State<string> = make_state("");
 });
 
-wtf.test(`It should not output undefined member values in object values.`, (assert) => {
+wtf.test(`It should output undefined member values in object values.`, (assert) => {
 	let state = make_state({ required: undefined });
-	assert.equals(state.value(), {});
+	assert.equals(state.value(), { required: undefined });
 });
 
 wtf.test(`It should support updating optional object members to undefined values.`, (assert) => {
 	let state = make_state({ object: { primitive: "a" } } as { object?: { primitive: string } });
 	let object_state = state.member("object");
 	state.update({ object: undefined });
-	assert.equals(state.value(), {});
+	assert.equals(state.value(), { object: undefined });
 	state.update({ object: { primitive: "b" } });
 	assert.equals(state.value(), { object: { primitive: "b" }});
 	assert.equals(object_state.value(), { primitive: "b" });
@@ -86,7 +86,7 @@ wtf.test(`It should support updating optional array members to undefined values.
 	let state = make_state({ array: ["a"] } as { array?: string[] });
 	let array_state = state.member("array");
 	state.update({ array: undefined });
-	assert.equals(state.value(), {});
+	assert.equals(state.value(), { array: undefined });
 	state.update({ array: ["b"] });
 	assert.equals(state.value(), { array: ["b"] });
 	assert.equals(array_state.value(), ["b"]);
@@ -96,7 +96,7 @@ wtf.test(`It should initialize optional members lazily when updated.`, (assert) 
 	let state = make_state({} as { optional?: boolean });
 	state.update({ optional: undefined });
 	let optional = state.member("optional");
-	assert.equals(state.value(), {});
+	assert.equals(state.value(), { optional: undefined });
 	assert.equals(optional.value(), undefined);
 });
 
@@ -671,8 +671,8 @@ wtf.test(`Fallback states should be constructible from other fallback states.`, 
 	let state = make_state({} as { object?: { string?: string } });
 	let object = fallback(state.member("object"), {});
 	let string = fallback(object.member("string"), "string");
-	asserts.equals(state.value(), {});
-	asserts.equals(object.value(), {});
+	asserts.equals(state.value(), { object: { string: undefined } });
+	asserts.equals(object.value(), { string: undefined });
 	asserts.equals(string.value(), "string");
 });
 
@@ -971,7 +971,7 @@ wtf.test(`Merged objects created from { key: "one" } and {} should update proper
 	one.update({ key: "ONE" });
 	assert.equals(valueify(merged), { key: "ONE" });
 	one.update({});
-	assert.equals(valueify(merged), {});
+	assert.equals(valueify(merged), { key: undefined });
 });
 
 wtf.test(`Merged objects created from { key: "one" } and {} should update properly when the second object is updated.`, (assert) => {
@@ -1001,7 +1001,7 @@ wtf.test(`Merged objects created from {} and { key: "two" } should update proper
 	two.update({ key: "TWO" });
 	assert.equals(valueify(merged), { key: "TWO" });
 	two.update({});
-	assert.equals(valueify(merged), {});
+	assert.equals(valueify(merged), { key: undefined });
 });
 
 wtf.test(`Merged objects created from { key: "one" } and { key: "two" } should update properly when the first object is updated.`, (assert) => {

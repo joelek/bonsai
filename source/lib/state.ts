@@ -595,9 +595,7 @@ export class ObjectStateImplementation<A extends RecordValue> extends ObjectStat
 		for (let key in this.members) {
 			let member = this.member(key);
 			let value = member.value();
-			if (typeof value !== "undefined") {
-				lastValue[key as keyof A] = value;
-			}
+			lastValue[key as keyof A] = value;
 		}
 		return lastValue;
 	}
