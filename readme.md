@@ -623,6 +623,8 @@ All elements may be removed from the array through the `vacate()` method.
 An instance of `ObjectState` is created when an object is passed to the `stateify()` function. The `ObjectState` class extends from the `State` class.
 
 * Instances of `ObjectState` emit an `update` event when the stored value changes.
+* Instances of `ObjectState` emit an `insert` event when a member is inserted.
+* Instances of `ObjectState` emit an `remove` event when a member is removed.
 
 #### Member
 
