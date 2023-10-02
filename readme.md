@@ -672,7 +672,6 @@ NB: This project targets TypeScript 4 in strict mode.
 
 * Write more unit tests.
 * Serialize classes as "class".
-* Fix issue with lazily initialized ObjectStates triggering multiple updates.
 * Consider adding support for Promise<State<Value>>.
 * Improve life-cycle management of elements.
 * Implement getter and mapped setter for `augment()`.
