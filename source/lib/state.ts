@@ -208,12 +208,22 @@ export type ArrayStateEvents<A extends Value> = AbstractStateEvents<Array<A>> & 
 
 export abstract class ArrayState<A extends Value> extends AbstractState<Array<A>, ArrayStateEvents<A>> {
 	protected elements: Array<State<A>>;
-	protected updating: boolean;
+	protected operating: boolean;
 	protected currentLength: State<number>;
 	protected isUndefined: boolean;
 
+	protected operate(callback: () => void): void {
+		let operating = this.operating;
+		this.operating = true;
+		try {
+			callback();
+		} finally {
+			this.operating = operating;
+		}
+	}
+
 	protected onElementUpdate = () => {
-		if (!this.updating) {
+		if (!this.operating) {
 			this.notify("update", this);
 		}
 	};
@@ -221,7 +231,7 @@ export abstract class ArrayState<A extends Value> extends AbstractState<Array<A>
 	constructor(elements: Array<State<A>>) {
 		super()
 		this.elements = [ ...elements ];
-		this.updating = false;
+		this.operating = false;
 		this.currentLength = make_state(elements.length);
 		this.isUndefined = false;
 		for (let index = 0; index < this.elements.length; index++) {
@@ -234,9 +244,15 @@ export abstract class ArrayState<A extends Value> extends AbstractState<Array<A>
 	}
 
 	append(...items: Array<StateOrValue<A>>): void {
-		for (let item of items) {
-			this.insert(this.elements.length, item);
+		if (items.length === 0) {
+			return;
 		}
+		this.operate(() => {
+			for (let item of items) {
+				this.insert(this.elements.length, item);
+			}
+			this.notify("update", this);
+		});
 	}
 
 	element(index: number | State<number>): State<A> {
@@ -362,9 +378,11 @@ export abstract class ArrayState<A extends Value> extends AbstractState<Array<A>
 		element.observe("update", this.onElementUpdate);
 		this.currentLength.update(this.elements.length);
 		if (true) {
-			this.notify("insert", element, index);
+			this.operate(() => {
+				this.notify("insert", element, index);
+			});
 		}
-		if (!this.updating) {
+		if (!this.operating) {
 			this.notify("update", this);
 		}
 	}
@@ -431,9 +449,11 @@ export abstract class ArrayState<A extends Value> extends AbstractState<Array<A>
 		element.unobserve("update", this.onElementUpdate);
 		this.currentLength.update(this.elements.length);
 		if (true) {
-			this.notify("remove", element, index);
+			this.operate(() => {
+				this.notify("remove", element, index);
+			});
 		}
-		if (!this.updating) {
+		if (!this.operating) {
 			this.notify("update", this);
 		}
 	}
@@ -451,8 +471,7 @@ export abstract class ArrayState<A extends Value> extends AbstractState<Array<A>
 export class ArrayStateImplementation<A extends Value> extends ArrayState<A> {
 	update(value: Array<A>): boolean {
 		let updated = false;
-		try {
-			this.updating = true;
+		this.operate(() => {
 			let isUndefined = typeof value === "undefined";
 			updated = (this.isUndefined && !isUndefined) || (!this.isUndefined && isUndefined);
 			this.isUndefined = isUndefined;
@@ -475,9 +494,7 @@ export class ArrayStateImplementation<A extends Value> extends ArrayState<A> {
 					this.append(value[index]);
 				}
 			}
-		} finally {
-			this.updating = false;
-		}
+		});
 		if (updated) {
 			this.notify("update", this);
 		}
@@ -509,11 +526,21 @@ export type ObjectStateEvents<A extends RecordValue> = AbstractStateEvents<A> & 
 
 export abstract class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectStateEvents<A>> {
 	protected members: MemberStates<A>;
-	protected updating: boolean;
+	protected operating: boolean;
 	protected isUndefined: boolean;
 
+	protected operate(callback: () => void): void {
+		let operating = this.operating;
+		this.operating = true;
+		try {
+			callback();
+		} finally {
+			this.operating = operating;
+		}
+	}
+
 	protected onMemberUpdate = () => {
-		if (!this.updating) {
+		if (!this.operating) {
 			this.notify("update", this);
 		}
 	};
@@ -521,7 +548,7 @@ export abstract class ObjectState<A extends RecordValue> extends AbstractState<A
 	constructor(members: MemberStates<A>) {
 		super();
 		this.members = { ...members };
-		this.updating = false;
+		this.operating = false;
 		this.isUndefined = false;
 		for (let key in this.members) {
 			this.members[key].observe("update", this.onMemberUpdate);
@@ -536,9 +563,11 @@ export abstract class ObjectState<A extends RecordValue> extends AbstractState<A
 		this.members[key] = member as any;
 		member.observe("update", this.onMemberUpdate);
 		if (true) {
-			this.notify("insert", member as any, key);
+			this.operate(() => {
+				this.notify("insert", member as any, key);
+			});
 		}
-		if (!this.updating) {
+		if (!this.operating) {
 			this.notify("update", this);
 		}
 		return this as any;
@@ -581,9 +610,11 @@ export abstract class ObjectState<A extends RecordValue> extends AbstractState<A
 		delete this.members[key];
 		member.unobserve("update", this.onMemberUpdate);
 		if (true) {
-			this.notify("remove", member, key);
+			this.operate(() => {
+				this.notify("remove", member, key);
+			});
 		}
-		if (!this.updating) {
+		if (!this.operating) {
 			this.notify("update", this);
 		}
 		return this as any;
@@ -598,8 +629,7 @@ export abstract class ObjectState<A extends RecordValue> extends AbstractState<A
 export class ObjectStateImplementation<A extends RecordValue> extends ObjectState<A> {
 	update(value: A): boolean {
 		let updated = false;
-		try {
-			this.updating = true;
+		this.operate(() => {
 			let isUndefined = typeof value === "undefined";
 			updated = (this.isUndefined && !isUndefined) || (!this.isUndefined && isUndefined);
 			this.isUndefined = isUndefined;
@@ -621,9 +651,7 @@ export class ObjectStateImplementation<A extends RecordValue> extends ObjectStat
 					updated = true;
 				}
 			}
-		} finally {
-			this.updating = false;
-		}
+		});
 		if (updated) {
 			this.notify("update", this);
 		}
