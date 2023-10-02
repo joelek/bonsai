@@ -496,8 +496,15 @@ export class ArrayStateImplementation<A extends Value> extends ArrayState<A> {
 	}
 };
 
-export type ObjectStateEvents<A extends Value> = AbstractStateEvents<A> & {
-
+export type ObjectStateEvents<A extends RecordValue> = AbstractStateEvents<A> & {
+	"insert": [
+		state: State<A[keyof A]>,
+		key: keyof A
+	];
+	"remove": [
+		state: State<A[keyof A]>,
+		key: keyof A
+	];
 };
 
 export abstract class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectStateEvents<A>> {
@@ -519,6 +526,22 @@ export abstract class ObjectState<A extends RecordValue> extends AbstractState<A
 		for (let key in this.members) {
 			this.members[key].observe("update", this.onMemberUpdate);
 		}
+	}
+
+	insert<B extends string, C extends Value>(key: B, item: StateOrValue<C>): State<ExpansionOf<A & { [key in B]: C; }>> {
+		if (key in this.members) {
+			throw new Error(`Expected member with key ${String(key)} to be absent!`);
+		}
+		let member = item instanceof AbstractState ? item : make_state(item);
+		this.members[key] = member as any;
+		member.observe("update", this.onMemberUpdate);
+		if (true) {
+			this.notify("insert", member as any, key);
+		}
+		if (!this.updating) {
+			this.notify("update", this);
+		}
+		return this as any;
 	}
 
 	member<B extends keyof A>(key: B | State<B>): State<A[B]> {
@@ -543,12 +566,27 @@ export abstract class ObjectState<A extends RecordValue> extends AbstractState<A
 		} else {
 			let member = this.members[key];
 			if (member == null) {
-				this.members[key] = member = make_state(undefined) as any;
-				this.members[key].observe("update", this.onMemberUpdate);
-				this.onMemberUpdate();
+				member = make_state(undefined) as any;
+				this.insert(key as any, member);
 			}
-			return member as any;
+			return member;
 		}
+	}
+
+	remove<B extends keyof A>(key: B): State<ExpansionOf<Omit<A, B>>> {
+		if (!(key in this.members)) {
+			throw new Error(`Expected member with key ${String(key)} to be present!`);
+		}
+		let member = this.members[key];
+		delete this.members[key];
+		member.unobserve("update", this.onMemberUpdate);
+		if (true) {
+			this.notify("remove", member, key);
+		}
+		if (!this.updating) {
+			this.notify("update", this);
+		}
+		return this as any;
 	}
 
 	spread(): MemberStates<A> {
@@ -567,14 +605,19 @@ export class ObjectStateImplementation<A extends RecordValue> extends ObjectStat
 			this.isUndefined = isUndefined;
 			for (let key in this.members) {
 				let member = this.member(key);
-				if (member.update(value?.[key] as any)) {
+				if (typeof value === "undefined" || !(key in value)) {
+					member.update(undefined as any);
+					this.remove(key);
 					updated = true;
+				} else {
+					if (member.update(value[key] as any)) {
+						updated = true;
+					}
 				}
 			}
 			for (let key in value) {
 				if (!(key in this.members)) {
-					let member = this.member(key);
-					member.update(value[key]);
+					this.insert(key, value[key]);
 					updated = true;
 				}
 			}

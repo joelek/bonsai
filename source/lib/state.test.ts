@@ -1257,3 +1257,52 @@ wtf.test(`Dynamic members being updated should propagate the changes back to the
 	asserts.equals(one.value(), "ONE");
 	asserts.equals(two.value(), "two");
 });
+
+wtf.test(`Record states should support insertion and removal of members.`, (asserts) => {
+	let state = make_state({} as Record<string, string>);
+	asserts.equals(state.value(), {});
+	state.insert("one", "one");
+	asserts.equals(state.value(), { one: "one" });
+	state.insert("two", "two");
+	asserts.equals(state.value(), { one: "one", two: "two" });
+	state.remove("one");
+	asserts.equals(state.value(), { two: "two" });
+	state.remove("two");
+	asserts.equals(state.value(), {});
+});
+
+wtf.test(`Record states should throw an error when attempting to insert an existent member.`, async (asserts) => {
+	let state = make_state({} as Record<string, string>);
+	state.insert("one", "one");
+	await asserts.throws(() => {
+		state.insert("one", "one");
+	});
+});
+
+wtf.test(`Record states should throw an error when attempting to remove a non-existent member.`, async (asserts) => {
+	let state = make_state({} as Record<string, string>);
+	await asserts.throws(() => {
+		state.remove("one");
+	});
+});
+
+wtf.test(`Record states should emit insert and remove events.`, (asserts) => {
+	let state = make_state({} as Record<string, string>);
+	let events = [] as Array<string>;
+	state.observe("insert", (state, key) => {
+		events.push(key);
+	});
+	state.observe("remove", (state, key) => {
+		events.push(key);
+	});
+	state.insert("one", "one");
+	state.insert("two", "two");
+	state.remove("one");
+	state.remove("two");
+	asserts.equals(events, [
+		"one",
+		"two",
+		"one",
+		"two"
+	]);
+});
