@@ -90,9 +90,10 @@ export type ArrayStateEvents<A extends Value> = AbstractStateEvents<Array<A>> & 
 };
 export declare abstract class ArrayState<A extends Value> extends AbstractState<Array<A>, ArrayStateEvents<A>> {
     protected elements: Array<State<A>>;
-    protected updating: boolean;
+    protected operating: boolean;
     protected currentLength: State<number>;
     protected isUndefined: boolean;
+    protected operate(callback: () => void): void;
     protected onElementUpdate: () => void;
     constructor(elements: Array<State<A>>);
     [Symbol.iterator](): Iterator<State<A>>;
@@ -125,8 +126,9 @@ export type ObjectStateEvents<A extends RecordValue> = AbstractStateEvents<A> & 
 };
 export declare abstract class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectStateEvents<A>> {
     protected members: MemberStates<A>;
-    protected updating: boolean;
+    protected operating: boolean;
     protected isUndefined: boolean;
+    protected operate(callback: () => void): void;
     protected onMemberUpdate: () => void;
     constructor(members: MemberStates<A>);
     insert<B extends string, C extends Value>(key: B, item: StateOrValue<C>): State<ExpansionOf<A & {

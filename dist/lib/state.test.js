@@ -543,18 +543,22 @@ wtf.test(`Lazily initialized ObjectStates should supporting being cleared.`, (as
     assert.equals(a.value(), undefined);
     assert.equals(b.value(), undefined);
 });
-/*
 wtf.test(`Lazily initialized ObjectStates should not trigger multiple updates.`, (assert) => {
-    let states = make_state<Array<{ key?: string }>>([]);
-    states.mapStates((state, index) => state.key); // Lazily initialized member triggers onMemberUpdate().
-    let events = [] as Array<Array<{ key?: string }>>;
+    let states = (0, state_1.make_state)([]);
+    states.mapStates((state, index) => state.key);
+    let events = [];
     states.observe("update", (state) => {
         events.push(state.value());
     });
     states.append({});
-    assert.equals(events, [{}]);
+    assert.equals(events, [
+        [
+            {
+                key: undefined
+            }
+        ]
+    ]);
 });
- */
 wtf.test(`State<[string, string] | undefined> should be assignable to StateOrValue<[string, string] | undefined>.`, (assert) => {
     let attribute = (0, state_1.stateify)(["one", "two"]);
 });

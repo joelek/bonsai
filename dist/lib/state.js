@@ -110,18 +110,28 @@ exports.ReferenceStateImplementation = ReferenceStateImplementation;
 ;
 class ArrayState extends AbstractState {
     elements;
-    updating;
+    operating;
     currentLength;
     isUndefined;
+    operate(callback) {
+        let operating = this.operating;
+        this.operating = true;
+        try {
+            callback();
+        }
+        finally {
+            this.operating = operating;
+        }
+    }
     onElementUpdate = () => {
-        if (!this.updating) {
+        if (!this.operating) {
             this.notify("update", this);
         }
     };
     constructor(elements) {
         super();
         this.elements = [...elements];
-        this.updating = false;
+        this.operating = false;
         this.currentLength = make_state(elements.length);
         this.isUndefined = false;
         for (let index = 0; index < this.elements.length; index++) {
@@ -132,9 +142,15 @@ class ArrayState extends AbstractState {
         return this.elements[Symbol.iterator]();
     }
     append(...items) {
-        for (let item of items) {
-            this.insert(this.elements.length, item);
+        if (items.length === 0) {
+            return;
         }
+        this.operate(() => {
+            for (let item of items) {
+                this.insert(this.elements.length, item);
+            }
+            this.notify("update", this);
+        });
     }
     element(index) {
         if (index instanceof AbstractState) {
@@ -259,9 +275,11 @@ class ArrayState extends AbstractState {
         element.observe("update", this.onElementUpdate);
         this.currentLength.update(this.elements.length);
         if (true) {
-            this.notify("insert", element, index);
+            this.operate(() => {
+                this.notify("insert", element, index);
+            });
         }
-        if (!this.updating) {
+        if (!this.operating) {
             this.notify("update", this);
         }
     }
@@ -323,9 +341,11 @@ class ArrayState extends AbstractState {
         element.unobserve("update", this.onElementUpdate);
         this.currentLength.update(this.elements.length);
         if (true) {
-            this.notify("remove", element, index);
+            this.operate(() => {
+                this.notify("remove", element, index);
+            });
         }
-        if (!this.updating) {
+        if (!this.operating) {
             this.notify("update", this);
         }
     }
@@ -342,8 +362,7 @@ exports.ArrayState = ArrayState;
 class ArrayStateImplementation extends ArrayState {
     update(value) {
         let updated = false;
-        try {
-            this.updating = true;
+        this.operate(() => {
             let isUndefined = typeof value === "undefined";
             updated = (this.isUndefined && !isUndefined) || (!this.isUndefined && isUndefined);
             this.isUndefined = isUndefined;
@@ -367,10 +386,7 @@ class ArrayStateImplementation extends ArrayState {
                     this.append(value[index]);
                 }
             }
-        }
-        finally {
-            this.updating = false;
-        }
+        });
         if (updated) {
             this.notify("update", this);
         }
@@ -391,17 +407,27 @@ exports.ArrayStateImplementation = ArrayStateImplementation;
 ;
 class ObjectState extends AbstractState {
     members;
-    updating;
+    operating;
     isUndefined;
+    operate(callback) {
+        let operating = this.operating;
+        this.operating = true;
+        try {
+            callback();
+        }
+        finally {
+            this.operating = operating;
+        }
+    }
     onMemberUpdate = () => {
-        if (!this.updating) {
+        if (!this.operating) {
             this.notify("update", this);
         }
     };
     constructor(members) {
         super();
         this.members = { ...members };
-        this.updating = false;
+        this.operating = false;
         this.isUndefined = false;
         for (let key in this.members) {
             this.members[key].observe("update", this.onMemberUpdate);
@@ -415,9 +441,11 @@ class ObjectState extends AbstractState {
         this.members[key] = member;
         member.observe("update", this.onMemberUpdate);
         if (true) {
-            this.notify("insert", member, key);
+            this.operate(() => {
+                this.notify("insert", member, key);
+            });
         }
-        if (!this.updating) {
+        if (!this.operating) {
             this.notify("update", this);
         }
         return this;
@@ -459,9 +487,11 @@ class ObjectState extends AbstractState {
         delete this.members[key];
         member.unobserve("update", this.onMemberUpdate);
         if (true) {
-            this.notify("remove", member, key);
+            this.operate(() => {
+                this.notify("remove", member, key);
+            });
         }
-        if (!this.updating) {
+        if (!this.operating) {
             this.notify("update", this);
         }
         return this;
@@ -476,8 +506,7 @@ exports.ObjectState = ObjectState;
 class ObjectStateImplementation extends ObjectState {
     update(value) {
         let updated = false;
-        try {
-            this.updating = true;
+        this.operate(() => {
             let isUndefined = typeof value === "undefined";
             updated = (this.isUndefined && !isUndefined) || (!this.isUndefined && isUndefined);
             this.isUndefined = isUndefined;
@@ -500,10 +529,7 @@ class ObjectStateImplementation extends ObjectState {
                     updated = true;
                 }
             }
-        }
-        finally {
-            this.updating = false;
-        }
+        });
         if (updated) {
             this.notify("update", this);
         }
