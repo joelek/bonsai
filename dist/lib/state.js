@@ -407,14 +407,64 @@ class ObjectState extends AbstractState {
             this.members[key].observe("update", this.onMemberUpdate);
         }
     }
-    member(key) {
-        let member = this.members[key];
-        if (member == null) {
-            this.members[key] = member = make_state(undefined);
-            this.members[key].observe("update", this.onMemberUpdate);
-            this.onMemberUpdate();
+    insert(key, item) {
+        if (key in this.members) {
+            throw new Error(`Expected member with key ${String(key)} to be absent!`);
         }
-        return member;
+        let member = item instanceof AbstractState ? item : make_state(item);
+        this.members[key] = member;
+        member.observe("update", this.onMemberUpdate);
+        if (true) {
+            this.notify("insert", member, key);
+        }
+        if (!this.updating) {
+            this.notify("update", this);
+        }
+        return this;
+    }
+    member(key) {
+        if (key instanceof AbstractState) {
+            let member = this.member(key.value());
+            let that = make_state(member.value());
+            let subscription = member.observe("update", (state) => {
+                that.update(state.value());
+            });
+            key.observe("update", (key) => {
+                member = this.member(key.value());
+                subscription();
+                that.update(member.value());
+                subscription = member.observe("update", (state) => {
+                    that.update(state.value());
+                });
+            });
+            that.observe("update", (that) => {
+                member.update(that.value());
+            });
+            return that;
+        }
+        else {
+            let member = this.members[key];
+            if (member == null) {
+                member = make_state(undefined);
+                this.insert(key, member);
+            }
+            return member;
+        }
+    }
+    remove(key) {
+        if (!(key in this.members)) {
+            throw new Error(`Expected member with key ${String(key)} to be present!`);
+        }
+        let member = this.members[key];
+        delete this.members[key];
+        member.unobserve("update", this.onMemberUpdate);
+        if (true) {
+            this.notify("remove", member, key);
+        }
+        if (!this.updating) {
+            this.notify("update", this);
+        }
+        return this;
     }
     spread() {
         return { ...this.members };
@@ -433,14 +483,20 @@ class ObjectStateImplementation extends ObjectState {
             this.isUndefined = isUndefined;
             for (let key in this.members) {
                 let member = this.member(key);
-                if (member.update(value?.[key])) {
+                if (typeof value === "undefined" || !(key in value)) {
+                    member.update(undefined);
+                    this.remove(key);
                     updated = true;
+                }
+                else {
+                    if (member.update(value[key])) {
+                        updated = true;
+                    }
                 }
             }
             for (let key in value) {
                 if (!(key in this.members)) {
-                    let member = this.member(key);
-                    member.update(value[key]);
+                    this.insert(key, value[key]);
                     updated = true;
                 }
             }
@@ -461,9 +517,7 @@ class ObjectStateImplementation extends ObjectState {
         for (let key in this.members) {
             let member = this.member(key);
             let value = member.value();
-            if (typeof value !== "undefined") {
-                lastValue[key] = value;
-            }
+            lastValue[key] = value;
         }
         return lastValue;
     }

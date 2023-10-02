@@ -113,14 +113,27 @@ export declare class ArrayStateImplementation<A extends Value> extends ArrayStat
     update(value: Array<A>): boolean;
     value(): Array<A>;
 }
-export type ObjectStateEvents<A extends Value> = AbstractStateEvents<A> & {};
+export type ObjectStateEvents<A extends RecordValue> = AbstractStateEvents<A> & {
+    "insert": [
+        state: State<A[keyof A]>,
+        key: keyof A
+    ];
+    "remove": [
+        state: State<A[keyof A]>,
+        key: keyof A
+    ];
+};
 export declare abstract class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectStateEvents<A>> {
     protected members: MemberStates<A>;
     protected updating: boolean;
     protected isUndefined: boolean;
     protected onMemberUpdate: () => void;
     constructor(members: MemberStates<A>);
-    member<B extends keyof A>(key: B): State<A[B]>;
+    insert<B extends string, C extends Value>(key: B, item: StateOrValue<C>): State<ExpansionOf<A & {
+        [key in B]: C;
+    }>>;
+    member<B extends keyof A>(key: B | State<B>): State<A[B]>;
+    remove<B extends keyof A>(key: B): State<ExpansionOf<Omit<A, B>>>;
     spread(): MemberStates<A>;
 }
 export declare class ObjectStateImplementation<A extends RecordValue> extends ObjectState<A> {

@@ -55,15 +55,15 @@ wtf.test(`Attributes<A> should support complex values.`, (assert) => {
 wtf.test(`It should support assignment from empty string literal to any string.`, (assert) => {
     let string = (0, state_1.make_state)("");
 });
-wtf.test(`It should not output undefined member values in object values.`, (assert) => {
+wtf.test(`It should output undefined member values in object values.`, (assert) => {
     let state = (0, state_1.make_state)({ required: undefined });
-    assert.equals(state.value(), {});
+    assert.equals(state.value(), { required: undefined });
 });
 wtf.test(`It should support updating optional object members to undefined values.`, (assert) => {
     let state = (0, state_1.make_state)({ object: { primitive: "a" } });
     let object_state = state.member("object");
     state.update({ object: undefined });
-    assert.equals(state.value(), {});
+    assert.equals(state.value(), { object: undefined });
     state.update({ object: { primitive: "b" } });
     assert.equals(state.value(), { object: { primitive: "b" } });
     assert.equals(object_state.value(), { primitive: "b" });
@@ -72,7 +72,7 @@ wtf.test(`It should support updating optional array members to undefined values.
     let state = (0, state_1.make_state)({ array: ["a"] });
     let array_state = state.member("array");
     state.update({ array: undefined });
-    assert.equals(state.value(), {});
+    assert.equals(state.value(), { array: undefined });
     state.update({ array: ["b"] });
     assert.equals(state.value(), { array: ["b"] });
     assert.equals(array_state.value(), ["b"]);
@@ -81,7 +81,7 @@ wtf.test(`It should initialize optional members lazily when updated.`, (assert) 
     let state = (0, state_1.make_state)({});
     state.update({ optional: undefined });
     let optional = state.member("optional");
-    assert.equals(state.value(), {});
+    assert.equals(state.value(), { optional: undefined });
     assert.equals(optional.value(), undefined);
 });
 wtf.test(`Lazily initialized optional members should propagate changes back to the object.`, (assert) => {
@@ -573,6 +573,14 @@ wtf.test(`State<[string, string]> should be assignable to Attribute<[string, str
 wtf.test(`State<undefined> should be assignable to Attribute<[string, string] | undefined>.`, (assert) => {
     let attribute = (0, state_1.stateify)(undefined);
 });
+wtf.test(`Fallback states should be constructible from other fallback states.`, (asserts) => {
+    let state = (0, state_1.make_state)({});
+    let object = (0, state_1.fallback)(state.member("object"), {});
+    let string = (0, state_1.fallback)(object.member("string"), "string");
+    asserts.equals(state.value(), { object: { string: undefined } });
+    asserts.equals(object.value(), { string: undefined });
+    asserts.equals(string.value(), "string");
+});
 wtf.test(`Fallback states should use the underlying value when the underlying value is defined.`, (assert) => {
     let underlying = (0, state_1.make_state)("underlying");
     let fallbacked = (0, state_1.fallback)(underlying, "default");
@@ -827,7 +835,7 @@ wtf.test(`Merged objects created from { key: "one" } and {} should update proper
     one.update({ key: "ONE" });
     assert.equals((0, state_1.valueify)(merged), { key: "ONE" });
     one.update({});
-    assert.equals((0, state_1.valueify)(merged), {});
+    assert.equals((0, state_1.valueify)(merged), { key: undefined });
 });
 wtf.test(`Merged objects created from { key: "one" } and {} should update properly when the second object is updated.`, (assert) => {
     let one = (0, state_1.stateify)({ key: "one" });
@@ -854,7 +862,7 @@ wtf.test(`Merged objects created from {} and { key: "two" } should update proper
     two.update({ key: "TWO" });
     assert.equals((0, state_1.valueify)(merged), { key: "TWO" });
     two.update({});
-    assert.equals((0, state_1.valueify)(merged), {});
+    assert.equals((0, state_1.valueify)(merged), { key: undefined });
 });
 wtf.test(`Merged objects created from { key: "one" } and { key: "two" } should update properly when the first object is updated.`, (assert) => {
     let one = (0, state_1.stateify)({ key: "one" });
@@ -1053,4 +1061,84 @@ wtf.test(`Flattened arrays should not contain arrays removed from the original a
     array_2.remove(1);
     array.remove(1);
     asserts.equals(flattened.value(), ["a", "c", "g", "i"]);
+});
+wtf.test(`Dynamic members should be updated when the dynamic key is updated.`, (asserts) => {
+    let state = (0, state_1.make_state)({ one: "one", two: "two" });
+    let key = (0, state_1.make_state)("one");
+    let member = state.member(key);
+    asserts.equals(member.value(), "one");
+    key.update("two");
+    asserts.equals(member.value(), "two");
+    key.update("one");
+    asserts.equals(member.value(), "one");
+});
+wtf.test(`Dynamic members should be updated when the active member is updated.`, (asserts) => {
+    let state = (0, state_1.make_state)({ one: "one", two: "two" });
+    let key = (0, state_1.make_state)("one");
+    let one = state.one;
+    let two = state.two;
+    let member = state.member(key);
+    key.update("two");
+    key.update("one");
+    one.update("ONE");
+    asserts.equals(member.value(), "ONE");
+    two.update("TWO");
+    asserts.equals(member.value(), "ONE");
+});
+wtf.test(`Dynamic members being updated should propagate the changes back to the active member.`, (asserts) => {
+    let state = (0, state_1.make_state)({ one: "one", two: "two" });
+    let key = (0, state_1.make_state)("one");
+    let one = state.one;
+    let two = state.two;
+    let member = state.member(key);
+    key.update("two");
+    key.update("one");
+    member.update("ONE");
+    asserts.equals(one.value(), "ONE");
+    asserts.equals(two.value(), "two");
+});
+wtf.test(`Record states should support insertion and removal of members.`, (asserts) => {
+    let state = (0, state_1.make_state)({});
+    asserts.equals(state.value(), {});
+    state.insert("one", "one");
+    asserts.equals(state.value(), { one: "one" });
+    state.insert("two", "two");
+    asserts.equals(state.value(), { one: "one", two: "two" });
+    state.remove("one");
+    asserts.equals(state.value(), { two: "two" });
+    state.remove("two");
+    asserts.equals(state.value(), {});
+});
+wtf.test(`Record states should throw an error when attempting to insert an existent member.`, async (asserts) => {
+    let state = (0, state_1.make_state)({});
+    state.insert("one", "one");
+    await asserts.throws(() => {
+        state.insert("one", "one");
+    });
+});
+wtf.test(`Record states should throw an error when attempting to remove a non-existent member.`, async (asserts) => {
+    let state = (0, state_1.make_state)({});
+    await asserts.throws(() => {
+        state.remove("one");
+    });
+});
+wtf.test(`Record states should emit insert and remove events.`, (asserts) => {
+    let state = (0, state_1.make_state)({});
+    let events = [];
+    state.observe("insert", (state, key) => {
+        events.push(key);
+    });
+    state.observe("remove", (state, key) => {
+        events.push(key);
+    });
+    state.insert("one", "one");
+    state.insert("two", "two");
+    state.remove("one");
+    state.remove("two");
+    asserts.equals(events, [
+        "one",
+        "two",
+        "one",
+        "two"
+    ]);
 });
