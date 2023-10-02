@@ -670,8 +670,6 @@ NB: This project targets TypeScript 4 in strict mode.
 
 * Write more unit tests.
 * Serialize classes as "class".
-* Consider implementing TupleState that changes once irregardless of number of members.
-* Consider implementing RecordState with "insert" and "remove" event messages.
 * Fix issue with lazily initialized ObjectStates triggering multiple updates.
 * Consider adding support for Promise<State<Value>>.
 * Improve life-cycle management of elements.
