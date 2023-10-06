@@ -695,7 +695,7 @@ wtf.test(`Fallback states should use the default value when the underlying value
 	assert.equals(fallbacked.value(), "default");
 });
 
-wtf.test(`Fallback states should propagate updated values back to the underlying state.`, (assert) => {
+wtf.test(`Fallback states should propagate updated primitive values back to the underlying state.`, (assert) => {
 	let underlying = make_state(undefined as string | undefined);
 	let fallbacked = fallback(underlying, "default");
 	assert.equals(underlying.value(), undefined);
@@ -703,6 +703,58 @@ wtf.test(`Fallback states should propagate updated values back to the underlying
 	fallbacked.update("updated");
 	assert.equals(underlying.value(), "updated");
 	assert.equals(fallbacked.value(), "updated");
+});
+
+wtf.test(`Fallback states should propagate updated object values back to the underlying undefined state.`, (asserts) => {
+	let underlying = make_state(undefined as Record<string, string> | undefined);
+	let fallbacked = fallback(underlying, {});
+	asserts.equals(underlying.value(), undefined);
+	asserts.equals(fallbacked.value(), {});
+	fallbacked.insert("one", "a");
+	asserts.equals(underlying.value(), { one: "a" });
+	asserts.equals(fallbacked.value(), { one: "a" });
+	fallbacked.insert("two", "b");
+	asserts.equals(underlying.value(), { one: "a", two: "b" });
+	asserts.equals(fallbacked.value(), { one: "a", two: "b" });
+});
+
+wtf.test(`Fallback states should propagate updated object values back to the underlying defined state.`, (asserts) => {
+	let underlying = make_state({} as Record<string, string> | undefined);
+	let fallbacked = fallback(underlying, {});
+	asserts.equals(underlying.value(), {});
+	asserts.equals(fallbacked.value(), {});
+	fallbacked.insert("one", "a");
+	asserts.equals(underlying.value(), { one: "a" });
+	asserts.equals(fallbacked.value(), { one: "a" });
+	fallbacked.insert("two", "b");
+	asserts.equals(underlying.value(), { one: "a", two: "b" });
+	asserts.equals(fallbacked.value(), { one: "a", two: "b" });
+});
+
+wtf.test(`Fallback states should propagate updated array values back to the underlying undefined state.`, (asserts) => {
+	let underlying = make_state(undefined as Array<string> | undefined);
+	let fallbacked = fallback(underlying, []);
+	asserts.equals(underlying.value(), undefined);
+	asserts.equals(fallbacked.value(), []);
+	fallbacked.insert(0, "a");
+	asserts.equals(underlying.value(), ["a"]);
+	asserts.equals(fallbacked.value(), ["a"]);
+	fallbacked.insert(1, "b");
+	asserts.equals(underlying.value(), ["a", "b"]);
+	asserts.equals(fallbacked.value(), ["a", "b"]);
+});
+
+wtf.test(`Fallback states should propagate updated array values back to the underlying defined state.`, (asserts) => {
+	let underlying = make_state([] as Array<string> | undefined);
+	let fallbacked = fallback(underlying, []);
+	asserts.equals(underlying.value(), []);
+	asserts.equals(fallbacked.value(), []);
+	fallbacked.insert(0, "a");
+	asserts.equals(underlying.value(), ["a"]);
+	asserts.equals(fallbacked.value(), ["a"]);
+	fallbacked.insert(1, "b");
+	asserts.equals(underlying.value(), ["a", "b"]);
+	asserts.equals(fallbacked.value(), ["a", "b"]);
 });
 
 wtf.test(`Fallback states should not propagate the default value back to the underlying state when the fallback state is updated.`, (assert) => {
