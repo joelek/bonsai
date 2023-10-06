@@ -718,15 +718,23 @@ exports.valueify = valueify;
 ;
 function fallback(state, defaultValue) {
     let computer = ((value) => typeof value !== "undefined" ? value : defaultValue);
-    let computed_state = state.compute(computer);
+    let computed_state = make_state(computer(state.value()));
+    let propagating = false;
+    state.observe("update", (state) => {
+        if (!propagating) {
+            computed_state.update(computer(state.value()));
+        }
+    });
     computed_state.observe("update", (computed_state) => {
         let value = computed_state.value();
+        propagating = true;
         if (make_state(defaultValue).update(value)) {
             state.update(value);
         }
         else {
             state.update(undefined);
         }
+        propagating = false;
     });
     return computed_state;
 }
