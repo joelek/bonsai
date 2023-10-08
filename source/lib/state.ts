@@ -636,7 +636,6 @@ export class ObjectStateImplementation<A extends RecordValue> extends ObjectStat
 			for (let key in this.members) {
 				let member = this.member(key);
 				if (typeof value === "undefined" || !(key in value)) {
-					member.update(undefined as any);
 					this.remove(key);
 					updated = true;
 				} else {

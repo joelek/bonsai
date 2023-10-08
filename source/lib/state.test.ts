@@ -626,8 +626,6 @@ wtf.test(`Lazily initialized ObjectStates should supporting being cleared.`, (as
 	b.update({ key: "b" });
 	object.update({});
 	assert.equals(object.value(), {});
-	assert.equals(a.value(), undefined);
-	assert.equals(b.value(), undefined);
 });
 
 wtf.test(`Lazily initialized ObjectStates should not trigger multiple updates.`, (assert) => {
@@ -1027,7 +1025,7 @@ wtf.test(`Merged objects created from { key: "one" } and {} should update proper
 	let merged = merge(one, two);
 	one.update({ key: "ONE" });
 	assert.equals(valueify(merged), { key: "ONE" });
-	one.update({});
+	one.update({ key: undefined });
 	assert.equals(valueify(merged), { key: undefined });
 });
 
@@ -1057,7 +1055,7 @@ wtf.test(`Merged objects created from {} and { key: "two" } should update proper
 	let merged = merge(one, two);
 	two.update({ key: "TWO" });
 	assert.equals(valueify(merged), { key: "TWO" });
-	two.update({});
+	two.update({ key: undefined });
 	assert.equals(valueify(merged), { key: undefined });
 });
 
@@ -1077,7 +1075,7 @@ wtf.test(`Merged objects created from { key: "one" } and { key: "two" } should u
 	let merged = merge(one, two);
 	two.update({ key: "TWO" });
 	assert.equals(valueify(merged), { key: "TWO" });
-	two.update({});
+	two.update({ key: undefined });
 	assert.equals(valueify(merged), { key: "one" });
 });
 
