@@ -1361,3 +1361,67 @@ wtf.test(`Record states should emit insert and remove events.`, (asserts) => {
 		"two"
 	]);
 });
+
+wtf.test(`Array states should emit remove events when set to undefined.`, (assert) => {
+	let state = make_state(["a", "b"] as Array<string>);
+	let events = [] as Array<{ type: string, index: number, value: string }>;
+	state.observe("insert", (element, index) => {
+		events.push({
+			type: "insert",
+			index: index,
+			value: element.value()
+		});
+	});
+	state.observe("remove", (element, index) => {
+		events.push({
+			type: "remove",
+			index: index,
+			value: element.value()
+		});
+	});
+	state.update(undefined as any);
+	assert.equals(events, [
+		{
+			type: "remove",
+			index: 1,
+			value: "b"
+		},
+		{
+			type: "remove",
+			index: 0,
+			value: "a"
+		}
+	]);
+});
+
+wtf.test(`Record states should emit remove events when set to undefined.`, (assert) => {
+	let state = make_state({ one: "a", two: "b" } as Record<string, string>);
+	let events = [] as Array<{ type: string, key: string, value: string }>;
+	state.observe("insert", (member, key) => {
+		events.push({
+			type: "insert",
+			key: key,
+			value: member.value()
+		});
+	});
+	state.observe("remove", (member, key) => {
+		events.push({
+			type: "remove",
+			key: key,
+			value: member.value()
+		});
+	});
+	state.update(undefined as any);
+	assert.equals(events, [
+		{
+			type: "remove",
+			key: "one",
+			value: "a"
+		},
+		{
+			type: "remove",
+			key: "two",
+			value: "b"
+		}
+	]);
+});
