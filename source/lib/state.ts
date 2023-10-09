@@ -251,8 +251,10 @@ export abstract class ArrayState<A extends Value> extends AbstractState<Array<A>
 			for (let item of items) {
 				this.insert(this.elements.length, item);
 			}
-			this.notify("update", this);
 		});
+		if (!this.operating) {
+			this.notify("update", this);
+		}
 	}
 
 	element(index: number | State<number>): State<A> {
