@@ -153,7 +153,7 @@ export declare function valueify<A extends Attribute<Value>>(attribute: A): Valu
 export type Merged<A extends RecordValue, B extends RecordValue> = ExpansionOf<{
     [C in keyof A | keyof B]: C extends keyof A & keyof B ? undefined extends B[C] ? Exclude<B[C], undefined> | A[C] : B[C] : C extends keyof A ? A[C] : C extends keyof B ? B[C] : never;
 }>;
-export declare function fallback<A extends Value>(state: State<A | undefined>, defaultValue: Exclude<A, undefined>): State<Exclude<A, undefined>>;
+export declare function fallback<A extends Value>(underlying: State<A | undefined>, default_value: Exclude<A, undefined>): State<Exclude<A, undefined>>;
 export declare function merge<A extends RecordValue, B extends RecordValue>(one: Attributes<A>, two: Attributes<B>): Attributes<Merged<A, B>>;
 export declare function flatten<A extends PrimitiveValue | ReferenceValue>(states: State<Array<A | RecursiveArray<A>>>): State<Array<A>>;
 export {};

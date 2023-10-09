@@ -149,8 +149,10 @@ class ArrayState extends AbstractState {
             for (let item of items) {
                 this.insert(this.elements.length, item);
             }
-            this.notify("update", this);
         });
+        if (!this.operating) {
+            this.notify("update", this);
+        }
     }
     element(index) {
         if (index instanceof AbstractState) {
@@ -513,7 +515,6 @@ class ObjectStateImplementation extends ObjectState {
             for (let key in this.members) {
                 let member = this.member(key);
                 if (typeof value === "undefined" || !(key in value)) {
-                    member.update(undefined);
                     this.remove(key);
                     updated = true;
                 }
@@ -716,27 +717,80 @@ function valueify(attribute) {
 }
 exports.valueify = valueify;
 ;
-function fallback(state, defaultValue) {
-    let computer = ((value) => typeof value !== "undefined" ? value : defaultValue);
-    let computed_state = make_state(computer(state.value()));
-    let propagating = false;
-    state.observe("update", (state) => {
-        if (!propagating) {
-            computed_state.update(computer(state.value()));
+function fallback_array(underlying, fallbacked, default_value, controller) {
+    fallbacked.observe("insert", (element, index) => {
+        if (controller.value() !== "underlying") {
+            controller.update("fallbacked");
+            if (typeof underlying.value() === "undefined") {
+                underlying.update(default_value);
+            }
+            underlying.insert(index, element);
+            controller.update(undefined);
         }
     });
-    computed_state.observe("update", (computed_state) => {
-        let value = computed_state.value();
-        propagating = true;
-        if (make_state(defaultValue).update(value)) {
-            state.update(value);
+    fallbacked.observe("remove", (element, index) => {
+        if (controller.value() !== "underlying") {
+            controller.update("fallbacked");
+            if (typeof underlying.value() === "undefined") {
+                underlying.update(default_value);
+            }
+            underlying.remove(index);
+            controller.update(undefined);
         }
-        else {
-            state.update(undefined);
-        }
-        propagating = false;
     });
-    return computed_state;
+    underlying.observe("insert", (element, index) => {
+        if (controller.value() !== "fallbacked") {
+            controller.update("underlying");
+            fallbacked.insert(index, element);
+            controller.update(undefined);
+        }
+    });
+    underlying.observe("remove", (element, index) => {
+        if (controller.value() !== "fallbacked") {
+            controller.update("underlying");
+            fallbacked.remove(index);
+            controller.update(undefined);
+        }
+    });
+}
+;
+function fallback(underlying, default_value) {
+    let computer = ((underlying) => typeof underlying === "undefined" ? default_value : underlying);
+    let fallbacked = make_state(computer(underlying.value()));
+    let controller = make_state(undefined);
+    underlying.compute((underlying_value) => {
+        if (controller.value() !== "fallbacked") {
+            controller.update("underlying");
+            if (typeof underlying_value === "undefined") {
+                fallbacked.update(default_value);
+            }
+            else {
+                if (make_state(default_value).update(underlying_value)) {
+                    fallbacked.update(underlying_value);
+                }
+                else {
+                    underlying.update(undefined);
+                }
+            }
+            controller.update(undefined);
+        }
+    });
+    fallbacked.compute((fallbacked_value) => {
+        if (controller.value() !== "underlying") {
+            controller.update("fallbacked");
+            if (make_state(default_value).update(fallbacked_value)) {
+                underlying.update(fallbacked_value);
+            }
+            else {
+                underlying.update(undefined);
+            }
+            controller.update(undefined);
+        }
+    });
+    if (underlying instanceof ArrayState && fallbacked instanceof ArrayState && default_value instanceof Array) {
+        fallback_array(underlying, fallbacked, default_value, controller);
+    }
+    return fallbacked;
 }
 exports.fallback = fallback;
 ;
