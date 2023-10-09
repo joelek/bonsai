@@ -839,26 +839,77 @@ export type Merged<A extends RecordValue, B extends RecordValue> = ExpansionOf<{
 				: never;
 }>;
 
-export function fallback<A extends Value>(state: State<A | undefined>, defaultValue: Exclude<A, undefined>): State<Exclude<A, undefined>> {
-	let computer = ((value) => typeof value !== "undefined" ? value : defaultValue) as Computer<A | undefined, Exclude<A, undefined>>;
-	let computed_state = make_state(computer(state.value()));
-	let propagating = false;
-	state.observe("update", (state) => {
-		if (!propagating) {
-			computed_state.update(computer(state.value()));
+function fallback_array<A extends Value>(underlying: State<Array<A>>, fallbacked: State<Array<A>>, default_value: Array<A>, controller: State<"underlying" | "fallbacked" | undefined>): void {
+	fallbacked.observe("insert", (element, index) => {
+		if (controller.value() !== "underlying") {
+			controller.update("fallbacked");
+			if (typeof underlying.value() === "undefined") {
+				underlying.update(default_value);
+			}
+			underlying.insert(index, element);
+			controller.update(undefined);
 		}
 	});
-	computed_state.observe("update", (computed_state) => {
-		let value = computed_state.value();
-		propagating = true;
-		if (make_state(defaultValue).update(value)) {
-			state.update(value);
-		} else {
-			state.update(undefined);
+	fallbacked.observe("remove", (element, index) => {
+		if (controller.value() !== "underlying") {
+			controller.update("fallbacked");
+			if (typeof underlying.value() === "undefined") {
+				underlying.update(default_value);
+			}
+			underlying.remove(index);
+			controller.update(undefined);
 		}
-		propagating = false;
 	});
-	return computed_state;
+	underlying.observe("insert", (element, index) => {
+		if (controller.value() !== "fallbacked") {
+			controller.update("underlying");
+			fallbacked.insert(index, element);
+			controller.update(undefined);
+		}
+	});
+	underlying.observe("remove", (element, index) => {
+		if (controller.value() !== "fallbacked") {
+			controller.update("underlying");
+			fallbacked.remove(index);
+			controller.update(undefined);
+		}
+	});
+};
+
+export function fallback<A extends Value>(underlying: State<A | undefined>, default_value: Exclude<A, undefined>): State<Exclude<A, undefined>> {
+	let computer = ((underlying) => typeof underlying === "undefined" ? default_value : underlying) as Computer<A | undefined, Exclude<A, undefined>>;
+	let fallbacked = make_state(computer(underlying.value()));
+	let controller = make_state(undefined as "underlying" | "fallbacked" | undefined);
+	underlying.compute((underlying_value) => {
+		if (controller.value() !== "fallbacked") {
+			controller.update("underlying");
+			if (typeof underlying_value === "undefined") {
+				fallbacked.update(default_value);
+			} else {
+				if (make_state(default_value).update(underlying_value as Exclude<A, undefined>)) {
+					fallbacked.update(underlying_value as Exclude<A, undefined>);
+				} else {
+					underlying.update(undefined);
+				}
+			}
+			controller.update(undefined);
+		}
+	});
+	fallbacked.compute((fallbacked_value) => {
+		if (controller.value() !== "underlying") {
+			controller.update("fallbacked");
+			if (make_state(default_value).update(fallbacked_value)) {
+				underlying.update(fallbacked_value);
+			} else {
+				underlying.update(undefined);
+			}
+			controller.update(undefined);
+		}
+	});
+	if (underlying instanceof ArrayState && fallbacked instanceof ArrayState && default_value instanceof Array) {
+		fallback_array(underlying, fallbacked, default_value, controller);
+	}
+	return fallbacked;
 };
 
 export function merge<A extends RecordValue, B extends RecordValue>(one: Attributes<A>, two: Attributes<B>): Attributes<Merged<A, B>> {
