@@ -442,15 +442,14 @@ let one = stateify(1);
 let two = stateify(2);
 ```
 
-New state may be created from existing state using the `fallback()` function. The function returns a new state that is updated whenever the original state is updated. The new state also updates the original state whenever it is updated as long as the value of the new state is different from the default value. The new state may never assume the undefined value making it useful in logic handling optional data.
+New state may be created from existing state using the `fallback()` function. The function returns a new state that is updated whenever the original state is updated. The new state also updates the original state whenever it is updated. The new state may never assume the undefined value making it useful in logic handling optional data.
 
 ```ts
 import { stateify, fallback } from "@joelek/bonsai";
 
 let state = stateify(undefined as number | undefined);
 let fallbacked = fallback(state, 0); // The resulting type is State<number>.
-fallbacked.update(1); // The original state is instantly updated to the value 1.
-fallbacked.update(0); // The original state is instantly updated to the value undefined since 0 is the default value.
+fallbacked.update(1); // Both states are instantly updated to the value 1.
 ```
 
 Multiple states may be combined into a single state using the `computed()` function.
