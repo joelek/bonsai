@@ -754,41 +754,32 @@ function fallback_array(underlying, fallbacked, default_value, controller) {
     });
 }
 ;
-function fallback(underlying, default_value) {
-    let computer = ((underlying) => typeof underlying === "undefined" ? default_value : underlying);
-    let fallbacked = make_state(computer(underlying.value()));
-    let controller = make_state(undefined);
-    underlying.compute((underlying_value) => {
+function fallback_primitive(underlying, fallbacked, default_value, controller, computer) {
+    underlying.observe("update", (underlying) => {
         if (controller.value() !== "fallbacked") {
             controller.update("underlying");
-            if (typeof underlying_value === "undefined") {
-                fallbacked.update(default_value);
-            }
-            else {
-                if (make_state(default_value).update(underlying_value)) {
-                    fallbacked.update(underlying_value);
-                }
-                else {
-                    underlying.update(undefined);
-                }
-            }
+            fallbacked.update(computer(underlying.value()));
             controller.update(undefined);
         }
     });
-    fallbacked.compute((fallbacked_value) => {
+    fallbacked.observe("update", (fallbacked) => {
         if (controller.value() !== "underlying") {
             controller.update("fallbacked");
-            if (make_state(default_value).update(fallbacked_value)) {
-                underlying.update(fallbacked_value);
-            }
-            else {
-                underlying.update(undefined);
-            }
+            underlying.update(fallbacked.value());
             controller.update(undefined);
         }
     });
+}
+;
+function fallback(underlying, default_value) {
+    let computer = ((underlying_value) => typeof underlying_value === "undefined" ? default_value : underlying_value);
+    let fallbacked = make_state(computer(underlying.value()));
+    let controller = make_state(undefined);
     if (underlying instanceof ArrayState && fallbacked instanceof ArrayState && default_value instanceof Array) {
         fallback_array(underlying, fallbacked, default_value, controller);
+    }
+    else {
+        fallback_primitive(underlying, fallbacked, default_value, controller, computer);
     }
     return fallbacked;
 }
