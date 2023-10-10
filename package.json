@@ -22,5 +22,5 @@
 		"postversion": "git push && git push --tags",
 		"test": "npx wtf"
 	},
-	"version": "0.8.1"
+	"version": "0.8.2"
 }
