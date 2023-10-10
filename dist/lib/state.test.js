@@ -583,216 +583,429 @@ wtf.test(`Fallback states should be constructible from other fallback states.`, 
     asserts.equals(object.value(), { string: undefined });
     asserts.equals(string.value(), "string");
 });
-wtf.test(`Fallback states should use the underlying value when the underlying value is defined.`, (assert) => {
-    let underlying = (0, state_1.make_state)("underlying");
-    let fallbacked = (0, state_1.fallback)(underlying, "default");
-    assert.equals(underlying.value(), "underlying");
-    assert.equals(fallbacked.value(), "underlying");
-});
-wtf.test(`Fallback states should use the default value when the underlying value is undefined.`, (assert) => {
+wtf.test(`Fallback states should be initialized properly (undefined primitive).`, (assert) => {
     let underlying = (0, state_1.make_state)(undefined);
     let fallbacked = (0, state_1.fallback)(underlying, "default");
     assert.equals(underlying.value(), undefined);
     assert.equals(fallbacked.value(), "default");
 });
-wtf.test(`Fallback states should propagate updated primitive values back to the underlying undefined state.`, (assert) => {
+wtf.test(`Underlying states should be properly updated when the fallback state is updated to a value different from the default value (undefined primitive).`, (assert) => {
     let underlying = (0, state_1.make_state)(undefined);
     let fallbacked = (0, state_1.fallback)(underlying, "default");
-    assert.equals(underlying.value(), undefined);
-    assert.equals(fallbacked.value(), "default");
     fallbacked.update("updated");
     assert.equals(underlying.value(), "updated");
     assert.equals(fallbacked.value(), "updated");
+});
+wtf.test(`Underlying states should be properly updated when the fallback state is updated to the default value (undefined primitive).`, (assert) => {
+    let underlying = (0, state_1.make_state)(undefined);
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
+    fallbacked.update("default");
+    assert.equals(underlying.value(), undefined);
+    assert.equals(fallbacked.value(), "default");
+});
+wtf.test(`Underlying states should be properly updated when the fallback state is updated back to the default value (undefined primitive).`, (assert) => {
+    let underlying = (0, state_1.make_state)(undefined);
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
+    fallbacked.update("updated");
     fallbacked.update("default");
     assert.equals(underlying.value(), "default");
     assert.equals(fallbacked.value(), "default");
 });
-wtf.test(`Underlying undefined states should propagate updated primitive values to the fallback state.`, (assert) => {
+wtf.test(`Fallback states should be properly updated when underlying states are updated to a value different from the default value (undefined primitive).`, (assert) => {
     let underlying = (0, state_1.make_state)(undefined);
     let fallbacked = (0, state_1.fallback)(underlying, "default");
-    assert.equals(underlying.value(), undefined);
-    assert.equals(fallbacked.value(), "default");
     underlying.update("updated");
     assert.equals(underlying.value(), "updated");
     assert.equals(fallbacked.value(), "updated");
-    underlying.update(undefined);
-    assert.equals(underlying.value(), undefined);
-    assert.equals(fallbacked.value(), "default");
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to the default value (undefined primitive).`, (assert) => {
+    let underlying = (0, state_1.make_state)(undefined);
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
     underlying.update("default");
     assert.equals(underlying.value(), "default");
     assert.equals(fallbacked.value(), "default");
 });
-wtf.test(`Fallback states should propagate updated primitive values back to the underlying defined state.`, (assert) => {
+wtf.test(`Fallback states should be properly updated when underlying states are updated back to the default value (undefined primitive).`, (assert) => {
+    let underlying = (0, state_1.make_state)(undefined);
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
+    underlying.update("updated");
+    underlying.update("default");
+    assert.equals(underlying.value(), "default");
+    assert.equals(fallbacked.value(), "default");
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to the undefined value (undefined primitive).`, (assert) => {
+    let underlying = (0, state_1.make_state)(undefined);
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
+    underlying.update(undefined);
+    assert.equals(underlying.value(), undefined);
+    assert.equals(fallbacked.value(), "default");
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated back to the undefined value (undefined primitive).`, (assert) => {
+    let underlying = (0, state_1.make_state)(undefined);
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
+    underlying.update("updated");
+    underlying.update(undefined);
+    assert.equals(underlying.value(), undefined);
+    assert.equals(fallbacked.value(), "default");
+});
+wtf.test(`Fallback states should be initialized properly (defined primitive different from the default value).`, (assert) => {
     let underlying = (0, state_1.make_state)("underlying");
     let fallbacked = (0, state_1.fallback)(underlying, "default");
     assert.equals(underlying.value(), "underlying");
     assert.equals(fallbacked.value(), "underlying");
+});
+wtf.test(`Underlying states should be properly updated when the fallback state is updated to a value different from the default value (defined primitive different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)("underlying");
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
     fallbacked.update("updated");
     assert.equals(underlying.value(), "updated");
     assert.equals(fallbacked.value(), "updated");
+});
+wtf.test(`Underlying states should be properly updated when the fallback state is updated to the default value (defined primitive different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)("underlying");
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
     fallbacked.update("default");
     assert.equals(underlying.value(), "default");
     assert.equals(fallbacked.value(), "default");
 });
-wtf.test(`Underlying defined states should propagate updated primitive values to the fallback state.`, (assert) => {
+wtf.test(`Underlying states should be properly updated when the fallback state is updated back to the default value (defined primitive different from the default value).`, (assert) => {
     let underlying = (0, state_1.make_state)("underlying");
     let fallbacked = (0, state_1.fallback)(underlying, "default");
-    assert.equals(underlying.value(), "underlying");
-    assert.equals(fallbacked.value(), "underlying");
+    fallbacked.update("updated");
+    fallbacked.update("default");
+    assert.equals(underlying.value(), "default");
+    assert.equals(fallbacked.value(), "default");
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to a value different from the default value (defined primitive different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)("underlying");
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
     underlying.update("updated");
     assert.equals(underlying.value(), "updated");
     assert.equals(fallbacked.value(), "updated");
-    underlying.update(undefined);
-    assert.equals(underlying.value(), undefined);
-    assert.equals(fallbacked.value(), "default");
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to the default value (defined primitive different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)("underlying");
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
     underlying.update("default");
     assert.equals(underlying.value(), "default");
     assert.equals(fallbacked.value(), "default");
 });
-wtf.test(`Fallback states should propagate updated record values back to underlying undefined states when the default value is {}.`, (assert) => {
-    let underlying = (0, state_1.make_state)(undefined);
-    let fallbacked = (0, state_1.fallback)(underlying, {});
+wtf.test(`Fallback states should be properly updated when underlying states are updated back to the default value (defined primitive different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)("underlying");
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
+    underlying.update("updated");
+    underlying.update("default");
+    assert.equals(underlying.value(), "default");
+    assert.equals(fallbacked.value(), "default");
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to the undefined value (defined primitive different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)("underlying");
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
+    underlying.update(undefined);
     assert.equals(underlying.value(), undefined);
-    assert.equals(fallbacked.value(), {});
-    fallbacked.insert("one", "a");
-    assert.equals(underlying.value(), { one: "a" });
-    assert.equals(fallbacked.value(), { one: "a" });
-    fallbacked.insert("two", "b");
-    assert.equals(underlying.value(), { one: "a", two: "b" });
-    assert.equals(fallbacked.value(), { one: "a", two: "b" });
-    fallbacked.remove("two");
-    assert.equals(underlying.value(), { one: "a" });
-    assert.equals(fallbacked.value(), { one: "a" });
-    fallbacked.remove("one");
-    assert.equals(underlying.value(), {});
-    assert.equals(fallbacked.value(), {});
-    fallbacked.update({ one: "a", two: "b" });
-    assert.equals(underlying.value(), { one: "a", two: "b" });
-    assert.equals(fallbacked.value(), { one: "a", two: "b" });
-    fallbacked.update({});
-    assert.equals(underlying.value(), {});
-    assert.equals(fallbacked.value(), {});
+    assert.equals(fallbacked.value(), "default");
 });
-wtf.test(`Underlying undefined states should propagate updated record values to the fallback state when the default value is {}.`, (assert) => {
-    let underlying = (0, state_1.make_state)(undefined);
-    let fallbacked = (0, state_1.fallback)(underlying, {});
-    underlying.update({ one: "a", two: "b" });
-    assert.equals(underlying.value(), { one: "a", two: "b" });
-    assert.equals(fallbacked.value(), { one: "a", two: "b" });
-    underlying.update({});
-    assert.equals(underlying.value(), {});
-    assert.equals(fallbacked.value(), {});
-});
-wtf.test(`Fallback states should propagate updated record values back to underlying undefined states when the default value is { one: "a" }.`, (assert) => {
-    let underlying = (0, state_1.make_state)(undefined);
-    let fallbacked = (0, state_1.fallback)(underlying, { one: "a" });
+wtf.test(`Fallback states should be properly updated when underlying states are updated back to the undefined value (defined primitive different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)("underlying");
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
+    underlying.update("updated");
+    underlying.update(undefined);
     assert.equals(underlying.value(), undefined);
-    assert.equals(fallbacked.value(), { one: "a" });
-    fallbacked.insert("two", "b");
-    assert.equals(underlying.value(), { one: "a", two: "b" });
-    assert.equals(fallbacked.value(), { one: "a", two: "b" });
-    fallbacked.remove("two");
-    assert.equals(underlying.value(), { one: "a" });
-    assert.equals(fallbacked.value(), { one: "a" });
-    fallbacked.remove("one");
-    assert.equals(underlying.value(), {});
-    assert.equals(fallbacked.value(), {});
-    fallbacked.insert("one", "a");
-    assert.equals(underlying.value(), { one: "a" });
-    assert.equals(fallbacked.value(), { one: "a" });
-    fallbacked.update({ one: "a", two: "b" });
-    assert.equals(underlying.value(), { one: "a", two: "b" });
-    assert.equals(fallbacked.value(), { one: "a", two: "b" });
-    fallbacked.update({ one: "a" });
-    assert.equals(underlying.value(), { one: "a" });
-    assert.equals(fallbacked.value(), { one: "a" });
+    assert.equals(fallbacked.value(), "default");
 });
-wtf.test(`Underlying undefined states should propagate updated record values to the fallback state when the default value is { one: "a" }.`, (assert) => {
+wtf.test(`Fallback states should be initialized properly (defined primitive identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)("default");
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
+    assert.equals(underlying.value(), "default");
+    assert.equals(fallbacked.value(), "default");
+});
+wtf.test(`Underlying states should be properly updated when the fallback state is updated to a value different from the default value (defined primitive identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)("default");
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
+    fallbacked.update("updated");
+    assert.equals(underlying.value(), "updated");
+    assert.equals(fallbacked.value(), "updated");
+});
+wtf.test(`Underlying states should be properly updated when the fallback state is updated to the default value (defined primitive identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)("default");
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
+    fallbacked.update("default");
+    assert.equals(underlying.value(), "default");
+    assert.equals(fallbacked.value(), "default");
+});
+wtf.test(`Underlying states should be properly updated when the fallback state is updated back to the default value (defined primitive identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)("default");
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
+    fallbacked.update("updated");
+    fallbacked.update("default");
+    assert.equals(underlying.value(), "default");
+    assert.equals(fallbacked.value(), "default");
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to a value different from the default value (defined primitive identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)("default");
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
+    underlying.update("updated");
+    assert.equals(underlying.value(), "updated");
+    assert.equals(fallbacked.value(), "updated");
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to the default value (defined primitive identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)("default");
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
+    underlying.update("default");
+    assert.equals(underlying.value(), "default");
+    assert.equals(fallbacked.value(), "default");
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated back to the default value (defined primitive identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)("default");
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
+    underlying.update("updated");
+    underlying.update("default");
+    assert.equals(underlying.value(), "default");
+    assert.equals(fallbacked.value(), "default");
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to the undefined value (defined primitive identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)("default");
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
+    underlying.update(undefined);
+    assert.equals(underlying.value(), undefined);
+    assert.equals(fallbacked.value(), "default");
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated back to the undefined value (defined primitive identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)("default");
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
+    underlying.update("updated");
+    underlying.update(undefined);
+    assert.equals(underlying.value(), undefined);
+    assert.equals(fallbacked.value(), "default");
+});
+wtf.test(`Fallback states should synchronize underlying primitive states using update events.`, (assert) => {
     let underlying = (0, state_1.make_state)(undefined);
-    let fallbacked = (0, state_1.fallback)(underlying, { one: "a" });
-    underlying.update({ one: "a", two: "b" });
-    assert.equals(underlying.value(), { one: "a", two: "b" });
-    assert.equals(fallbacked.value(), { one: "a", two: "b" });
-    underlying.update({ one: "a" });
-    assert.equals(underlying.value(), { one: "a" });
-    assert.equals(fallbacked.value(), { one: "a" });
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
+    let events = [];
+    underlying.observe("update", (state) => {
+        events.push({
+            type: "update"
+        });
+    });
+    fallbacked.update("updated");
+    assert.equals(events, [
+        {
+            type: "update"
+        }
+    ]);
 });
-wtf.test(`Fallback states should propagate updated record values back to underlying defined states when the default value is {}.`, (assert) => {
-    let underlying = (0, state_1.make_state)({});
-    let fallbacked = (0, state_1.fallback)(underlying, {});
-    assert.equals(underlying.value(), {});
-    assert.equals(fallbacked.value(), {});
-    fallbacked.insert("one", "a");
-    assert.equals(underlying.value(), { one: "a" });
-    assert.equals(fallbacked.value(), { one: "a" });
-    fallbacked.insert("two", "b");
-    assert.equals(underlying.value(), { one: "a", two: "b" });
-    assert.equals(fallbacked.value(), { one: "a", two: "b" });
-    fallbacked.remove("two");
-    assert.equals(underlying.value(), { one: "a" });
-    assert.equals(fallbacked.value(), { one: "a" });
-    fallbacked.remove("one");
-    assert.equals(underlying.value(), {});
-    assert.equals(fallbacked.value(), {});
-    fallbacked.update({ one: "a", two: "b" });
-    assert.equals(underlying.value(), { one: "a", two: "b" });
-    assert.equals(fallbacked.value(), { one: "a", two: "b" });
-    fallbacked.update({});
-    assert.equals(underlying.value(), {});
-    assert.equals(fallbacked.value(), {});
+wtf.test(`Underlying primitive states should synchronize fallback states using update events.`, (assert) => {
+    let underlying = (0, state_1.make_state)(undefined);
+    let fallbacked = (0, state_1.fallback)(underlying, "default");
+    let events = [];
+    fallbacked.observe("update", (state) => {
+        events.push({
+            type: "update"
+        });
+    });
+    underlying.update("updated");
+    assert.equals(events, [
+        {
+            type: "update"
+        }
+    ]);
 });
-wtf.test(`Underlying defined states propagate updated record values to the fallback state when the default value is {}.`, (assert) => {
-    let underlying = (0, state_1.make_state)({});
-    let fallbacked = (0, state_1.fallback)(underlying, {});
-    assert.equals(underlying.value(), {});
-    assert.equals(fallbacked.value(), {});
-    underlying.update({ one: "a", two: "b" });
-    assert.equals(underlying.value(), { one: "a", two: "b" });
-    assert.equals(fallbacked.value(), { one: "a", two: "b" });
-    underlying.update({});
-    assert.equals(underlying.value(), {});
-    assert.equals(fallbacked.value(), {});
+wtf.test(`Fallback states should be initialized properly (undefined record).`, (assert) => {
+    let underlying = (0, state_1.make_state)(undefined);
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    assert.equals(underlying.value(), undefined);
+    assert.equals(fallbacked.value(), { value: "default" });
 });
-wtf.test(`Fallback states should propagate updated record values back to underlying defined states when the default value is { one: "a" }.`, (assert) => {
-    let underlying = (0, state_1.make_state)({});
-    let fallbacked = (0, state_1.fallback)(underlying, { one: "a" });
-    assert.equals(underlying.value(), {});
-    assert.equals(fallbacked.value(), {});
-    fallbacked.insert("one", "a");
-    assert.equals(underlying.value(), { one: "a" });
-    assert.equals(fallbacked.value(), { one: "a" });
-    fallbacked.insert("two", "b");
-    assert.equals(underlying.value(), { one: "a", two: "b" });
-    assert.equals(fallbacked.value(), { one: "a", two: "b" });
-    fallbacked.remove("two");
-    assert.equals(underlying.value(), { one: "a" });
-    assert.equals(fallbacked.value(), { one: "a" });
-    fallbacked.remove("one");
-    assert.equals(underlying.value(), {});
-    assert.equals(fallbacked.value(), {});
-    fallbacked.insert("one", "a");
-    assert.equals(underlying.value(), { one: "a" });
-    assert.equals(fallbacked.value(), { one: "a" });
-    fallbacked.update({ one: "a", two: "b" });
-    assert.equals(underlying.value(), { one: "a", two: "b" });
-    assert.equals(fallbacked.value(), { one: "a", two: "b" });
-    fallbacked.update({ one: "a" });
-    assert.equals(underlying.value(), { one: "a" });
-    assert.equals(fallbacked.value(), { one: "a" });
+wtf.test(`Underlying states should be properly updated when the fallback state is updated to a value different from the default value (undefined record).`, (assert) => {
+    let underlying = (0, state_1.make_state)(undefined);
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    fallbacked.update({ value: "updated" });
+    assert.equals(underlying.value(), { value: "updated" });
+    assert.equals(fallbacked.value(), { value: "updated" });
 });
-wtf.test(`Underlying defined states propagate updated record values to the fallback state when the default value is { one: "a" }.`, (assert) => {
-    let underlying = (0, state_1.make_state)({});
-    let fallbacked = (0, state_1.fallback)(underlying, { one: "a" });
-    assert.equals(underlying.value(), {});
-    assert.equals(fallbacked.value(), {});
-    underlying.update({ one: "a", two: "b" });
-    assert.equals(underlying.value(), { one: "a", two: "b" });
-    assert.equals(fallbacked.value(), { one: "a", two: "b" });
-    underlying.update({ one: "a" });
-    assert.equals(underlying.value(), { one: "a" });
-    assert.equals(fallbacked.value(), { one: "a" });
+wtf.test(`Underlying states should be properly updated when the fallback state is updated to the default value (undefined record).`, (assert) => {
+    let underlying = (0, state_1.make_state)(undefined);
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    fallbacked.update({ value: "default" });
+    assert.equals(underlying.value(), undefined);
+    assert.equals(fallbacked.value(), { value: "default" });
 });
-wtf.test(`Fallback states should synchronize underlying record states using insert and remove events.`, (assert) => {
+wtf.test(`Underlying states should be properly updated when the fallback state is updated back to the default value (undefined record).`, (assert) => {
+    let underlying = (0, state_1.make_state)(undefined);
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    fallbacked.update({ value: "updated" });
+    fallbacked.update({ value: "default" });
+    assert.equals(underlying.value(), { value: "default" });
+    assert.equals(fallbacked.value(), { value: "default" });
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to a value different from the default value (undefined record).`, (assert) => {
+    let underlying = (0, state_1.make_state)(undefined);
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    underlying.update({ value: "updated" });
+    assert.equals(underlying.value(), { value: "updated" });
+    assert.equals(fallbacked.value(), { value: "updated" });
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to the default value (undefined record).`, (assert) => {
+    let underlying = (0, state_1.make_state)(undefined);
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    underlying.update({ value: "default" });
+    assert.equals(underlying.value(), { value: "default" });
+    assert.equals(fallbacked.value(), { value: "default" });
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated back to the default value (undefined record).`, (assert) => {
+    let underlying = (0, state_1.make_state)(undefined);
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    underlying.update({ value: "updated" });
+    underlying.update({ value: "default" });
+    assert.equals(underlying.value(), { value: "default" });
+    assert.equals(fallbacked.value(), { value: "default" });
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to the undefined value (undefined record).`, (assert) => {
+    let underlying = (0, state_1.make_state)(undefined);
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    underlying.update(undefined);
+    assert.equals(underlying.value(), undefined);
+    assert.equals(fallbacked.value(), { value: "default" });
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated back to the undefined value (undefined record).`, (assert) => {
+    let underlying = (0, state_1.make_state)(undefined);
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    underlying.update({ value: "updated" });
+    underlying.update(undefined);
+    assert.equals(underlying.value(), undefined);
+    assert.equals(fallbacked.value(), { value: "default" });
+});
+wtf.test(`Fallback states should be initialized properly (defined record different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)({ value: "underlying" });
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    assert.equals(underlying.value(), { value: "underlying" });
+    assert.equals(fallbacked.value(), { value: "underlying" });
+});
+wtf.test(`Underlying states should be properly updated when the fallback state is updated to a value different from the default value (defined record different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)({ value: "underlying" });
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    fallbacked.update({ value: "updated" });
+    assert.equals(underlying.value(), { value: "updated" });
+    assert.equals(fallbacked.value(), { value: "updated" });
+});
+wtf.test(`Underlying states should be properly updated when the fallback state is updated to the default value (defined record different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)({ value: "underlying" });
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    fallbacked.update({ value: "default" });
+    assert.equals(underlying.value(), { value: "default" });
+    assert.equals(fallbacked.value(), { value: "default" });
+});
+wtf.test(`Underlying states should be properly updated when the fallback state is updated back to the default value (defined record different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)({ value: "underlying" });
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    fallbacked.update({ value: "updated" });
+    fallbacked.update({ value: "default" });
+    assert.equals(underlying.value(), { value: "default" });
+    assert.equals(fallbacked.value(), { value: "default" });
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to a value different from the default value (defined record different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)({ value: "underlying" });
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    underlying.update({ value: "updated" });
+    assert.equals(underlying.value(), { value: "updated" });
+    assert.equals(fallbacked.value(), { value: "updated" });
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to the default value (defined record different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)({ value: "underlying" });
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    underlying.update({ value: "default" });
+    assert.equals(underlying.value(), { value: "default" });
+    assert.equals(fallbacked.value(), { value: "default" });
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated back to the default value (defined record different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)({ value: "underlying" });
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    underlying.update({ value: "updated" });
+    underlying.update({ value: "default" });
+    assert.equals(underlying.value(), { value: "default" });
+    assert.equals(fallbacked.value(), { value: "default" });
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to the undefined value (defined record different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)({ value: "underlying" });
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    underlying.update(undefined);
+    assert.equals(underlying.value(), undefined);
+    assert.equals(fallbacked.value(), { value: "default" });
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated back to the undefined value (defined record different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)({ value: "underlying" });
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    underlying.update({ value: "updated" });
+    underlying.update(undefined);
+    assert.equals(underlying.value(), undefined);
+    assert.equals(fallbacked.value(), { value: "default" });
+});
+wtf.test(`Fallback states should be initialized properly (defined record identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)({ value: "default" });
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    assert.equals(underlying.value(), { value: "default" });
+    assert.equals(fallbacked.value(), { value: "default" });
+});
+wtf.test(`Underlying states should be properly updated when the fallback state is updated to a value different from the default value (defined record identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)({ value: "default" });
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    fallbacked.update({ value: "updated" });
+    assert.equals(underlying.value(), { value: "updated" });
+    assert.equals(fallbacked.value(), { value: "updated" });
+});
+wtf.test(`Underlying states should be properly updated when the fallback state is updated to the default value (defined record identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)({ value: "default" });
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    fallbacked.update({ value: "default" });
+    assert.equals(underlying.value(), { value: "default" });
+    assert.equals(fallbacked.value(), { value: "default" });
+});
+wtf.test(`Underlying states should be properly updated when the fallback state is updated back to the default value (defined record identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)({ value: "default" });
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    fallbacked.update({ value: "updated" });
+    fallbacked.update({ value: "default" });
+    assert.equals(underlying.value(), { value: "default" });
+    assert.equals(fallbacked.value(), { value: "default" });
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to a value different from the default value (defined record identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)({ value: "default" });
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    underlying.update({ value: "updated" });
+    assert.equals(underlying.value(), { value: "updated" });
+    assert.equals(fallbacked.value(), { value: "updated" });
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to the default value (defined record identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)({ value: "default" });
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    underlying.update({ value: "default" });
+    assert.equals(underlying.value(), { value: "default" });
+    assert.equals(fallbacked.value(), { value: "default" });
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated back to the default value (defined record identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)({ value: "default" });
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    underlying.update({ value: "updated" });
+    underlying.update({ value: "default" });
+    assert.equals(underlying.value(), { value: "default" });
+    assert.equals(fallbacked.value(), { value: "default" });
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to the undefined value (defined record identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)({ value: "default" });
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    underlying.update(undefined);
+    assert.equals(underlying.value(), undefined);
+    assert.equals(fallbacked.value(), { value: "default" });
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated back to the undefined value (defined record identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)({ value: "default" });
+    let fallbacked = (0, state_1.fallback)(underlying, { value: "default" });
+    underlying.update({ value: "updated" });
+    underlying.update(undefined);
+    assert.equals(underlying.value(), undefined);
+    assert.equals(fallbacked.value(), { value: "default" });
+});
+wtf.test(`Fallback states should synchronize underlying record states using insert, remove and update events.`, (assert) => {
     let underlying = (0, state_1.make_state)({});
     let fallbacked = (0, state_1.fallback)(underlying, {});
     let events = [];
@@ -854,151 +1067,264 @@ wtf.test(`Fallback states should synchronize underlying record states using inse
         }
     ]);
 });
-wtf.test(`Fallback states should propagate updated array values back to underlying undefined states when the default value is [].`, (assert) => {
+wtf.test(`Underlying record states should synchronize fallback states using insert, remove and update events.`, (assert) => {
+    let underlying = (0, state_1.make_state)({});
+    let fallbacked = (0, state_1.fallback)(underlying, {});
+    let events = [];
+    fallbacked.observe("insert", (state, key) => {
+        events.push({
+            type: "insert",
+            key: key,
+            value: state.value()
+        });
+    });
+    fallbacked.observe("remove", (state, key) => {
+        events.push({
+            type: "remove",
+            key: key,
+            value: state.value()
+        });
+    });
+    fallbacked.observe("update", (state) => {
+        events.push({
+            type: "update"
+        });
+    });
+    underlying.insert("one", "a");
+    underlying.insert("two", "b");
+    underlying.remove("two");
+    underlying.remove("one");
+    assert.equals(events, [
+        {
+            type: "insert",
+            key: "one",
+            value: "a"
+        },
+        {
+            type: "update"
+        },
+        {
+            type: "insert",
+            key: "two",
+            value: "b"
+        },
+        {
+            type: "update"
+        },
+        {
+            type: "remove",
+            key: "two",
+            value: "b"
+        },
+        {
+            type: "update"
+        },
+        {
+            type: "remove",
+            key: "one",
+            value: "a"
+        },
+        {
+            type: "update"
+        }
+    ]);
+});
+wtf.test(`Fallback states should be initialized properly (undefined array).`, (assert) => {
     let underlying = (0, state_1.make_state)(undefined);
-    let fallbacked = (0, state_1.fallback)(underlying, []);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
     assert.equals(underlying.value(), undefined);
-    assert.equals(fallbacked.value(), []);
-    fallbacked.insert(0, "a");
-    assert.equals(underlying.value(), ["a"]);
-    assert.equals(fallbacked.value(), ["a"]);
-    fallbacked.insert(1, "b");
-    assert.equals(underlying.value(), ["a", "b"]);
-    assert.equals(fallbacked.value(), ["a", "b"]);
-    fallbacked.remove(1);
-    assert.equals(underlying.value(), ["a"]);
-    assert.equals(fallbacked.value(), ["a"]);
-    fallbacked.remove(0);
-    assert.equals(underlying.value(), []);
-    assert.equals(fallbacked.value(), []);
-    fallbacked.update(["a", "b"]);
-    assert.equals(underlying.value(), ["a", "b"]);
-    assert.equals(fallbacked.value(), ["a", "b"]);
-    fallbacked.update([]);
-    assert.equals(underlying.value(), []);
-    assert.equals(fallbacked.value(), []);
+    assert.equals(fallbacked.value(), ["default"]);
 });
-wtf.test(`Underlying undefined states should propagate updated array values to the fallback state when the default value is [].`, (assert) => {
+wtf.test(`Underlying states should be properly updated when the fallback state is updated to a value different from the default value (undefined array).`, (assert) => {
     let underlying = (0, state_1.make_state)(undefined);
-    let fallbacked = (0, state_1.fallback)(underlying, []);
-    assert.equals(underlying.value(), undefined);
-    assert.equals(fallbacked.value(), []);
-    underlying.update(["a", "b"]);
-    assert.equals(underlying.value(), ["a", "b"]);
-    assert.equals(fallbacked.value(), ["a", "b"]);
-    underlying.update([]);
-    assert.equals(underlying.value(), []);
-    assert.equals(fallbacked.value(), []);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    fallbacked.update(["updated"]);
+    assert.equals(underlying.value(), ["updated"]);
+    assert.equals(fallbacked.value(), ["updated"]);
 });
-wtf.test(`Fallback states should propagate updated array values back to underlying undefined states when the default value is ["a"].`, (assert) => {
+wtf.test(`Underlying states should be properly updated when the fallback state is updated to the default value (undefined array).`, (assert) => {
     let underlying = (0, state_1.make_state)(undefined);
-    let fallbacked = (0, state_1.fallback)(underlying, ["a"]);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    fallbacked.update(["default"]);
     assert.equals(underlying.value(), undefined);
-    assert.equals(fallbacked.value(), ["a"]);
-    fallbacked.insert(1, "b");
-    assert.equals(underlying.value(), ["a", "b"]);
-    assert.equals(fallbacked.value(), ["a", "b"]);
-    fallbacked.remove(1);
-    assert.equals(underlying.value(), ["a"]);
-    assert.equals(fallbacked.value(), ["a"]);
-    fallbacked.remove(0);
-    assert.equals(underlying.value(), []);
-    assert.equals(fallbacked.value(), []);
-    fallbacked.insert(0, "a");
-    assert.equals(underlying.value(), ["a"]);
-    assert.equals(fallbacked.value(), ["a"]);
-    fallbacked.update(["a", "b"]);
-    assert.equals(underlying.value(), ["a", "b"]);
-    assert.equals(fallbacked.value(), ["a", "b"]);
-    fallbacked.update(["a"]);
-    assert.equals(underlying.value(), ["a"]);
-    assert.equals(fallbacked.value(), ["a"]);
+    assert.equals(fallbacked.value(), ["default"]);
 });
-wtf.test(`Underlying undefined states should propagate updated array values to the fallback state when the default value is ["a"].`, (assert) => {
+wtf.test(`Underlying states should be properly updated when the fallback state is updated back to the default value (undefined array).`, (assert) => {
     let underlying = (0, state_1.make_state)(undefined);
-    let fallbacked = (0, state_1.fallback)(underlying, ["a"]);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    fallbacked.update(["updated"]);
+    fallbacked.update(["default"]);
+    assert.equals(underlying.value(), ["default"]);
+    assert.equals(fallbacked.value(), ["default"]);
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to a value different from the default value (undefined array).`, (assert) => {
+    let underlying = (0, state_1.make_state)(undefined);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    underlying.update(["updated"]);
+    assert.equals(underlying.value(), ["updated"]);
+    assert.equals(fallbacked.value(), ["updated"]);
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to the default value (undefined array).`, (assert) => {
+    let underlying = (0, state_1.make_state)(undefined);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    underlying.update(["default"]);
+    assert.equals(underlying.value(), ["default"]);
+    assert.equals(fallbacked.value(), ["default"]);
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated back to the default value (undefined array).`, (assert) => {
+    let underlying = (0, state_1.make_state)(undefined);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    underlying.update(["updated"]);
+    underlying.update(["default"]);
+    assert.equals(underlying.value(), ["default"]);
+    assert.equals(fallbacked.value(), ["default"]);
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to the undefined value (undefined array).`, (assert) => {
+    let underlying = (0, state_1.make_state)(undefined);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    underlying.update(undefined);
     assert.equals(underlying.value(), undefined);
-    assert.equals(fallbacked.value(), ["a"]);
-    underlying.update(["a", "b"]);
-    assert.equals(underlying.value(), ["a", "b"]);
-    assert.equals(fallbacked.value(), ["a", "b"]);
-    underlying.update(["a"]);
-    assert.equals(underlying.value(), ["a"]);
-    assert.equals(fallbacked.value(), ["a"]);
+    assert.equals(fallbacked.value(), ["default"]);
 });
-wtf.test(`Fallback states should propagate updated array values back to underlying defined states when the default value is [].`, (assert) => {
-    let underlying = (0, state_1.make_state)([]);
-    let fallbacked = (0, state_1.fallback)(underlying, []);
-    assert.equals(underlying.value(), []);
-    assert.equals(fallbacked.value(), []);
-    fallbacked.insert(0, "a");
-    assert.equals(underlying.value(), ["a"]);
-    assert.equals(fallbacked.value(), ["a"]);
-    fallbacked.insert(1, "b");
-    assert.equals(underlying.value(), ["a", "b"]);
-    assert.equals(fallbacked.value(), ["a", "b"]);
-    fallbacked.remove(1);
-    assert.equals(underlying.value(), ["a"]);
-    assert.equals(fallbacked.value(), ["a"]);
-    fallbacked.remove(0);
-    assert.equals(underlying.value(), []);
-    assert.equals(fallbacked.value(), []);
-    fallbacked.update(["a", "b"]);
-    assert.equals(underlying.value(), ["a", "b"]);
-    assert.equals(fallbacked.value(), ["a", "b"]);
-    fallbacked.update([]);
-    assert.equals(underlying.value(), []);
-    assert.equals(fallbacked.value(), []);
+wtf.test(`Fallback states should be properly updated when underlying states are updated back to the undefined value (undefined array).`, (assert) => {
+    let underlying = (0, state_1.make_state)(undefined);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    underlying.update(["updated"]);
+    underlying.update(undefined);
+    assert.equals(underlying.value(), undefined);
+    assert.equals(fallbacked.value(), ["default"]);
 });
-wtf.test(`Underlying defined states propagate updated array values to the fallback state when the default value is [].`, (assert) => {
-    let underlying = (0, state_1.make_state)([]);
-    let fallbacked = (0, state_1.fallback)(underlying, []);
-    assert.equals(underlying.value(), []);
-    assert.equals(fallbacked.value(), []);
-    underlying.update(["a", "b"]);
-    assert.equals(underlying.value(), ["a", "b"]);
-    assert.equals(fallbacked.value(), ["a", "b"]);
-    underlying.update([]);
-    assert.equals(underlying.value(), []);
-    assert.equals(fallbacked.value(), []);
+wtf.test(`Fallback states should be initialized properly (defined array different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)(["underlying"]);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    assert.equals(underlying.value(), ["underlying"]);
+    assert.equals(fallbacked.value(), ["underlying"]);
 });
-wtf.test(`Fallback states should propagate updated array values back to underlying defined states when the default value is ["a"].`, (assert) => {
-    let underlying = (0, state_1.make_state)([]);
-    let fallbacked = (0, state_1.fallback)(underlying, ["a"]);
-    assert.equals(underlying.value(), []);
-    assert.equals(fallbacked.value(), []);
-    fallbacked.insert(0, "a");
-    assert.equals(underlying.value(), ["a"]);
-    assert.equals(fallbacked.value(), ["a"]);
-    fallbacked.insert(1, "b");
-    assert.equals(underlying.value(), ["a", "b"]);
-    assert.equals(fallbacked.value(), ["a", "b"]);
-    fallbacked.remove(1);
-    assert.equals(underlying.value(), ["a"]);
-    assert.equals(fallbacked.value(), ["a"]);
-    fallbacked.remove(0);
-    assert.equals(underlying.value(), []);
-    assert.equals(fallbacked.value(), []);
-    fallbacked.update(["a", "b"]);
-    assert.equals(underlying.value(), ["a", "b"]);
-    assert.equals(fallbacked.value(), ["a", "b"]);
-    fallbacked.update(["a"]);
-    assert.equals(underlying.value(), ["a"]);
-    assert.equals(fallbacked.value(), ["a"]);
+wtf.test(`Underlying states should be properly updated when the fallback state is updated to a value different from the default value (defined array different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)(["underlying"]);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    fallbacked.update(["updated"]);
+    assert.equals(underlying.value(), ["updated"]);
+    assert.equals(fallbacked.value(), ["updated"]);
 });
-wtf.test(`Underlying defined states propagate updated array values to the fallback state when the default value is ["a"].`, (assert) => {
-    let underlying = (0, state_1.make_state)([]);
-    let fallbacked = (0, state_1.fallback)(underlying, ["a"]);
-    assert.equals(underlying.value(), []);
-    assert.equals(fallbacked.value(), []);
-    underlying.update(["a", "b"]);
-    assert.equals(underlying.value(), ["a", "b"]);
-    assert.equals(fallbacked.value(), ["a", "b"]);
-    underlying.update(["a"]);
-    assert.equals(underlying.value(), ["a"]);
-    assert.equals(fallbacked.value(), ["a"]);
+wtf.test(`Underlying states should be properly updated when the fallback state is updated to the default value (defined array different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)(["underlying"]);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    fallbacked.update(["default"]);
+    assert.equals(underlying.value(), ["default"]);
+    assert.equals(fallbacked.value(), ["default"]);
 });
-wtf.test(`Fallback states should synchronize underlying array states using insert and remove events.`, (assert) => {
+wtf.test(`Underlying states should be properly updated when the fallback state is updated back to the default value (defined array different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)(["underlying"]);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    fallbacked.update(["updated"]);
+    fallbacked.update(["default"]);
+    assert.equals(underlying.value(), ["default"]);
+    assert.equals(fallbacked.value(), ["default"]);
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to a value different from the default value (defined array different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)(["underlying"]);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    underlying.update(["updated"]);
+    assert.equals(underlying.value(), ["updated"]);
+    assert.equals(fallbacked.value(), ["updated"]);
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to the default value (defined array different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)(["underlying"]);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    underlying.update(["default"]);
+    assert.equals(underlying.value(), ["default"]);
+    assert.equals(fallbacked.value(), ["default"]);
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated back to the default value (defined array different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)(["underlying"]);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    underlying.update(["updated"]);
+    underlying.update(["default"]);
+    assert.equals(underlying.value(), ["default"]);
+    assert.equals(fallbacked.value(), ["default"]);
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to the undefined value (defined array different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)(["underlying"]);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    underlying.update(undefined);
+    assert.equals(underlying.value(), undefined);
+    assert.equals(fallbacked.value(), ["default"]);
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated back to the undefined value (defined array different from the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)(["underlying"]);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    underlying.update(["updated"]);
+    underlying.update(undefined);
+    assert.equals(underlying.value(), undefined);
+    assert.equals(fallbacked.value(), ["default"]);
+});
+wtf.test(`Fallback states should be initialized properly (defined array identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)(["default"]);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    assert.equals(underlying.value(), ["default"]);
+    assert.equals(fallbacked.value(), ["default"]);
+});
+wtf.test(`Underlying states should be properly updated when the fallback state is updated to a value different from the default value (defined array identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)(["default"]);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    fallbacked.update(["updated"]);
+    assert.equals(underlying.value(), ["updated"]);
+    assert.equals(fallbacked.value(), ["updated"]);
+});
+wtf.test(`Underlying states should be properly updated when the fallback state is updated to the default value (defined array identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)(["default"]);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    fallbacked.update(["default"]);
+    assert.equals(underlying.value(), ["default"]);
+    assert.equals(fallbacked.value(), ["default"]);
+});
+wtf.test(`Underlying states should be properly updated when the fallback state is updated back to the default value (defined array identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)(["default"]);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    fallbacked.update(["updated"]);
+    fallbacked.update(["default"]);
+    assert.equals(underlying.value(), ["default"]);
+    assert.equals(fallbacked.value(), ["default"]);
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to a value different from the default value (defined array identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)(["default"]);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    underlying.update(["updated"]);
+    assert.equals(underlying.value(), ["updated"]);
+    assert.equals(fallbacked.value(), ["updated"]);
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to the default value (defined array identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)(["default"]);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    underlying.update(["default"]);
+    assert.equals(underlying.value(), ["default"]);
+    assert.equals(fallbacked.value(), ["default"]);
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated back to the default value (defined array identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)(["default"]);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    underlying.update(["updated"]);
+    underlying.update(["default"]);
+    assert.equals(underlying.value(), ["default"]);
+    assert.equals(fallbacked.value(), ["default"]);
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated to the undefined value (defined array identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)(["default"]);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    underlying.update(undefined);
+    assert.equals(underlying.value(), undefined);
+    assert.equals(fallbacked.value(), ["default"]);
+});
+wtf.test(`Fallback states should be properly updated when underlying states are updated back to the undefined value (defined array identical to the default value).`, (assert) => {
+    let underlying = (0, state_1.make_state)(["default"]);
+    let fallbacked = (0, state_1.fallback)(underlying, ["default"]);
+    underlying.update(["updated"]);
+    underlying.update(undefined);
+    assert.equals(underlying.value(), undefined);
+    assert.equals(fallbacked.value(), ["default"]);
+});
+wtf.test(`Fallback states should synchronize underlying array states using insert, remove and update events.`, (assert) => {
     let underlying = (0, state_1.make_state)([]);
     let fallbacked = (0, state_1.fallback)(underlying, []);
     let events = [];
@@ -1025,6 +1351,68 @@ wtf.test(`Fallback states should synchronize underlying array states using inser
     fallbacked.insert(1, "b");
     fallbacked.remove(1);
     fallbacked.remove(0);
+    assert.equals(events, [
+        {
+            type: "insert",
+            index: 0,
+            value: "a"
+        },
+        {
+            type: "update"
+        },
+        {
+            type: "insert",
+            index: 1,
+            value: "b"
+        },
+        {
+            type: "update"
+        },
+        {
+            type: "remove",
+            index: 1,
+            value: "b"
+        },
+        {
+            type: "update"
+        },
+        {
+            type: "remove",
+            index: 0,
+            value: "a"
+        },
+        {
+            type: "update"
+        }
+    ]);
+});
+wtf.test(`Underlying array states should synchronize fallback states using insert, remove and update events.`, (assert) => {
+    let underlying = (0, state_1.make_state)([]);
+    let fallbacked = (0, state_1.fallback)(underlying, []);
+    let events = [];
+    fallbacked.observe("insert", (state, index) => {
+        events.push({
+            type: "insert",
+            index: index,
+            value: state.value()
+        });
+    });
+    fallbacked.observe("remove", (state, index) => {
+        events.push({
+            type: "remove",
+            index: index,
+            value: state.value()
+        });
+    });
+    fallbacked.observe("update", (state) => {
+        events.push({
+            type: "update"
+        });
+    });
+    underlying.insert(0, "a");
+    underlying.insert(1, "b");
+    underlying.remove(1);
+    underlying.remove(0);
     assert.equals(events, [
         {
             type: "insert",

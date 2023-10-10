@@ -775,11 +775,9 @@ function fallback(underlying, default_value) {
     let computer = ((underlying_value) => typeof underlying_value === "undefined" ? default_value : underlying_value);
     let fallbacked = make_state(computer(underlying.value()));
     let controller = make_state(undefined);
+    fallback_primitive(underlying, fallbacked, default_value, controller, computer);
     if (underlying instanceof ArrayState && fallbacked instanceof ArrayState && default_value instanceof Array) {
         fallback_array(underlying, fallbacked, default_value, controller);
-    }
-    else {
-        fallback_primitive(underlying, fallbacked, default_value, controller, computer);
     }
     return fallbacked;
 }
