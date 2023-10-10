@@ -876,38 +876,31 @@ function fallback_array<A extends Value>(underlying: State<Array<A>>, fallbacked
 	});
 };
 
-export function fallback<A extends Value>(underlying: State<A | undefined>, default_value: Exclude<A, undefined>): State<Exclude<A, undefined>> {
-	let computer = ((underlying) => typeof underlying === "undefined" ? default_value : underlying) as Computer<A | undefined, Exclude<A, undefined>>;
-	let fallbacked = make_state(computer(underlying.value()));
-	let controller = make_state(undefined as "underlying" | "fallbacked" | undefined);
-	underlying.compute((underlying_value) => {
+function fallback_primitive<A extends Value>(underlying: State<A | undefined>, fallbacked: State<Exclude<A, undefined>>, default_value: Exclude<A, undefined>, controller: State<"underlying" | "fallbacked" | undefined>, computer: Computer<A | undefined, Exclude<A, undefined>>): void {
+	underlying.observe("update", (underlying) => {
 		if (controller.value() !== "fallbacked") {
 			controller.update("underlying");
-			if (typeof underlying_value === "undefined") {
-				fallbacked.update(default_value);
-			} else {
-				if (make_state(default_value).update(underlying_value as Exclude<A, undefined>)) {
-					fallbacked.update(underlying_value as Exclude<A, undefined>);
-				} else {
-					underlying.update(undefined);
-				}
-			}
+			fallbacked.update(computer(underlying.value()));
 			controller.update(undefined);
 		}
 	});
-	fallbacked.compute((fallbacked_value) => {
+	fallbacked.observe("update", (fallbacked) => {
 		if (controller.value() !== "underlying") {
 			controller.update("fallbacked");
-			if (make_state(default_value).update(fallbacked_value)) {
-				underlying.update(fallbacked_value);
-			} else {
-				underlying.update(undefined);
-			}
+			underlying.update(fallbacked.value());
 			controller.update(undefined);
 		}
 	});
+};
+
+export function fallback<A extends Value>(underlying: State<A | undefined>, default_value: Exclude<A, undefined>): State<Exclude<A, undefined>> {
+	let computer = ((underlying_value) => typeof underlying_value === "undefined" ? default_value : underlying_value) as Computer<A | undefined, Exclude<A, undefined>>;
+	let fallbacked = make_state(computer(underlying.value()));
+	let controller = make_state(undefined as "underlying" | "fallbacked" | undefined);
 	if (underlying instanceof ArrayState && fallbacked instanceof ArrayState && default_value instanceof Array) {
 		fallback_array(underlying, fallbacked, default_value, controller);
+	} else {
+		fallback_primitive(underlying, fallbacked, default_value, controller, computer);
 	}
 	return fallbacked;
 };

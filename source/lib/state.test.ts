@@ -672,8 +672,8 @@ wtf.test(`State<undefined> should be assignable to Attribute<[string, string] | 
 
 wtf.test(`Fallback states should be constructible from other fallback states.`, (asserts) => {
 	let state = make_state({} as { object?: { string?: string } });
-	let object = fallback(state.member("object"), {});
-	let string = fallback(object.member("string"), "string");
+	let object = fallback(state.object, {});
+	let string = fallback(object.string, "string");
 	asserts.equals(state.value(), { object: { string: undefined } });
 	asserts.equals(object.value(), { string: undefined });
 	asserts.equals(string.value(), "string");
@@ -702,7 +702,7 @@ wtf.test(`Fallback states should propagate updated primitive values back to the 
 	assert.equals(underlying.value(), "updated");
 	assert.equals(fallbacked.value(), "updated");
 	fallbacked.update("default");
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), "default");
 	assert.equals(fallbacked.value(), "default");
 });
 
@@ -718,7 +718,7 @@ wtf.test(`Underlying undefined states should propagate updated primitive values 
 	assert.equals(underlying.value(), undefined);
 	assert.equals(fallbacked.value(), "default");
 	underlying.update("default");
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), "default");
 	assert.equals(fallbacked.value(), "default");
 });
 
@@ -731,7 +731,7 @@ wtf.test(`Fallback states should propagate updated primitive values back to the 
 	assert.equals(underlying.value(), "updated");
 	assert.equals(fallbacked.value(), "updated");
 	fallbacked.update("default");
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), "default");
 	assert.equals(fallbacked.value(), "default");
 });
 
@@ -747,7 +747,7 @@ wtf.test(`Underlying defined states should propagate updated primitive values to
 	assert.equals(underlying.value(), undefined);
 	assert.equals(fallbacked.value(), "default");
 	underlying.update("default");
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), "default");
 	assert.equals(fallbacked.value(), "default");
 });
 
@@ -766,13 +766,13 @@ wtf.test(`Fallback states should propagate updated record values back to underly
 	assert.equals(underlying.value(), { one: "a" });
 	assert.equals(fallbacked.value(), { one: "a" });
 	fallbacked.remove("one");
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), {});
 	assert.equals(fallbacked.value(), {});
 	fallbacked.update({ one: "a", two: "b" });
 	assert.equals(underlying.value(), { one: "a", two: "b" });
 	assert.equals(fallbacked.value(), { one: "a", two: "b" });
 	fallbacked.update({});
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), {});
 	assert.equals(fallbacked.value(), {});
 });
 
@@ -783,7 +783,7 @@ wtf.test(`Underlying undefined states should propagate updated record values to 
 	assert.equals(underlying.value(), { one: "a", two: "b" });
 	assert.equals(fallbacked.value(), { one: "a", two: "b" });
 	underlying.update({});
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), {});
 	assert.equals(fallbacked.value(), {});
 });
 
@@ -796,19 +796,19 @@ wtf.test(`Fallback states should propagate updated record values back to underly
 	assert.equals(underlying.value(), { one: "a", two: "b" });
 	assert.equals(fallbacked.value(), { one: "a", two: "b" });
 	fallbacked.remove("two");
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), { one: "a" });
 	assert.equals(fallbacked.value(), { one: "a" });
 	fallbacked.remove("one");
 	assert.equals(underlying.value(), {});
 	assert.equals(fallbacked.value(), {});
 	fallbacked.insert("one", "a");
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), { one: "a" });
 	assert.equals(fallbacked.value(), { one: "a" });
 	fallbacked.update({ one: "a", two: "b" });
 	assert.equals(underlying.value(), { one: "a", two: "b" });
 	assert.equals(fallbacked.value(), { one: "a", two: "b" });
 	fallbacked.update({ one: "a" });
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), { one: "a" });
 	assert.equals(fallbacked.value(), { one: "a" });
 });
 
@@ -819,14 +819,14 @@ wtf.test(`Underlying undefined states should propagate updated record values to 
 	assert.equals(underlying.value(), { one: "a", two: "b" });
 	assert.equals(fallbacked.value(), { one: "a", two: "b" });
 	underlying.update({ one: "a" });
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), { one: "a" });
 	assert.equals(fallbacked.value(), { one: "a" });
 });
 
 wtf.test(`Fallback states should propagate updated record values back to underlying defined states when the default value is {}.`, (assert) => {
 	let underlying = make_state({} as Record<string, string> | undefined);
 	let fallbacked = fallback(underlying, {});
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), {});
 	assert.equals(fallbacked.value(), {});
 	fallbacked.insert("one", "a");
 	assert.equals(underlying.value(), { one: "a" });
@@ -838,26 +838,26 @@ wtf.test(`Fallback states should propagate updated record values back to underly
 	assert.equals(underlying.value(), { one: "a" });
 	assert.equals(fallbacked.value(), { one: "a" });
 	fallbacked.remove("one");
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), {});
 	assert.equals(fallbacked.value(), {});
 	fallbacked.update({ one: "a", two: "b" });
 	assert.equals(underlying.value(), { one: "a", two: "b" });
 	assert.equals(fallbacked.value(), { one: "a", two: "b" });
 	fallbacked.update({});
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), {});
 	assert.equals(fallbacked.value(), {});
 });
 
 wtf.test(`Underlying defined states propagate updated record values to the fallback state when the default value is {}.`, (assert) => {
 	let underlying = make_state({} as Record<string, string> | undefined);
 	let fallbacked = fallback(underlying, {});
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), {});
 	assert.equals(fallbacked.value(), {});
 	underlying.update({ one: "a", two: "b" });
 	assert.equals(underlying.value(), { one: "a", two: "b" });
 	assert.equals(fallbacked.value(), { one: "a", two: "b" });
 	underlying.update({});
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), {});
 	assert.equals(fallbacked.value(), {});
 });
 
@@ -867,25 +867,25 @@ wtf.test(`Fallback states should propagate updated record values back to underly
 	assert.equals(underlying.value(), {});
 	assert.equals(fallbacked.value(), {});
 	fallbacked.insert("one", "a");
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), { one: "a" });
 	assert.equals(fallbacked.value(), { one: "a" });
 	fallbacked.insert("two", "b");
 	assert.equals(underlying.value(), { one: "a", two: "b" });
 	assert.equals(fallbacked.value(), { one: "a", two: "b" });
 	fallbacked.remove("two");
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), { one: "a" });
 	assert.equals(fallbacked.value(), { one: "a" });
 	fallbacked.remove("one");
 	assert.equals(underlying.value(), {});
 	assert.equals(fallbacked.value(), {});
 	fallbacked.insert("one", "a");
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), { one: "a" });
 	assert.equals(fallbacked.value(), { one: "a" });
 	fallbacked.update({ one: "a", two: "b" });
 	assert.equals(underlying.value(), { one: "a", two: "b" });
 	assert.equals(fallbacked.value(), { one: "a", two: "b" });
 	fallbacked.update({ one: "a" });
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), { one: "a" });
 	assert.equals(fallbacked.value(), { one: "a" });
 });
 
@@ -898,7 +898,7 @@ wtf.test(`Underlying defined states propagate updated record values to the fallb
 	assert.equals(underlying.value(), { one: "a", two: "b" });
 	assert.equals(fallbacked.value(), { one: "a", two: "b" });
 	underlying.update({ one: "a" });
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), { one: "a" });
 	assert.equals(fallbacked.value(), { one: "a" });
 });
 
@@ -927,6 +927,8 @@ wtf.test(`Fallback states should synchronize underlying record states using inse
 	});
 	fallbacked.insert("one", "a");
 	fallbacked.insert("two", "b");
+	fallbacked.remove("two");
+	fallbacked.remove("one");
 	assert.equals(events, [
 		{
 			type: "insert",
@@ -940,6 +942,22 @@ wtf.test(`Fallback states should synchronize underlying record states using inse
 			type: "insert",
 			key: "two",
 			value: "b"
+		},
+		{
+			type: "update"
+		},
+		{
+			type: "remove",
+			key: "two",
+			value: "b"
+		},
+		{
+			type: "update"
+		},
+		{
+			type: "remove",
+			key: "one",
+			value: "a"
 		},
 		{
 			type: "update"
@@ -962,13 +980,13 @@ wtf.test(`Fallback states should propagate updated array values back to underlyi
 	assert.equals(underlying.value(), ["a"]);
 	assert.equals(fallbacked.value(), ["a"]);
 	fallbacked.remove(0);
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), []);
 	assert.equals(fallbacked.value(), []);
 	fallbacked.update(["a", "b"]);
 	assert.equals(underlying.value(), ["a", "b"]);
 	assert.equals(fallbacked.value(), ["a", "b"]);
 	fallbacked.update([]);
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), []);
 	assert.equals(fallbacked.value(), []);
 });
 
@@ -981,7 +999,7 @@ wtf.test(`Underlying undefined states should propagate updated array values to t
 	assert.equals(underlying.value(), ["a", "b"]);
 	assert.equals(fallbacked.value(), ["a", "b"]);
 	underlying.update([]);
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), []);
 	assert.equals(fallbacked.value(), []);
 });
 
@@ -994,19 +1012,19 @@ wtf.test(`Fallback states should propagate updated array values back to underlyi
 	assert.equals(underlying.value(), ["a", "b"]);
 	assert.equals(fallbacked.value(), ["a", "b"]);
 	fallbacked.remove(1);
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), ["a"]);
 	assert.equals(fallbacked.value(), ["a"]);
 	fallbacked.remove(0);
 	assert.equals(underlying.value(), []);
 	assert.equals(fallbacked.value(), []);
 	fallbacked.insert(0, "a");
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), ["a"]);
 	assert.equals(fallbacked.value(), ["a"]);
 	fallbacked.update(["a", "b"]);
 	assert.equals(underlying.value(), ["a", "b"]);
 	assert.equals(fallbacked.value(), ["a", "b"]);
 	fallbacked.update(["a"]);
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), ["a"]);
 	assert.equals(fallbacked.value(), ["a"]);
 });
 
@@ -1019,14 +1037,14 @@ wtf.test(`Underlying undefined states should propagate updated array values to t
 	assert.equals(underlying.value(), ["a", "b"]);
 	assert.equals(fallbacked.value(), ["a", "b"]);
 	underlying.update(["a"]);
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), ["a"]);
 	assert.equals(fallbacked.value(), ["a"]);
 });
 
 wtf.test(`Fallback states should propagate updated array values back to underlying defined states when the default value is [].`, (assert) => {
 	let underlying = make_state([] as Array<string> | undefined);
 	let fallbacked = fallback(underlying, []);
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), []);
 	assert.equals(fallbacked.value(), []);
 	fallbacked.insert(0, "a");
 	assert.equals(underlying.value(), ["a"]);
@@ -1038,26 +1056,26 @@ wtf.test(`Fallback states should propagate updated array values back to underlyi
 	assert.equals(underlying.value(), ["a"]);
 	assert.equals(fallbacked.value(), ["a"]);
 	fallbacked.remove(0);
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), []);
 	assert.equals(fallbacked.value(), []);
 	fallbacked.update(["a", "b"]);
 	assert.equals(underlying.value(), ["a", "b"]);
 	assert.equals(fallbacked.value(), ["a", "b"]);
 	fallbacked.update([]);
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), []);
 	assert.equals(fallbacked.value(), []);
 });
 
 wtf.test(`Underlying defined states propagate updated array values to the fallback state when the default value is [].`, (assert) => {
 	let underlying = make_state([] as Array<string> | undefined);
 	let fallbacked = fallback(underlying, []);
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), []);
 	assert.equals(fallbacked.value(), []);
 	underlying.update(["a", "b"]);
 	assert.equals(underlying.value(), ["a", "b"]);
 	assert.equals(fallbacked.value(), ["a", "b"]);
 	underlying.update([]);
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), []);
 	assert.equals(fallbacked.value(), []);
 });
 
@@ -1067,13 +1085,13 @@ wtf.test(`Fallback states should propagate updated array values back to underlyi
 	assert.equals(underlying.value(), []);
 	assert.equals(fallbacked.value(), []);
 	fallbacked.insert(0, "a");
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), ["a"]);
 	assert.equals(fallbacked.value(), ["a"]);
 	fallbacked.insert(1, "b");
 	assert.equals(underlying.value(), ["a", "b"]);
 	assert.equals(fallbacked.value(), ["a", "b"]);
 	fallbacked.remove(1);
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), ["a"]);
 	assert.equals(fallbacked.value(), ["a"]);
 	fallbacked.remove(0);
 	assert.equals(underlying.value(), []);
@@ -1082,7 +1100,7 @@ wtf.test(`Fallback states should propagate updated array values back to underlyi
 	assert.equals(underlying.value(), ["a", "b"]);
 	assert.equals(fallbacked.value(), ["a", "b"]);
 	fallbacked.update(["a"]);
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), ["a"]);
 	assert.equals(fallbacked.value(), ["a"]);
 });
 
@@ -1095,7 +1113,7 @@ wtf.test(`Underlying defined states propagate updated array values to the fallba
 	assert.equals(underlying.value(), ["a", "b"]);
 	assert.equals(fallbacked.value(), ["a", "b"]);
 	underlying.update(["a"]);
-	assert.equals(underlying.value(), undefined);
+	assert.equals(underlying.value(), ["a"]);
 	assert.equals(fallbacked.value(), ["a"]);
 });
 
@@ -1124,10 +1142,9 @@ wtf.test(`Fallback states should synchronize underlying array states using inser
 	});
 	fallbacked.insert(0, "a");
 	fallbacked.insert(1, "b");
+	fallbacked.remove(1);
+	fallbacked.remove(0);
 	assert.equals(events, [
-		{
-			type: "update"
-		},
 		{
 			type: "insert",
 			index: 0,
@@ -1140,6 +1157,22 @@ wtf.test(`Fallback states should synchronize underlying array states using inser
 			type: "insert",
 			index: 1,
 			value: "b"
+		},
+		{
+			type: "update"
+		},
+		{
+			type: "remove",
+			index: 1,
+			value: "b"
+		},
+		{
+			type: "update"
+		},
+		{
+			type: "remove",
+			index: 0,
+			value: "a"
 		},
 		{
 			type: "update"
