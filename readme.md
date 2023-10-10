@@ -676,4 +676,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Improve life-cycle management of elements.
 * Implement getter and mapped setter for `augment()`.
 * Investigate usability of a promise to state shim.
-* Remove possibility of using `fallback()` for states that may never be undefined.
+* Investigate value caching.
