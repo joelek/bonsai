@@ -828,7 +828,7 @@ export function valueify<A extends Attribute<Value>>(attribute: A): ValueFromAtt
 	return attribute as any;
 };
 
-export type Merged<A extends RecordValue, B extends RecordValue> = ExpansionOf<{
+export type MergedPair<A extends RecordValue, B extends RecordValue> = ExpansionOf<{
 	[C in keyof A | keyof B]: C extends keyof A & keyof B
 		? undefined extends B[C]
 			? Exclude<B[C], undefined> | A[C]
@@ -839,6 +839,16 @@ export type Merged<A extends RecordValue, B extends RecordValue> = ExpansionOf<{
 				? B[C]
 				: never;
 }>;
+
+export type MergedTuple<A extends RecordValue[]> = ExpansionOf<
+	A extends [infer B extends RecordValue, infer C extends RecordValue, ...infer D extends RecordValue[]]
+		? MergedTuple<[MergedPair<B, C>, ...D]>
+		: A extends [infer B extends RecordValue, infer C extends RecordValue]
+			? MergedPair<B, C>
+			: A extends [infer B extends RecordValue]
+				? B
+				: {}
+>;
 
 function fallback_array<A extends Value>(underlying: State<Array<A>>, fallbacked: State<Array<A>>, default_value: Array<A>, controller: State<"underlying" | "fallbacked" | undefined>): void {
 	fallbacked.observe("insert", (element, index) => {
@@ -986,31 +996,12 @@ export function fallback<A extends Value>(underlying: State<A | undefined>, defa
 	return fallbacked;
 };
 
-export function merge<A extends RecordValue, B extends RecordValue>(one: Attributes<A>, two: Attributes<B>): Attributes<Merged<A, B>> {
-	let one_state = stateify(one);
-	let two_state = stateify(two);
-	let merged = stateify({}) as State<Merged<A, B>>;
-	(merged as any).members = new Proxy({} as RecordValue, {
-		get(target, key) {
-			if (!(key in target)) {
-				let one_member = one_state.member(key as any) as State<Value>;
-				let two_member = two_state.member(key as any) as State<Value>;
-				target[key as any] = computed([one_member, two_member], (one_member, two_member) => typeof two_member !== "undefined" ? two_member : one_member) as State<Value>;
-			}
-			return target[key as any];
-		}
-	});
-	one_state.compute((one) => {
-		for (let key in one_state) {
-			merged.member(key as never);
-		}
-	});
-	two_state.compute((two) => {
-		for (let key in two_state) {
-			merged.member(key as never);
-		}
-	});
-	return merged;
+export function merge<A extends RecordValue[]>(...states: StateTupleFromValueTuple<A>): State<MergedTuple<A>> {
+	let records = make_state([] as Array<RecordValue>);
+	for (let state of states) {
+		records.append(state);
+	}
+	return squash(records) as State<MergedTuple<A>>;
 };
 
 export function flatten<A extends PrimitiveValue | ReferenceValue>(states: State<Array<A | RecursiveArray<A>>>): State<Array<A>> {

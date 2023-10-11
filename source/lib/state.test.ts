@@ -1715,308 +1715,304 @@ wtf.test(`Underlying array states should synchronize fallback states using inser
 	]);
 });
 
-wtf.test(`Merge should merge value { a: "one" } with value { a: "two" }.`, (assert) => {
-	let one = valueify({ a: "one" });
-	let two = valueify({ a: "two" });
-	let merged = merge(one, two);
-	assert.equals(valueify(merged), { a: "two" });
-});
-
-wtf.test(`Merge should merge value { a: "one" } with state { a: "two" }.`, (assert) => {
-	let one = valueify({ a: "one" });
-	let two = stateify({ a: "two" });
-	let merged = merge(one, two);
-	assert.equals(valueify(merged), { a: "two" });
-});
-
-wtf.test(`Merge should merge state { a: "one" } with value { a: "two" }.`, (assert) => {
+wtf.test(`Merge should merge { a: "one" } with { a: "one" }.`, (assert) => {
 	let one = stateify({ a: "one" });
-	let two = valueify({ a: "two" });
-	let merged = merge(one, two);
-	assert.equals(valueify(merged), { a: "two" });
-});
-
-wtf.test(`Merge should merge state { a: "one" } with state { a: "two" }.`, (assert) => {
-	let one = stateify({ a: "one" });
-	let two = stateify({ a: "two" });
-	let merged = merge(one, two);
-	assert.equals(valueify(merged), { a: "two" });
-});
-
-wtf.test(`Merge should merge value {} with value { a: "two" }.`, (assert) => {
-	let one = valueify({});
-	let two = valueify({ a: "two" });
-	let merged = merge(one, two);
-	assert.equals(valueify(merged), { a: "two" });
-});
-
-wtf.test(`Merge should merge value {} with state { a: "two" }.`, (assert) => {
-	let one = valueify({});
-	let two = stateify({ a: "two" });
-	let merged = merge(one, two);
-	assert.equals(valueify(merged), { a: "two" });
-});
-
-wtf.test(`Merge should merge state {} with value { a: "two" }.`, (assert) => {
-	let one = stateify({});
-	let two = valueify({ a: "two" });
-	let merged = merge(one, two);
-	assert.equals(valueify(merged), { a: "two" });
-});
-
-wtf.test(`Merge should merge state {} with state { a: "two" }.`, (assert) => {
-	let one = stateify({});
-	let two = stateify({ a: "two" });
-	let merged = merge(one, two);
-	assert.equals(valueify(merged), { a: "two" });
-});
-
-wtf.test(`Merge should merge value { a: "one" } with value {}.`, (assert) => {
-	let one = valueify({ a: "one" });
-	let two = valueify({});
+	let two = stateify({ a: "one" });
 	let merged = merge(one, two);
 	assert.equals(valueify(merged), { a: "one" });
 });
 
-wtf.test(`Merge should merge value { a: "one" } with state {}.`, (assert) => {
-	let one = valueify({ a: "one" });
-	let two = stateify({});
-	let merged = merge(one, two);
-	assert.equals(valueify(merged), { a: "one" });
-});
-
-wtf.test(`Merge should merge state { a: "one" } with value {}.`, (assert) => {
-	let one = stateify({ a: "one" });
-	let two = valueify({});
-	let merged = merge(one, two);
-	assert.equals(valueify(merged), { a: "one" });
-});
-
-wtf.test(`Merge should merge state { a: "one" } with state {}.`, (assert) => {
+wtf.test(`Merge should merge { a: "one" } with {}.`, (assert) => {
 	let one = stateify({ a: "one" });
 	let two = stateify({});
 	let merged = merge(one, two);
 	assert.equals(valueify(merged), { a: "one" });
 });
 
-wtf.test(`Merge should merge value { a: null } with value { a: "two" }.`, (assert) => {
-	let one = valueify({ a: null });
-	let two = valueify({ a: "two" });
-	let merged = merge(one, two);
-	assert.equals(valueify(merged), { a: "two" });
-});
-
-wtf.test(`Merge should merge value { a: null } with state { a: "two" }.`, (assert) => {
-	let one = valueify({ a: null });
-	let two = stateify({ a: "two" });
-	let merged = merge(one, two);
-	assert.equals(valueify(merged), { a: "two" });
-});
-
-wtf.test(`Merge should merge state { a: null } with value { a: "two" }.`, (assert) => {
-	let one = stateify({ a: null });
-	let two = valueify({ a: "two" });
-	let merged = merge(one, two);
-	assert.equals(valueify(merged), { a: "two" });
-});
-
-wtf.test(`Merge should merge state { a: null } with state { a: "two" }.`, (assert) => {
-	let one = stateify({ a: null });
-	let two = stateify({ a: "two" });
-	let merged = merge(one, two);
-	assert.equals(valueify(merged), { a: "two" });
-});
-
-wtf.test(`Merge should merge value { a: "one" } with value { "a": null }.`, (assert) => {
-	let one = valueify({ a: "one" });
-	let two = valueify({ a: null });
+wtf.test(`Merge should merge { a: "one" } with { a: null }.`, (assert) => {
+	let one = stateify({ a: "one" });
+	let two = stateify({ a: null });
 	let merged = merge(one, two);
 	assert.equals(valueify(merged), { a: null });
 });
 
-wtf.test(`Merge should merge value { a: "one" } with state { "a": null }.`, (assert) => {
-	let one = valueify({ a: "one" });
+wtf.test(`Merge should merge { a: "one" } with { a: undefined }.`, (assert) => {
+	let one = stateify({ a: "one" });
+	let two = stateify({ a: undefined });
+	let merged = merge(one, two);
+	assert.equals(valueify(merged), { a: "one" });
+});
+
+wtf.test(`Merge should merge {} with { a: "one" }.`, (assert) => {
+	let one = stateify({});
+	let two = stateify({ a: "one" });
+	let merged = merge(one, two);
+	assert.equals(valueify(merged), { a: "one" });
+});
+
+wtf.test(`Merge should merge {} with {}.`, (assert) => {
+	let one = stateify({});
+	let two = stateify({});
+	let merged = merge(one, two);
+	assert.equals(valueify(merged), {});
+});
+
+wtf.test(`Merge should merge {} with {}.`, (assert) => {
+	let one = stateify({});
 	let two = stateify({ a: null });
 	let merged = merge(one, two);
 	assert.equals(valueify(merged), { a: null });
 });
 
-wtf.test(`Merge should merge state { a: "one" } with value { "a": null }.`, (assert) => {
-	let one = stateify({ a: "one" });
-	let two = valueify({ a: null });
+wtf.test(`Merge should merge {} with {}.`, (assert) => {
+	let one = stateify({});
+	let two = stateify({ a: undefined });
+	let merged = merge(one, two);
+	assert.equals(valueify(merged), { a: undefined });
+});
+
+wtf.test(`Merge should merge { a: null } with { a: "one" }.`, (assert) => {
+	let one = stateify({ a: null });
+	let two = stateify({ a: "one" });
+	let merged = merge(one, two);
+	assert.equals(valueify(merged), { a: "one" });
+});
+
+wtf.test(`Merge should merge { a: null } with {}.`, (assert) => {
+	let one = stateify({ a: null });
+	let two = stateify({});
 	let merged = merge(one, two);
 	assert.equals(valueify(merged), { a: null });
 });
 
-wtf.test(`Merge should merge state { a: "one" } with state { "a": null }.`, (assert) => {
-	let one = stateify({ a: "one" });
+wtf.test(`Merge should merge { a: null } with { a: null }.`, (assert) => {
+	let one = stateify({ a: null });
 	let two = stateify({ a: null });
 	let merged = merge(one, two);
 	assert.equals(valueify(merged), { a: null });
+});
+
+wtf.test(`Merge should merge { a: null } with { a: undefined }.`, (assert) => {
+	let one = stateify({ a: null });
+	let two = stateify({ a: undefined });
+	let merged = merge(one, two);
+	assert.equals(valueify(merged), { a: null });
+});
+
+wtf.test(`Merge should merge { a: undefined } with { a: "one" }.`, (assert) => {
+	let one = stateify({ a: undefined });
+	let two = stateify({ a: "one" });
+	let merged = merge(one, two);
+	assert.equals(valueify(merged), { a: "one" });
+});
+
+wtf.test(`Merge should merge { a: undefined } with {}.`, (assert) => {
+	let one = stateify({ a: undefined });
+	let two = stateify({});
+	let merged = merge(one, two);
+	assert.equals(valueify(merged), { a: undefined });
+});
+
+wtf.test(`Merge should merge { a: undefined } with { a: null }.`, (assert) => {
+	let one = stateify({ a: undefined });
+	let two = stateify({ a: null });
+	let merged = merge(one, two);
+	assert.equals(valueify(merged), { a: null });
+});
+
+wtf.test(`Merge should merge { a: undefined } with { a: undefined }.`, (assert) => {
+	let one = stateify({ a: undefined });
+	let two = stateify({ a: undefined });
+	let merged = merge(one, two);
+	assert.equals(valueify(merged), { a: undefined });
 });
 
 wtf.test(`Merge should return the correct type for { a: string } and { a: string }.`, (assert) => {
-	let one = valueify({ a: "one" });
-	let two = valueify({ a: "two" });
+	let one = stateify({ a: "one" });
+	let two = stateify({ a: "two" });
 	let merged: Attributes<{ a: string }> = merge(one, two);
 });
 
 wtf.test(`Merge should return the correct type for { a?: string } and { a: string }.`, (assert) => {
-	let one = valueify({} as { a?: string });
-	let two = valueify({ a: "two" });
+	let one = stateify({} as { a?: string });
+	let two = stateify({ a: "two" });
 	let merged: Attributes<{ a: string }> = merge(one, two);
 });
 
 wtf.test(`Merge should return the correct type for { a: string } and { a?: string }.`, (assert) => {
-	let one = valueify({ a: "two" });
-	let two = valueify({} as { a?: string });
+	let one = stateify({ a: "two" });
+	let two = stateify({} as { a?: string });
 	let merged: Attributes<{ a: string }> = merge(one, two);
 });
 
 wtf.test(`Merge should return the correct type for { a?: string } and { a?: string }.`, (assert) => {
-	let one = valueify({} as { a?: string });
-	let two = valueify({} as { a?: string });
+	let one = stateify({} as { a?: string });
+	let two = stateify({} as { a?: string });
 	let merged: Attributes<{ a: string | undefined }> = merge(one, two);
 });
 
 wtf.test(`Merge should return the correct type for { a: string } and { a: number }.`, (assert) => {
-	let one = valueify({ a: "one" });
-	let two = valueify({ a: 1 });
+	let one = stateify({ a: "one" });
+	let two = stateify({ a: 1 });
 	let merged: Attributes<{ a: number }> = merge(one, two);
 });
 
 wtf.test(`Merge should return the correct type for { a?: string } and { a: number }.`, (assert) => {
-	let one = valueify({} as { a?: string });
-	let two = valueify({ a: 1 });
+	let one = stateify({} as { a?: string });
+	let two = stateify({ a: 1 });
 	let merged: Attributes<{ a: number }> = merge(one, two);
 });
 
 wtf.test(`Merge should return the correct type for { a: string } and { a?: number }.`, (assert) => {
-	let one = valueify({ a: "two" });
-	let two = valueify({} as { a?: number });
+	let one = stateify({ a: "two" });
+	let two = stateify({} as { a?: number });
 	let merged: Attributes<{ a: string | number }> = merge(one, two);
 });
 
 wtf.test(`Merge should return the correct type for { a?: string } and { a?: number }.`, (assert) => {
-	let one = valueify({} as { a?: string });
-	let two = valueify({} as { a?: number });
+	let one = stateify({} as { a?: string });
+	let two = stateify({} as { a?: number });
 	let merged: Attributes<{ a: string | number | undefined }> = merge(one, two);
 });
 
 wtf.test(`Merge should return the correct type for { a: number } and { a: string }.`, (assert) => {
-	let one = valueify({ a: 1 });
-	let two = valueify({ a: "two" });
+	let one = stateify({ a: 1 });
+	let two = stateify({ a: "two" });
 	let merged: Attributes<{ a: string }> = merge(one, two);
 });
 
 wtf.test(`Merge should return the correct type for { a?: number } and { a: string }.`, (assert) => {
-	let one = valueify({} as { a?: number });
-	let two = valueify({ a: "two" });
+	let one = stateify({} as { a?: number });
+	let two = stateify({ a: "two" });
 	let merged: Attributes<{ a: string }> = merge(one, two);
 });
 
 wtf.test(`Merge should return the correct type for { a: number } and { a?: string }.`, (assert) => {
-	let one = valueify({ a: 1 });
-	let two = valueify({} as { a?: string });
+	let one = stateify({ a: 1 });
+	let two = stateify({} as { a?: string });
 	let merged: Attributes<{ a: string | number }> = merge(one, two);
 });
 
 wtf.test(`Merge should return the correct type for { a?: number } and { a?: string }.`, (assert) => {
-	let one = valueify({} as { a?: number });
-	let two = valueify({} as { a?: string });
+	let one = stateify({} as { a?: number });
+	let two = stateify({} as { a?: string });
 	let merged: Attributes<{ a: string | number | undefined }> = merge(one, two);
 });
 
 wtf.test(`Merge should return the correct type for { a: number } and { a: null }.`, (assert) => {
-	let one = valueify({ a: 1 });
-	let two = valueify({ a: null });
+	let one = stateify({ a: 1 });
+	let two = stateify({ a: null });
 	let merged: Attributes<{ a: null }> = merge(one, two);
 });
 
 wtf.test(`Merge should return the correct type for { a: number } and { a: string | null }.`, (assert) => {
-	let one = valueify({ a: 1 });
-	let two = valueify({ a: null as string | null });
+	let one = stateify({ a: 1 });
+	let two = stateify({ a: null as string | null });
 	let merged: Attributes<{ a: string | null }> = merge(one, two);
 });
 
 wtf.test(`Merged objects created from {} and {} should update properly when the first object is updated.`, (assert) => {
-	let one = stateify({} as { key?: string });
-	let two = stateify({} as { key?: string });
+	let one = stateify({} as Record<string, string>);
+	let two = stateify({} as Record<string, string>);
 	let merged = merge(one, two);
+	assert.equals(valueify(merged), {});
 	one.update({ key: "one" });
 	assert.equals(valueify(merged), { key: "one" });
 	one.update({ key: "ONE" });
 	assert.equals(valueify(merged), { key: "ONE" });
+	one.update({});
+	assert.equals(valueify(merged), {});
 });
 
 wtf.test(`Merged objects created from {} and {} should update properly when the second object is updated.`, (assert) => {
-	let one = stateify({} as { key?: string });
-	let two = stateify({} as { key?: string });
+	let one = stateify({} as Record<string, string>);
+	let two = stateify({} as Record<string, string>);
 	let merged = merge(one, two);
+	assert.equals(valueify(merged), {});
 	two.update({ key: "two" });
 	assert.equals(valueify(merged), { key: "two" });
 	two.update({ key: "TWO" });
 	assert.equals(valueify(merged), { key: "TWO" });
+	two.update({});
+	assert.equals(valueify(merged), {});
 });
 
 wtf.test(`Merged objects created from { key: "one" } and {} should update properly when the first object is updated.`, (assert) => {
-	let one = stateify({ key: "one" } as { key?: string });
-	let two = stateify({} as { key?: string });
+	let one = stateify({ key: "one" } as Record<string, string>);
+	let two = stateify({} as Record<string, string>);
 	let merged = merge(one, two);
+	assert.equals(valueify(merged), { key: "one" });
 	one.update({ key: "ONE" });
 	assert.equals(valueify(merged), { key: "ONE" });
-	one.update({ key: undefined });
-	assert.equals(valueify(merged), { key: undefined });
+	one.update({});
+	assert.equals(valueify(merged), {});
+	one.update({ key: "one" });
+	assert.equals(valueify(merged), { key: "one" });
 });
 
 wtf.test(`Merged objects created from { key: "one" } and {} should update properly when the second object is updated.`, (assert) => {
-	let one = stateify({ key: "one" } as { key?: string });
-	let two = stateify({} as { key?: string });
+	let one = stateify({ key: "one" } as Record<string, string>);
+	let two = stateify({} as Record<string, string>);
 	let merged = merge(one, two);
+	assert.equals(valueify(merged), { key: "one" });
 	two.update({ key: "two" });
 	assert.equals(valueify(merged), { key: "two" });
 	two.update({ key: "TWO" });
 	assert.equals(valueify(merged), { key: "TWO" });
+	two.update({});
+	assert.equals(valueify(merged), { key: "one" });
 });
 
 wtf.test(`Merged objects created from {} and { key: "two" } should update properly when the first object is updated.`, (assert) => {
-	let one = stateify({} as { key?: string });
-	let two = stateify({ key: "two" } as { key?: string });
+	let one = stateify({} as Record<string, string>);
+	let two = stateify({ key: "two" } as Record<string, string>);
 	let merged = merge(one, two);
+	assert.equals(valueify(merged), { key: "two" });
 	one.update({ key: "one" });
 	assert.equals(valueify(merged), { key: "two" });
-	one.update({ key: "ONE" });
-	assert.equals(valueify(merged), { key: "two" });
-});
-
-wtf.test(`Merged objects created from {} and { key: "two" } should update properly when the second object is updated.`, (assert) => {
-	let one = stateify({} as { key?: string });
-	let two = stateify({ key: "two" } as { key?: string });
-	let merged = merge(one, two);
-	two.update({ key: "TWO" });
-	assert.equals(valueify(merged), { key: "TWO" });
-	two.update({ key: undefined });
-	assert.equals(valueify(merged), { key: undefined });
-});
-
-wtf.test(`Merged objects created from { key: "one" } and { key: "two" } should update properly when the first object is updated.`, (assert) => {
-	let one = stateify({ key: "one" } as { key?: string });
-	let two = stateify({ key: "two" } as { key?: string });
-	let merged = merge(one, two);
 	one.update({ key: "ONE" });
 	assert.equals(valueify(merged), { key: "two" });
 	one.update({});
 	assert.equals(valueify(merged), { key: "two" });
 });
 
-wtf.test(`Merged objects created from { key: "one" } and { key: "two" } should update properly when the second object is updated.`, (assert) => {
-	let one = stateify({ key: "one" } as { key?: string });
-	let two = stateify({ key: "two" } as { key?: string });
+wtf.test(`Merged objects created from {} and { key: "two" } should update properly when the second object is updated.`, (assert) => {
+	let one = stateify({} as Record<string, string>);
+	let two = stateify({ key: "two" } as Record<string, string>);
 	let merged = merge(one, two);
+	assert.equals(valueify(merged), { key: "two" });
 	two.update({ key: "TWO" });
 	assert.equals(valueify(merged), { key: "TWO" });
-	two.update({ key: undefined });
+	two.update({});
+	assert.equals(valueify(merged), {});
+	two.update({ key: "two"});
+	assert.equals(valueify(merged), { key: "two" });
+});
+
+wtf.test(`Merged objects created from { key: "one" } and { key: "two" } should update properly when the first object is updated.`, (assert) => {
+	let one = stateify({ key: "one" } as Record<string, string>);
+	let two = stateify({ key: "two" } as Record<string, string>);
+	let merged = merge(one, two);
+	assert.equals(valueify(merged), { key: "two" });
+	one.update({ key: "ONE" });
+	assert.equals(valueify(merged), { key: "two" });
+	one.update({});
+	assert.equals(valueify(merged), { key: "two" });
+	one.update({ key: "one" });
+	assert.equals(valueify(merged), { key: "two" });
+});
+
+wtf.test(`Merged objects created from { key: "one" } and { key: "two" } should update properly when the second object is updated.`, (assert) => {
+	let one = stateify({ key: "one" } as Record<string, string>);
+	let two = stateify({ key: "two" } as Record<string, string>);
+	let merged = merge(one, two);
+	assert.equals(valueify(merged), { key: "two" });
+	two.update({ key: "TWO" });
+	assert.equals(valueify(merged), { key: "TWO" });
+	two.update({});
 	assert.equals(valueify(merged), { key: "one" });
+	two.update({ key: "two" });
+	assert.equals(valueify(merged), { key: "two" });
 });
 
 wtf.test(`Object state members accessed using dot notation should have the correct type.`, (assert) => {
