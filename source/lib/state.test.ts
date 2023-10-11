@@ -1,5 +1,5 @@
 import * as wtf from "@joelek/wtf";
-import { Attribute, Attributes, merge, make_state, State, stateify, StateOrValue, valueify, Value, computed, fallback, flatten } from "./state";
+import { Attribute, Attributes, merge, make_state, State, stateify, StateOrValue, valueify, Value, computed, fallback, flatten, squash } from "./state";
 
 wtf.test(`Computed should compute a new state from two string states.`, (assert) => {
 	let one = stateify("one" as string);
@@ -668,6 +668,90 @@ wtf.test(`State<[string, string]> should be assignable to Attribute<[string, str
 
 wtf.test(`State<undefined> should be assignable to Attribute<[string, string] | undefined>.`, (assert) => {
 	let attribute: Attribute<[string, string] | undefined> = stateify<undefined>(undefined);
+});
+
+wtf.test(`Squashed record arrays should support records being inserted before other records with identical keys.`, (assert) => {
+	let records = stateify([
+		{ one: "a" }
+	] as Array<Record<string, string>>);
+	let squashed = squash(records);
+	assert.equals(squashed.value(), { one: "a" });
+	records.insert(0, { one: "b" });
+	assert.equals(squashed.value(), { one: "a" });
+});
+
+wtf.test(`Squashed record arrays should support records being inserted after other records with identical keys.`, (assert) => {
+	let records = stateify([
+		{ one: "a" }
+	] as Array<Record<string, string>>);
+	let squashed = squash(records);
+	assert.equals(squashed.value(), { one: "a" });
+	records.insert(1, { one: "b" });
+	assert.equals(squashed.value(), { one: "b" });
+});
+
+wtf.test(`Squashed record arrays should support records being inserted before other records with different keys.`, (assert) => {
+	let records = stateify([
+		{ one: "a" }
+	] as Array<Record<string, string>>);
+	let squashed = squash(records);
+	assert.equals(squashed.value(), { one: "a" });
+	records.insert(0, { two: "b" });
+	assert.equals(squashed.value(), { one: "a", two: "b" });
+});
+
+wtf.test(`Squashed record arrays should support records being inserted after other records with different keys.`, (assert) => {
+	let records = stateify([
+		{ one: "a" }
+	] as Array<Record<string, string>>);
+	let squashed = squash(records);
+	assert.equals(squashed.value(), { one: "a" });
+	records.insert(1, { two: "b" });
+	assert.equals(squashed.value(), { one: "a", two: "b" });
+});
+
+wtf.test(`Squashed record arrays should support records being removed before other records with identical keys.`, (assert) => {
+	let records = stateify([
+		{ one: "a" },
+		{ one: "b" }
+	] as Array<Record<string, string>>);
+	let squashed = squash(records);
+	assert.equals(squashed.value(), { one: "b" });
+	records.remove(0);
+	assert.equals(squashed.value(), { one: "b" });
+});
+
+wtf.test(`Squashed record arrays should support records being removed after other records with identical keys.`, (assert) => {
+	let records = stateify([
+		{ one: "a" },
+		{ one: "b" }
+	] as Array<Record<string, string>>);
+	let squashed = squash(records);
+	assert.equals(squashed.value(), { one: "b" });
+	records.remove(1);
+	assert.equals(squashed.value(), { one: "a" });
+});
+
+wtf.test(`Squashed record arrays should support records being removed before other records with different keys.`, (assert) => {
+	let records = stateify([
+		{ one: "a" },
+		{ two: "b" }
+	] as Array<Record<string, string>>);
+	let squashed = squash(records);
+	assert.equals(squashed.value(), { one: "a", two: "b" });
+	records.remove(0);
+	assert.equals(squashed.value(), { two: "b" });
+});
+
+wtf.test(`Squashed record arrays should support records being removed after other records with different keys.`, (assert) => {
+	let records = stateify([
+		{ one: "a" },
+		{ two: "b" }
+	] as Array<Record<string, string>>);
+	let squashed = squash(records);
+	assert.equals(squashed.value(), { one: "a", two: "b" });
+	records.remove(1);
+	assert.equals(squashed.value(), { one: "a" });
 });
 
 wtf.test(`Fallback states should be constructible from other fallback states.`, (asserts) => {

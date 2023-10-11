@@ -894,6 +894,87 @@ function fallback_primitive<A extends Value>(underlying: State<A | undefined>, f
 	});
 };
 
+export function squash<A extends RecordValue>(records: State<Array<A>>): State<A> {
+	let squashed = make_state({} as RecordValue);
+	let absent = Symbol();
+	let arrays = new Map<string, State<Array<Value | symbol>>>();
+	function attach_member(index: number, member: State<Value>, key: string): void {
+		let array = arrays.get(key);
+		if (array == null) {
+			array = make_state(new Array(records.length().value()).fill(absent));
+			arrays.set(key, array);
+			squashed.insert(key, array.compute((values) => {
+				for (let value of values.reverse()) {
+					if (typeof value !== "undefined" && value !== absent) {
+						return value;
+					}
+				}
+			}));
+		}
+		array.remove(index);
+		array.insert(index, member);
+	}
+	function detach_member(index: number, member: State<Value>, key: string): void {
+		let array = arrays.get(key);
+		if (array == null) {
+			array = make_state(new Array(records.length().value()).fill(absent));
+			arrays.set(key, array);
+		}
+		array.remove(index);
+		array.insert(index, absent);
+		for (let member of array) {
+			if (member.value() !== absent) {
+				return;
+			}
+		}
+		squashed.remove(key);
+		arrays.delete(key);
+	}
+	let inserts = [] as Array<CancellationToken>;
+	let removes = [] as Array<CancellationToken>;
+	function attach_record(record: State<RecordValue>, index: number): void {
+		for (let [key, array] of arrays.entries()) {
+			array.insert(index, absent);
+		}
+		for (let key in record) {
+			let member = record[key];
+			attach_member(index, member, key);
+		}
+		let insert = record.observe("insert", (member, key) => {
+			attach_member(index, member, key);
+		});
+		inserts.splice(index, 0, insert);
+		let remove = record.observe("remove", (member, key) => {
+			detach_member(index, member, key);
+		});
+		removes.splice(index, 0, remove);
+	}
+	function detach_record(record: State<RecordValue>, index: number): void {
+		for (let key in record) {
+			let member = record[key];
+			detach_member(index, member, key);
+		}
+		inserts[index]();
+		inserts.splice(index, 1);
+		removes[index]();
+		removes.splice(index, 1);
+		for (let [key, array] of arrays.entries()) {
+			array.remove(index);
+		}
+	}
+	let index = 0;
+	for (let record of records) {
+		attach_record(record, index++);
+	}
+	records.observe("insert", (record, index) => {
+		attach_record(record, index);
+	});
+	records.observe("remove", (record, index) => {
+		detach_record(record, index);
+	});
+	return squashed as State<A>;
+};
+
 export function fallback<A extends Value>(underlying: State<A | undefined>, default_value: Exclude<A, undefined>): State<Exclude<A, undefined>> {
 	let computer = ((underlying_value) => typeof underlying_value === "undefined" ? default_value : underlying_value) as Computer<A | undefined, Exclude<A, undefined>>;
 	let fallbacked = make_state(computer(underlying.value()));
