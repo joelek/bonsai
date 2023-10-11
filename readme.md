@@ -479,7 +479,37 @@ let array = stateify([
 		"four"
 	]
 ]);
-let flattened = flatten(array); // The resulting type is State<Array<string>>.
+let flattened = flatten(array); // The resulting value is ["one", "two", "three", "four"].
+```
+
+Multiple object states may be merged into a single object state using the `merge()` function. The function retains the original states and is updated whenever either of the original states update. Keys present in multiple object states will be overridden as long as the corresponding values are different from undefined.
+
+```ts
+import { stateify, merge } from "@joelek/bonsai";
+
+let one = stateify({
+	key_in_one: "one",
+	key_in_both: "one"
+});
+let two = stateify({
+	key_in_two: "two",
+	key_in_both: "two"
+});
+let merged = merge(one, two); // The resulting value is { key_in_one: "one", key_in_two: "two", key_in_both: "two" }.
+```
+
+Multiple record states may be merged into a single record state using the `squash()` function. The behaviour of the function is identical to the `merge()` function but the `squash()` function takes an array state of records as a single argument instead of multiple arguments. This enables entire records as well as individual members being inserted and removed dynamically as needed.
+
+```ts
+import { stateify, squash } from "@joelek/bonsai";
+
+let array = stateify([] as Array<Record<string, string>>>);
+let squashed = squash(array);
+let record = stateify({
+	one: "one"
+} as Record<string, string>);
+array.insert(0, record); // The squashed array is instantly updated to the value { one: "one" }.
+record.insert("two", "two"); // The squashed array is instantly updated to the value { one: "one", two: "two" }.
 ```
 
 #### Compute
@@ -678,4 +708,3 @@ NB: This project targets TypeScript 4 in strict mode.
 * Investigate value caching.
 * Rename `value()` to `serialize()` if not implementing value caching.
 * Decide on behaviour for `merge()` regarding nulls.
-* Document `squash()`.
