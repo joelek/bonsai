@@ -676,3 +676,6 @@ NB: This project targets TypeScript 4 in strict mode.
 * Implement getter and mapped setter for `augment()`.
 * Investigate usability of a promise to state shim.
 * Investigate value caching.
+* Rename `value()` to `serialize()` if not implementing value caching.
+* Decide on behaviour for `merge()` regarding nulls.
+* Document `squash()`.
