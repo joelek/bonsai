@@ -26,7 +26,7 @@ export type StateFromAttribute<A extends Attribute<Value>> = State<ValueFromAttr
 
 export type TupleRecord<A extends TupleRecord<A>> = { [C in keyof A]: any[]; };
 
-export type PrimitiveValue = void | bigint | boolean | number | string | null | undefined;
+export type PrimitiveValue = symbol | void | bigint | boolean | number | string | null | undefined;
 
 export type ReferenceValue = Object;
 
@@ -734,6 +734,9 @@ export function make_reference_state<A extends ReferenceValue>(value: A): Refere
 };
 
 export function make_state<A extends Value>(value: A): State<A> {
+	if (typeof value === "symbol") {
+		return make_primitive_state(value) as any;
+	}
 	if (typeof value === "bigint") {
 		return make_primitive_state(value) as any;
 	}
