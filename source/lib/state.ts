@@ -515,15 +515,13 @@ export class ArrayStateImplementation<A extends Value> extends ArrayState<A> {
 	}
 };
 
+export type ObjectStateEventsTuple<A extends RecordValue> = {
+	[B in keyof A]: [state: State<A[B]>, key: B];
+}[keyof A];
+
 export type ObjectStateEvents<A extends RecordValue> = AbstractStateEvents<A> & {
-	"insert": [
-		state: State<A[keyof A]>,
-		key: keyof A
-	];
-	"remove": [
-		state: State<A[keyof A]>,
-		key: keyof A
-	];
+	"insert": ObjectStateEventsTuple<A>;
+	"remove": ObjectStateEventsTuple<A>;
 };
 
 export abstract class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectStateEvents<A>> {
