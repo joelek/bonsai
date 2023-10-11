@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.flatten = exports.merge = exports.fallback = exports.valueify = exports.stateify = exports.computed = exports.make_state = exports.make_reference_state = exports.make_object_state = exports.make_array_state = exports.make_primitive_state = exports.ObjectStateImplementation = exports.ObjectState = exports.ArrayStateImplementation = exports.ArrayState = exports.ReferenceStateImplementation = exports.ReferenceState = exports.PrimitiveStateImplementation = exports.PrimitiveState = exports.AbstractState = void 0;
+exports.flatten = exports.merge = exports.fallback = exports.squash = exports.valueify = exports.stateify = exports.computed = exports.make_state = exports.make_reference_state = exports.make_object_state = exports.make_array_state = exports.make_primitive_state = exports.ObjectStateImplementation = exports.ObjectState = exports.ArrayStateImplementation = exports.ArrayState = exports.ReferenceStateImplementation = exports.ReferenceState = exports.PrimitiveStateImplementation = exports.PrimitiveState = exports.AbstractState = void 0;
 const utils_1 = require("./utils");
 class AbstractState {
     observers;
@@ -620,6 +620,9 @@ function make_reference_state(value) {
 exports.make_reference_state = make_reference_state;
 ;
 function make_state(value) {
+    if (typeof value === "symbol") {
+        return make_primitive_state(value);
+    }
     if (typeof value === "bigint") {
         return make_primitive_state(value);
     }
@@ -771,6 +774,88 @@ function fallback_primitive(underlying, fallbacked, default_value, controller, c
     });
 }
 ;
+function squash(records) {
+    let squashed = make_state({});
+    let absent = Symbol();
+    let arrays = new Map();
+    function attach_member(index, member, key) {
+        let array = arrays.get(key);
+        if (array == null) {
+            array = make_state(new Array(records.length().value()).fill(absent));
+            arrays.set(key, array);
+            squashed.insert(key, array.compute((values) => {
+                for (let value of values.reverse()) {
+                    if (typeof value !== "undefined" && value !== absent) {
+                        return value;
+                    }
+                }
+            }));
+        }
+        array.remove(index);
+        array.insert(index, member);
+    }
+    function detach_member(index, member, key) {
+        let array = arrays.get(key);
+        if (array == null) {
+            array = make_state(new Array(records.length().value()).fill(absent));
+            arrays.set(key, array);
+        }
+        array.remove(index);
+        array.insert(index, absent);
+        for (let member of array) {
+            if (member.value() !== absent) {
+                return;
+            }
+        }
+        squashed.remove(key);
+        arrays.delete(key);
+    }
+    let inserts = [];
+    let removes = [];
+    function attach_record(record, index) {
+        for (let [key, array] of arrays.entries()) {
+            array.insert(index, absent);
+        }
+        for (let key in record) {
+            let member = record[key];
+            attach_member(index, member, key);
+        }
+        let insert = record.observe("insert", (member, key) => {
+            attach_member(index, member, key);
+        });
+        inserts.splice(index, 0, insert);
+        let remove = record.observe("remove", (member, key) => {
+            detach_member(index, member, key);
+        });
+        removes.splice(index, 0, remove);
+    }
+    function detach_record(record, index) {
+        for (let key in record) {
+            let member = record[key];
+            detach_member(index, member, key);
+        }
+        inserts[index]();
+        inserts.splice(index, 1);
+        removes[index]();
+        removes.splice(index, 1);
+        for (let [key, array] of arrays.entries()) {
+            array.remove(index);
+        }
+    }
+    let index = 0;
+    for (let record of records) {
+        attach_record(record, index++);
+    }
+    records.observe("insert", (record, index) => {
+        attach_record(record, index);
+    });
+    records.observe("remove", (record, index) => {
+        detach_record(record, index);
+    });
+    return squashed;
+}
+exports.squash = squash;
+;
 function fallback(underlying, default_value) {
     let computer = ((underlying_value) => typeof underlying_value === "undefined" ? default_value : underlying_value);
     let fallbacked = make_state(computer(underlying.value()));
@@ -783,31 +868,12 @@ function fallback(underlying, default_value) {
 }
 exports.fallback = fallback;
 ;
-function merge(one, two) {
-    let one_state = stateify(one);
-    let two_state = stateify(two);
-    let merged = stateify({});
-    merged.members = new Proxy({}, {
-        get(target, key) {
-            if (!(key in target)) {
-                let one_member = one_state.member(key);
-                let two_member = two_state.member(key);
-                target[key] = computed([one_member, two_member], (one_member, two_member) => typeof two_member !== "undefined" ? two_member : one_member);
-            }
-            return target[key];
-        }
-    });
-    one_state.compute((one) => {
-        for (let key in one_state) {
-            merged.member(key);
-        }
-    });
-    two_state.compute((two) => {
-        for (let key in two_state) {
-            merged.member(key);
-        }
-    });
-    return merged;
+function merge(...states) {
+    let records = make_state([]);
+    for (let state of states) {
+        records.append(state);
+    }
+    return squash(records);
 }
 exports.merge = merge;
 ;

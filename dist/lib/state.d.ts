@@ -18,7 +18,7 @@ export type StateFromAttribute<A extends Attribute<Value>> = State<ValueFromAttr
 export type TupleRecord<A extends TupleRecord<A>> = {
     [C in keyof A]: any[];
 };
-export type PrimitiveValue = void | bigint | boolean | number | string | null | undefined;
+export type PrimitiveValue = symbol | void | bigint | boolean | number | string | null | undefined;
 export type ReferenceValue = Object;
 export type Value = PrimitiveValue | ReferenceValue | any[] | {
     [key: string]: any;
@@ -114,15 +114,12 @@ export declare class ArrayStateImplementation<A extends Value> extends ArrayStat
     update(value: Array<A>): boolean;
     value(): Array<A>;
 }
+export type ObjectStateEventsTuple<A extends RecordValue> = {
+    [B in keyof A]: [state: State<A[B]>, key: B];
+}[keyof A];
 export type ObjectStateEvents<A extends RecordValue> = AbstractStateEvents<A> & {
-    "insert": [
-        state: State<A[keyof A]>,
-        key: keyof A
-    ];
-    "remove": [
-        state: State<A[keyof A]>,
-        key: keyof A
-    ];
+    "insert": ObjectStateEventsTuple<A>;
+    "remove": ObjectStateEventsTuple<A>;
 };
 export declare abstract class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectStateEvents<A>> {
     protected members: MemberStates<A>;
@@ -150,10 +147,12 @@ export declare function make_state<A extends Value>(value: A): State<A>;
 export declare function computed<A extends Value[], B extends Value>(states: [...StateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): State<B>;
 export declare function stateify<A extends Attribute<Value>>(attribute: A): StateFromAttribute<A>;
 export declare function valueify<A extends Attribute<Value>>(attribute: A): ValueFromAttribute<A>;
-export type Merged<A extends RecordValue, B extends RecordValue> = ExpansionOf<{
+export type MergedPair<A extends RecordValue, B extends RecordValue> = ExpansionOf<{
     [C in keyof A | keyof B]: C extends keyof A & keyof B ? undefined extends B[C] ? Exclude<B[C], undefined> | A[C] : B[C] : C extends keyof A ? A[C] : C extends keyof B ? B[C] : never;
 }>;
+export type MergedTuple<A extends RecordValue[]> = ExpansionOf<A extends [infer B extends RecordValue, infer C extends RecordValue, ...infer D extends RecordValue[]] ? MergedTuple<[MergedPair<B, C>, ...D]> : A extends [infer B extends RecordValue, infer C extends RecordValue] ? MergedPair<B, C> : A extends [infer B extends RecordValue] ? B : {}>;
+export declare function squash<A extends RecordValue>(records: State<Array<A>>): State<A>;
 export declare function fallback<A extends Value>(underlying: State<A | undefined>, default_value: Exclude<A, undefined>): State<Exclude<A, undefined>>;
-export declare function merge<A extends RecordValue, B extends RecordValue>(one: Attributes<A>, two: Attributes<B>): Attributes<Merged<A, B>>;
+export declare function merge<A extends RecordValue[]>(...states: StateTupleFromValueTuple<A>): State<MergedTuple<A>>;
 export declare function flatten<A extends PrimitiveValue | ReferenceValue>(states: State<Array<A | RecursiveArray<A>>>): State<Array<A>>;
 export {};
