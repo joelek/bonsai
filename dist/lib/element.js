@@ -305,6 +305,14 @@ class FunctionalElementImplementation extends Element {
         callback(this);
         return this;
     }
+    removeAttribute(key) {
+        super.removeAttribute(key);
+        if (key === "value") {
+            if (this instanceof HTMLInputElement || this instanceof HTMLTextAreaElement) {
+                this.value = "";
+            }
+        }
+    }
     setAttribute(key, value) {
         super.setAttribute(key, value);
         if (key === "value") {

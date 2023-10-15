@@ -49,6 +49,7 @@ export declare class FunctionalElementImplementation<A extends FunctionalElement
     listener<B extends keyof A & string>(type: `on${B}`, listener: FunctionalElementListener<A[B], this> | undefined): this;
     nodes(...children: Children): this;
     process(callback: (element: this) => void): this;
+    removeAttribute(key: string): void;
     setAttribute(key: string, value: string): void;
 }
 export type FunctionalElement<A extends FunctionalElementEventMap<A>, B extends Element> = FunctionalElementImplementation<A> & B;
