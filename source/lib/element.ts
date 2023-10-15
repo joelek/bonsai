@@ -331,6 +331,15 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 		return this;
 	}
 
+	removeAttribute(key: string): void {
+		super.removeAttribute(key);
+		if (key === "value") {
+			if (this instanceof HTMLInputElement || this instanceof HTMLTextAreaElement) {
+				this.value = "";
+			}
+		}
+	}
+
 	setAttribute(key: string, value: string): void {
 		super.setAttribute(key, value);
 		if (key === "value") {
