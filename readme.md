@@ -708,3 +708,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Investigate value caching.
 * Rename `value()` to `serialize()` if not implementing value caching.
 * Decide on behaviour for `merge()` regarding nulls.
+* Implement `sort()` for array states.
