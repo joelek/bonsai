@@ -17,11 +17,12 @@ exports.pathify = pathify;
 ;
 function getUrlFromRoute(route) {
     let path = route.paths.map((path) => encodeURIComponent(path)).join("/");
-    let query = "";
+    let parts = [];
     for (let parameter of route.parameters) {
-        query += `${encodeURIComponent(parameter.key)}=${encodeURIComponent(parameter.value)}`;
+        parts.push(`${encodeURIComponent(parameter.key)}=${encodeURIComponent(parameter.value)}`);
     }
-    let url = (query !== "") ? `${path}?${query}` : path;
+    let search = parts.length === 0 ? "" : "?" + parts.join("&");
+    let url = path + search;
     return url;
 }
 exports.getUrlFromRoute = getUrlFromRoute;
@@ -68,17 +69,20 @@ function getInitialRoute() {
     let location = window.location;
     let paths = getInitialPaths(location.pathname, getBaseHref());
     let parameters = [];
-    for (let one in location.search.split("&")) {
-        let two = one.split("=");
-        if (two.length !== 2) {
-            continue;
+    let search = location.search;
+    if (search.startsWith("?")) {
+        for (let one in search.slice(1).split("&")) {
+            let two = one.split("=");
+            if (two.length !== 2) {
+                continue;
+            }
+            let key = decodeURIComponent(two[0]);
+            let value = decodeURIComponent(two[1]);
+            parameters.push({
+                key,
+                value
+            });
         }
-        let key = decodeURIComponent(two[0]);
-        let value = decodeURIComponent(two[1]);
-        parameters.push({
-            key,
-            value
-        });
     }
     return {
         paths,
