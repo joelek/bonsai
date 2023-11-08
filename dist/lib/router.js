@@ -71,7 +71,7 @@ function getInitialRoute() {
     let parameters = [];
     let search = location.search;
     if (search.startsWith("?")) {
-        for (let one in search.slice(1).split("&")) {
+        for (let one of search.slice(1).split("&")) {
             let two = one.split("=");
             if (two.length !== 2) {
                 continue;
