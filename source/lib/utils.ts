@@ -16,6 +16,7 @@ export function getOrderedIndex<A>(array: Array<A>, collator: (value: A) => numb
 	};
 	return recursive(0, array.length);
 };
+
 type IterableWeakMapEntry<A extends object, B> = {
 	keyref: WeakRef<A>;
 	value: B;
@@ -44,7 +45,9 @@ export class IterableWeakMap<A extends object, B> implements Map<A, B> {
 		return this.current_size;
 	}
 
-	[Symbol.toStringTag]: "IterableWeakMap";
+	get [Symbol.toStringTag](): string {
+		return "IterableWeakMap";
+	}
 
 	[Symbol.iterator](): IterableIterator<[A, B]> {
 		return this.entries();
@@ -168,7 +171,9 @@ export class IterableWeakSet<A extends object> implements Set<A> {
 		return this.current_size;
 	}
 
-	[Symbol.toStringTag]: "IterableWeakSet";
+	get [Symbol.toStringTag](): string {
+		return "IterableWeakSet";
+	}
 
 	[Symbol.iterator](): IterableIterator<A> {
 		return this.values();
