@@ -140,9 +140,18 @@ export class IterableWeakMap<A extends object, B> implements Map<A, B> {
 		}
 		return this;
 	}
+
+	static IS_SUPPORTED = typeof WeakRef === "function" && typeof FinalizationRegistry === "function" && typeof WeakMap === "function";
+
+	static create<A extends object, B>(iterable?: Iterable<[A, B]>): Map<A, B> {
+		if (this.IS_SUPPORTED) {
+			return new IterableWeakMap(iterable);
+		} else {
+			// Default to using a regular map with potential memory leaks since polyfilling is technically impossible.
+			return new Map(iterable);
+		}
+	};
 };
-
-
 
 type IterableWeakSetEntry<A extends object> = {
 	keyref: WeakRef<A>;
@@ -253,4 +262,15 @@ export class IterableWeakSet<A extends object> implements Set<A> {
 	has(key: A): boolean {
 		return this.map.has(key);
 	}
+
+	static IS_SUPPORTED = typeof WeakRef === "function" && typeof FinalizationRegistry === "function" && typeof WeakMap === "function";
+
+	static create<A extends object>(iterable?: Iterable<A>): Set<A> {
+		if (this.IS_SUPPORTED) {
+			return new IterableWeakSet(iterable);
+		} else {
+			// Default to using a regular set with potential memory leaks since polyfilling is technically impossible.
+			return new Set(iterable);
+		}
+	};
 };
