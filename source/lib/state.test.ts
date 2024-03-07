@@ -535,12 +535,27 @@ wtf.test(`Array states should have spread functionality.`, (assert) => {
 	assert.equals(spread[1] === state[1], true);
 });
 
+wtf.test(`Array states should have the same property descriptors as their value counterparts.`, (assert) => {
+	let value = ["a", "b"];
+	let state = make_state(value);
+	assert.equals(Object.getOwnPropertyNames(state), Object.getOwnPropertyNames(value));
+	// The length property is shadowed by the length() method on the ArrayState prototype.
+	assert.equals([...Object.keys(Object.getOwnPropertyDescriptors(state)), "length"], Object.keys(Object.getOwnPropertyDescriptors(value)));
+});
+
 wtf.test(`Object states should have spread functionality.`, (assert) => {
 	let state = make_state({ one: "a", two: "b" });
 	let spread = { ...state };
 	assert.equals(Object.getOwnPropertyNames(spread), ["one", "two"]);
 	assert.equals(spread.one === state.one, true);
 	assert.equals(spread.two === state.two, true);
+});
+
+wtf.test(`Object states should have the same property descriptors as their value counterparts.`, (assert) => {
+	let value = { one: "a", two: "b" };
+	let state = make_state(value);
+	assert.equals(Object.getOwnPropertyNames(state), Object.getOwnPropertyNames(value));
+	assert.equals(Object.keys(Object.getOwnPropertyDescriptors(state)), Object.keys(Object.getOwnPropertyDescriptors(value)));
 });
 
 wtf.test(`Primitive states should have spread functionality.`, (assert) => {
