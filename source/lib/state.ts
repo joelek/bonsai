@@ -139,7 +139,12 @@ export abstract class AbstractState<A extends Value, B extends TupleRecord<B> & 
 			this.observers[type] = observers = [];
 		}
 		observers.push(observer);
+		let cancelled = false;
 		return () => {
+			if (cancelled) {
+				return;
+			}
+			cancelled = true;
 			this.unobserve(type, observer);
 		};
 	}
