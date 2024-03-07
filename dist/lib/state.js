@@ -2,8 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.flatten = exports.merge = exports.fallback = exports.squash = exports.valueify = exports.stateify = exports.computed = exports.make_state = exports.make_reference_state = exports.make_object_state = exports.make_array_state = exports.make_primitive_state = exports.ObjectStateImplementation = exports.ObjectState = exports.ArrayStateImplementation = exports.ArrayState = exports.ReferenceStateImplementation = exports.ReferenceState = exports.PrimitiveStateImplementation = exports.PrimitiveState = exports.AbstractState = void 0;
 const utils_1 = require("./utils");
+const REGISTRY = typeof FinalizationRegistry === "function" ? new FinalizationRegistry((subscription) => subscription()) : undefined;
 class AbstractState {
     observers;
+    subscriptions;
     notify(type, ...args) {
         let observers = this.observers[type];
         if (observers == null) {
@@ -15,8 +17,23 @@ class AbstractState {
             observers[index](...args);
         }
     }
+    observe_weakly(type, callback) {
+        if (typeof WeakRef === "function") {
+            let callback_reference = new WeakRef(callback);
+            return this.observe(type, (...args) => {
+                let callback = callback_reference.deref();
+                if (callback != null) {
+                    callback(...args);
+                }
+            });
+        }
+        else {
+            return this.observe(type, callback);
+        }
+    }
     constructor() {
         this.observers = {};
+        this.subscriptions = [];
     }
     compute(computer) {
         let computed = make_state(computer(this.value()));
@@ -25,14 +42,45 @@ class AbstractState {
         });
         return computed;
     }
+    derive(deriver) {
+        let derived = make_state(deriver(this.value()));
+        derived.subscribe(this, "update", (state) => {
+            derived.update(deriver(state.value()));
+        });
+        return derived;
+    }
     observe(type, observer) {
         let observers = this.observers[type];
         if (observers == null) {
             this.observers[type] = observers = [];
         }
         observers.push(observer);
+        let cancelled = false;
         return () => {
+            if (cancelled) {
+                return;
+            }
+            cancelled = true;
             this.unobserve(type, observer);
+        };
+    }
+    subscribe(target, type, callback) {
+        let observer = target.observe_weakly(type, callback);
+        REGISTRY?.register(this, observer);
+        let subscriptions = this.subscriptions;
+        subscriptions.push(callback);
+        let cancelled = false;
+        return () => {
+            if (cancelled) {
+                return;
+            }
+            cancelled = true;
+            observer();
+            let index = subscriptions.lastIndexOf(callback);
+            if (index < 0) {
+                return;
+            }
+            subscriptions.splice(index, 1);
         };
     }
     unobserve(type, observer) {
@@ -63,6 +111,26 @@ exports.PrimitiveState = PrimitiveState;
 ;
 // Implement the abstract methods in secret in order for TypeScript not to handle them as if they were own properties.
 class PrimitiveStateImplementation extends PrimitiveState {
+    shadow() {
+        let subject = this;
+        let controller;
+        let shadow = make_state(subject.value());
+        shadow.subscribe(subject, "update", (subject) => {
+            if (controller !== "shadow") {
+                controller = "subject";
+                shadow.update(subject.value());
+                controller = undefined;
+            }
+        });
+        shadow.observe("update", (shadow) => {
+            if (controller !== "subject") {
+                controller = "shadow";
+                subject.update(shadow.value());
+                controller = undefined;
+            }
+        });
+        return shadow;
+    }
     update(value) {
         let updated = false;
         if (value !== this.lastValue) {
@@ -91,6 +159,26 @@ exports.ReferenceState = ReferenceState;
 ;
 // Implement the abstract methods in secret in order for TypeScript not to handle them as if they were own properties.
 class ReferenceStateImplementation extends ReferenceState {
+    shadow() {
+        let subject = this;
+        let controller;
+        let shadow = make_state(subject.value());
+        shadow.subscribe(subject, "update", (subject) => {
+            if (controller !== "shadow") {
+                controller = "subject";
+                shadow.update(subject.value());
+                controller = undefined;
+            }
+        });
+        shadow.observe("update", (shadow) => {
+            if (controller !== "subject") {
+                controller = "shadow";
+                subject.update(shadow.value());
+                controller = undefined;
+            }
+        });
+        return shadow;
+    }
     update(value) {
         let updated = false;
         if (value !== this.lastValue) {
@@ -362,6 +450,57 @@ exports.ArrayState = ArrayState;
 ;
 // Implement the abstract methods in secret in order for TypeScript not to handle them as if they were own properties.
 class ArrayStateImplementation extends ArrayState {
+    shadow() {
+        let subject = this;
+        let controller;
+        let shadow = make_state([]);
+        for (let element of subject.elements) {
+            shadow.append(element.shadow());
+        }
+        shadow.subscribe(subject, "insert", (element, index) => {
+            if (controller !== "shadow") {
+                controller = "subject";
+                shadow.insert(index, element.shadow());
+                controller = undefined;
+            }
+        });
+        shadow.subscribe(subject, "remove", (element, index) => {
+            if (controller !== "shadow") {
+                controller = "subject";
+                shadow.remove(index);
+                controller = undefined;
+            }
+        });
+        shadow.subscribe(subject, "update", (subject) => {
+            if (controller !== "shadow") {
+                controller = "subject";
+                shadow.update(subject.value());
+                controller = undefined;
+            }
+        });
+        shadow.observe("insert", (element, index) => {
+            if (controller !== "subject") {
+                controller = "shadow";
+                subject.insert(index, element.shadow());
+                controller = undefined;
+            }
+        });
+        shadow.observe("remove", (element, index) => {
+            if (controller !== "subject") {
+                controller = "shadow";
+                subject.remove(index);
+                controller = undefined;
+            }
+        });
+        shadow.observe("update", (shadow) => {
+            if (controller !== "subject") {
+                controller = "shadow";
+                subject.update(shadow.value());
+                controller = undefined;
+            }
+        });
+        return shadow;
+    }
     update(value) {
         let updated = false;
         this.operate(() => {
@@ -506,6 +645,58 @@ exports.ObjectState = ObjectState;
 ;
 // Implement the abstract methods in secret in order for TypeScript not to handle them as if they were own properties.
 class ObjectStateImplementation extends ObjectState {
+    shadow() {
+        let subject = this;
+        let controller;
+        let shadow = make_state({});
+        for (let key in subject.members) {
+            let member = subject.members[key];
+            shadow.insert(key, member.shadow());
+        }
+        shadow.subscribe(subject, "insert", (member, key) => {
+            if (controller !== "shadow") {
+                controller = "subject";
+                shadow.insert(key, member.shadow());
+                controller = undefined;
+            }
+        });
+        shadow.subscribe(subject, "remove", (member, key) => {
+            if (controller !== "shadow") {
+                controller = "subject";
+                shadow.remove(key);
+                controller = undefined;
+            }
+        });
+        shadow.subscribe(subject, "update", (subject) => {
+            if (controller !== "shadow") {
+                controller = "subject";
+                shadow.update(subject.value());
+                controller = undefined;
+            }
+        });
+        shadow.observe("insert", (member, key) => {
+            if (controller !== "subject") {
+                controller = "shadow";
+                subject.insert(key, member.shadow());
+                controller = undefined;
+            }
+        });
+        shadow.observe("remove", (member, key) => {
+            if (controller !== "subject") {
+                controller = "shadow";
+                subject.remove(key);
+                controller = undefined;
+            }
+        });
+        shadow.observe("update", (shadow) => {
+            if (controller !== "subject") {
+                controller = "shadow";
+                subject.update(shadow.value());
+                controller = undefined;
+            }
+        });
+        return shadow;
+    }
     update(value) {
         let updated = false;
         this.operate(() => {

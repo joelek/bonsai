@@ -43,7 +43,9 @@ class IterableWeakMap {
     get size() {
         return this.current_size;
     }
-    [Symbol.toStringTag];
+    get [Symbol.toStringTag]() {
+        return "IterableWeakMap";
+    }
     [Symbol.iterator]() {
         return this.entries();
     }
@@ -128,6 +130,17 @@ class IterableWeakMap {
         }
         return this;
     }
+    static IS_SUPPORTED = typeof WeakRef === "function" && typeof FinalizationRegistry === "function" && typeof WeakMap === "function";
+    static create(iterable) {
+        if (this.IS_SUPPORTED) {
+            return new IterableWeakMap(iterable);
+        }
+        else {
+            // Default to using a regular map with potential memory leaks since polyfilling is technically impossible.
+            return new Map(iterable);
+        }
+    }
+    ;
 }
 exports.IterableWeakMap = IterableWeakMap;
 ;
@@ -151,7 +164,9 @@ class IterableWeakSet {
     get size() {
         return this.current_size;
     }
-    [Symbol.toStringTag];
+    get [Symbol.toStringTag]() {
+        return "IterableWeakSet";
+    }
     [Symbol.iterator]() {
         return this.values();
     }
@@ -223,6 +238,17 @@ class IterableWeakSet {
     has(key) {
         return this.map.has(key);
     }
+    static IS_SUPPORTED = typeof WeakRef === "function" && typeof FinalizationRegistry === "function" && typeof WeakMap === "function";
+    static create(iterable) {
+        if (this.IS_SUPPORTED) {
+            return new IterableWeakSet(iterable);
+        }
+        else {
+            // Default to using a regular set with potential memory leaks since polyfilling is technically impossible.
+            return new Set(iterable);
+        }
+    }
+    ;
 }
 exports.IterableWeakSet = IterableWeakSet;
 ;

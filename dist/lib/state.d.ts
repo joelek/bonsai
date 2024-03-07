@@ -31,8 +31,11 @@ export type StateMapper<A extends Value, B extends Value> = (state: State<A>, in
 export type ValueMapper<A extends Value, B extends Value> = (value: A, index: number) => B;
 export type Predicate<A extends Value> = (state: State<A>, index: State<number>) => State<boolean>;
 export type Observer<A extends any[]> = (...args: A) => void;
+export type Callback<A extends any[]> = (...args: A) => void;
 export type Computer<A extends Value, B extends Value> = (value: A) => B;
+export type Deriver<A extends Value, B extends Value> = (value: A) => B;
 export type CancellationToken = () => void;
+export type Subscription = () => void;
 export type State<A extends Value> = AbstractState<A, AbstractStateEvents<A>> & (A extends PrimitiveValue ? PrimitiveState<A> : A extends ReadonlyArray<infer B extends Value> | Array<infer B extends Value> ? ElementStates<A> & ArrayState<B> : A extends RecordValue ? MemberStates<A> & ObjectState<A> : A extends ReferenceValue ? ReferenceState<A> : never);
 export type StateTupleFromValueTuple<A extends Value[]> = {
     [B in keyof A]: State<A[B]>;
@@ -52,11 +55,16 @@ export declare abstract class AbstractState<A extends Value, B extends TupleReco
     protected observers: {
         [C in keyof B]?: Array<Observer<any>>;
     };
+    protected subscriptions: Array<Callback<any>>;
     protected notify<C extends keyof B>(type: C, ...args: [...B[C]]): void;
+    protected observe_weakly<C extends keyof B>(type: C, callback: Callback<B[C]>): CancellationToken;
     constructor();
     compute<C extends Value>(computer: Computer<A, C>): State<C>;
+    derive<C extends Value>(deriver: Deriver<A, C>): State<C>;
     observe<C extends keyof B>(type: C, observer: Observer<B[C]>): CancellationToken;
+    subscribe<A extends Value, B extends TupleRecord<B> & AbstractStateEvents<A>, C extends keyof B>(target: AbstractState<A, B>, type: C, callback: Callback<B[C]>): Subscription;
     unobserve<C extends keyof B>(type: C, observer: Observer<B[C]>): void;
+    abstract shadow(): State<A>;
     abstract update(value: A): boolean;
     abstract value(): A;
 }
@@ -66,6 +74,7 @@ export declare abstract class PrimitiveState<A extends PrimitiveValue> extends A
     constructor(lastValue: A);
 }
 export declare class PrimitiveStateImplementation<A extends PrimitiveValue> extends PrimitiveState<A> {
+    shadow(): State<A>;
     update(value: A): boolean;
     value(): A;
 }
@@ -75,6 +84,7 @@ export declare abstract class ReferenceState<A extends ReferenceValue> extends A
     constructor(lastValue: A);
 }
 export declare class ReferenceStateImplementation<A extends ReferenceValue> extends ReferenceState<A> {
+    shadow(): State<A>;
     update(value: A): boolean;
     value(): A;
 }
@@ -111,6 +121,7 @@ export declare abstract class ArrayState<A extends Value> extends AbstractState<
     vacate(): boolean;
 }
 export declare class ArrayStateImplementation<A extends Value> extends ArrayState<A> {
+    shadow(): State<Array<A>>;
     update(value: Array<A>): boolean;
     value(): Array<A>;
 }
@@ -136,6 +147,7 @@ export declare abstract class ObjectState<A extends RecordValue> extends Abstrac
     spread(): MemberStates<A>;
 }
 export declare class ObjectStateImplementation<A extends RecordValue> extends ObjectState<A> {
+    shadow(): State<A>;
     update(value: A): boolean;
     value(): A;
 }
