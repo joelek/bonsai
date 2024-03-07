@@ -44,9 +44,13 @@ export type Predicate<A extends Value> = (state: State<A>, index: State<number>)
 
 export type Observer<A extends any[]> = (...args: A) => void;
 
+export type Callback<A extends any[]> = (...args: A) => void;
+
 export type Computer<A extends Value, B extends Value> = (value: A) => B;
 
 export type CancellationToken = () => void;
+
+export type Subscription = () => void;
 
 export type State<A extends Value> = AbstractState<A, AbstractStateEvents<A>> & (
 	A extends PrimitiveValue ? PrimitiveState<A> :
@@ -74,8 +78,11 @@ export type AbstractStateEvents<A extends Value> = {
 	];
 };
 
+const REGISTRY = typeof FinalizationRegistry === "function" ? new FinalizationRegistry<CancellationToken>((subscription) => subscription()) : undefined;
+
 export abstract class AbstractState<A extends Value, B extends TupleRecord<B> & AbstractStateEvents<A>> {
 	protected observers: { [C in keyof B]?: Array<Observer<any>> };
+	protected subscriptions: Array<Callback<any>>;
 
 	protected notify<C extends keyof B>(type: C, ...args: [...B[C]]): void {
 		let observers = this.observers[type];
@@ -89,8 +96,23 @@ export abstract class AbstractState<A extends Value, B extends TupleRecord<B> & 
 		}
 	}
 
+	protected observe_weakly<C extends keyof B>(type: C, callback: Callback<B[C]>): CancellationToken {
+		if (typeof WeakRef === "function") {
+			let callback_reference = new WeakRef(callback);
+			return this.observe(type, (...args) => {
+				let callback = callback_reference.deref();
+				if (callback != null) {
+					callback(...args);
+				}
+			});
+		} else {
+			return this.observe(type, callback);
+		}
+	}
+
 	constructor() {
 		this.observers = {};
+		this.subscriptions = [];
 	}
 
 	compute<C extends Value>(computer: Computer<A, C>): State<C> {
@@ -109,6 +131,26 @@ export abstract class AbstractState<A extends Value, B extends TupleRecord<B> & 
 		observers.push(observer);
 		return () => {
 			this.unobserve(type, observer);
+		};
+	}
+
+	subscribe<A extends Value, B extends TupleRecord<B> & AbstractStateEvents<A>, C extends keyof B>(target: AbstractState<A, B>, type: C, callback: Callback<B[C]>): Subscription {
+		let observer = target.observe_weakly(type, callback);
+		REGISTRY?.register(this, observer);
+		let subscriptions = this.subscriptions;
+		subscriptions.push(callback);
+		let cancelled = false;
+		return () => {
+			if (cancelled) {
+				return;
+			}
+			cancelled = true;
+			observer();
+			let index = subscriptions.lastIndexOf(callback);
+			if (index < 0) {
+				return;
+			}
+			subscriptions.splice(index, 1);
 		};
 	}
 
