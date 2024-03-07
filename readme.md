@@ -705,9 +705,16 @@ NB: This project targets TypeScript 4 in strict mode.
 * Improve life-cycle management of elements.
 * Implement getter and mapped setter for `augment()`.
 * Investigate usability of a promise to state shim.
+* Implement scroll state restoration for router elements.
+* Separate history management from routing.
 * Investigate value caching.
 * Rename `value()` to `serialize()` if not implementing value caching.
 * Decide on behaviour for `merge()` regarding nulls.
+* Consider removing proxies and index signatures.
+* Fix issue with states retrieved through `element()` or `member()` only being updated through `update` events.
+* Document behaviour of applying spread operator to proxy-wrapped states compare to states.
 * Implement `sort()` for array states.
+* Fix issue with the `length` property being shadowed by the `length()` method on the ArrayState prototype.
 * Investigate issue with `filter()` for array states.
+* Investigate possibility of re-using index states for array states.
 * Investigate issue with computing state from array state length involving array items.
