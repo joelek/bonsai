@@ -911,7 +911,7 @@ export function squash<A extends RecordValue>(records: State<Array<A>>): State<A
 	function attach_member(index: number, member: State<Value>, key: string): void {
 		let array = arrays.get(key);
 		if (array == null) {
-			array = make_state(new Array(records.length().value()).fill(absent));
+			array = make_state(new Array<Value | symbol>(records.length().value()).fill(absent));
 			arrays.set(key, array);
 			squashed.insert(key, array.compute((values) => {
 				for (let value of values.reverse()) {
@@ -927,7 +927,7 @@ export function squash<A extends RecordValue>(records: State<Array<A>>): State<A
 	function detach_member(index: number, member: State<Value>, key: string): void {
 		let array = arrays.get(key);
 		if (array == null) {
-			array = make_state(new Array(records.length().value()).fill(absent));
+			array = make_state(new Array<Value | symbol>(records.length().value()).fill(absent));
 			arrays.set(key, array);
 		}
 		array.remove(index);
