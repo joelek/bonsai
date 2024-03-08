@@ -1,7 +1,20 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.flatten = exports.merge = exports.fallback = exports.squash = exports.valueify = exports.stateify = exports.computed = exports.make_state = exports.make_reference_state = exports.make_object_state = exports.make_array_state = exports.make_primitive_state = exports.ObjectStateImplementation = exports.ObjectState = exports.ArrayStateImplementation = exports.ArrayState = exports.ReferenceStateImplementation = exports.ReferenceState = exports.PrimitiveStateImplementation = exports.PrimitiveState = exports.AbstractState = void 0;
+exports.flatten = exports.merge = exports.fallback = exports.squash = exports.valueify = exports.stateify = exports.computed = exports.make_state = exports.make_reference_state = exports.make_object_state = exports.make_array_state = exports.make_primitive_state = exports.ObjectStateImplementation = exports.ObjectState = exports.ArrayStateImplementation = exports.ArrayState = exports.ReferenceStateImplementation = exports.ReferenceState = exports.PrimitiveStateImplementation = exports.PrimitiveState = exports.AbstractState = exports.Subscription = void 0;
 const utils_1 = require("./utils");
+exports.Subscription = {
+    create(is_cancelled, callback) {
+        let cancel = (() => {
+            if (is_cancelled.value()) {
+                return;
+            }
+            callback();
+            is_cancelled.update(true);
+        });
+        cancel.is_cancelled = is_cancelled;
+        return cancel;
+    }
+};
 const REGISTRY = typeof FinalizationRegistry === "function" ? new FinalizationRegistry((subscription) => subscription()) : undefined;
 class AbstractState {
     observers;
@@ -55,33 +68,23 @@ class AbstractState {
             this.observers[type] = observers = [];
         }
         observers.push(observer);
-        let cancelled = false;
-        return () => {
-            if (cancelled) {
-                return;
-            }
-            cancelled = true;
+        return exports.Subscription.create(make_state(false), () => {
             this.unobserve(type, observer);
-        };
+        });
     }
     subscribe(target, type, callback) {
         let observer = target.observe_weakly(type, callback);
         REGISTRY?.register(this, observer);
         let subscriptions = this.subscriptions;
         subscriptions.push(callback);
-        let cancelled = false;
-        return () => {
-            if (cancelled) {
-                return;
-            }
-            cancelled = true;
+        return exports.Subscription.create(observer.is_cancelled, () => {
             observer();
             let index = subscriptions.lastIndexOf(callback);
             if (index < 0) {
                 return;
             }
             subscriptions.splice(index, 1);
-        };
+        });
     }
     unobserve(type, observer) {
         let observers = this.observers[type];

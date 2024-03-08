@@ -34,8 +34,13 @@ export type Observer<A extends any[]> = (...args: A) => void;
 export type Callback<A extends any[]> = (...args: A) => void;
 export type Computer<A extends Value, B extends Value> = (value: A) => B;
 export type Deriver<A extends Value, B extends Value> = (value: A) => B;
-export type CancellationToken = () => void;
-export type Subscription = () => void;
+export type CancellationToken = Subscription;
+export type Subscription = (() => void) & {
+    is_cancelled: State<boolean>;
+};
+export declare const Subscription: {
+    create(is_cancelled: State<boolean>, callback: Callback<[]>): Subscription;
+};
 export type State<A extends Value> = AbstractState<A, AbstractStateEvents<A>> & (A extends PrimitiveValue ? PrimitiveState<A> : A extends ReadonlyArray<infer B extends Value> | Array<infer B extends Value> ? ElementStates<A> & ArrayState<B> : A extends RecordValue ? MemberStates<A> & ObjectState<A> : A extends ReferenceValue ? ReferenceState<A> : never);
 export type StateTupleFromValueTuple<A extends Value[]> = {
     [B in keyof A]: State<A[B]>;
