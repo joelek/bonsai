@@ -50,9 +50,25 @@ export type Computer<A extends Value, B extends Value> = (value: A) => B;
 
 export type Deriver<A extends Value, B extends Value> = (value: A) => B;
 
-export type CancellationToken = () => void;
+export type CancellationToken = Subscription;
 
-export type Subscription = () => void;
+export type Subscription = (() => void) & {
+	is_cancelled: State<boolean>;
+};
+
+export const Subscription = {
+	create(is_cancelled: State<boolean>, callback: Callback<[]>): Subscription {
+		let cancel = (() => {
+			if (is_cancelled.value()) {
+				return;
+			}
+			callback();
+			is_cancelled.update(true);
+		}) as Subscription;
+		cancel.is_cancelled = is_cancelled;
+		return cancel;
+	}
+};
 
 export type State<A extends Value> = AbstractState<A, AbstractStateEvents<A>> & (
 	A extends PrimitiveValue ? PrimitiveState<A> :
@@ -139,14 +155,9 @@ export abstract class AbstractState<A extends Value, B extends TupleRecord<B> & 
 			this.observers[type] = observers = [];
 		}
 		observers.push(observer);
-		let cancelled = false;
-		return () => {
-			if (cancelled) {
-				return;
-			}
-			cancelled = true;
+		return Subscription.create(make_state(false), () => {
 			this.unobserve(type, observer);
-		};
+		});
 	}
 
 	subscribe<A extends Value, B extends TupleRecord<B> & AbstractStateEvents<A>, C extends keyof B>(target: AbstractState<A, B>, type: C, callback: Callback<B[C]>): Subscription {
@@ -154,19 +165,14 @@ export abstract class AbstractState<A extends Value, B extends TupleRecord<B> & 
 		REGISTRY?.register(this, observer);
 		let subscriptions = this.subscriptions;
 		subscriptions.push(callback);
-		let cancelled = false;
-		return () => {
-			if (cancelled) {
-				return;
-			}
-			cancelled = true;
+		return Subscription.create(observer.is_cancelled, () => {
 			observer();
 			let index = subscriptions.lastIndexOf(callback);
 			if (index < 0) {
 				return;
 			}
 			subscriptions.splice(index, 1);
-		};
+		});
 	}
 
 	unobserve<C extends keyof B>(type: C, observer: Observer<B[C]>): void {
