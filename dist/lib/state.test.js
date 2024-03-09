@@ -2121,3 +2121,229 @@ wtf.test(`Record states should emit remove events when set to undefined.`, (asse
         }
     ]);
 });
+wtf.test(`Primitive shadow states should synchronize with their source states.`, (assert) => {
+    let source = (0, state_1.make_state)(false);
+    let shadow = source.shadow();
+    shadow.update(true);
+    assert.equals(source.value(), true);
+    source.update(false);
+    assert.equals(shadow.value(), false);
+});
+wtf.test(`Reference shadow states should synchronize with their source states.`, (assert) => {
+    let one = {};
+    let two = {};
+    let source = (0, state_1.make_state)(one);
+    let shadow = source.shadow();
+    shadow.update(two);
+    assert.equals(source.value(), two);
+    source.update(one);
+    assert.equals(shadow.value(), one);
+});
+wtf.test(`Primitive shadow states should synchronize with their source states using the correct events.`, (assert) => {
+    let events = [];
+    let one = false;
+    let two = true;
+    let source = (0, state_1.make_state)(one);
+    source.observe("update", (source) => {
+        events.push({
+            target: "source",
+            type: "update",
+            value: source.value()
+        });
+    });
+    let shadow = source.shadow();
+    shadow.observe("update", (shadow) => {
+        events.push({
+            target: "shadow",
+            type: "update",
+            value: shadow.value()
+        });
+    });
+    shadow.update(two);
+    source.update(one);
+    assert.equals(events, [
+        { target: "source", type: "update", value: two },
+        { target: "shadow", type: "update", value: two },
+        { target: "source", type: "update", value: one },
+        { target: "shadow", type: "update", value: one }
+    ]);
+});
+wtf.test(`Reference shadow states should synchronize with their source states using the correct events.`, (assert) => {
+    let events = [];
+    let one = () => { };
+    let two = () => { };
+    let source = (0, state_1.make_state)(one);
+    source.observe("update", (source) => {
+        events.push({
+            target: "source",
+            type: "update",
+            value: source.value()
+        });
+    });
+    let shadow = source.shadow();
+    shadow.observe("update", (shadow) => {
+        events.push({
+            target: "shadow",
+            type: "update",
+            value: shadow.value()
+        });
+    });
+    shadow.update(two);
+    source.update(one);
+    assert.equals(events.map(({ target, type }) => ({ target, type })), [
+        { target: "source", type: "update" },
+        { target: "shadow", type: "update" },
+        { target: "source", type: "update" },
+        { target: "shadow", type: "update" }
+    ]);
+    assert.equals(events[0].value === two, true);
+    assert.equals(events[1].value === two, true);
+    assert.equals(events[2].value === one, true);
+    assert.equals(events[3].value === one, true);
+});
+wtf.test(`Array shadow states should synchronize with their source states using the correct events.`, (assert) => {
+    let events = [];
+    let source = (0, state_1.make_state)([]);
+    source.observe("insert", (element, index) => {
+        events.push({
+            target: "source",
+            type: "insert",
+            element: element.value(),
+            index: index
+        });
+    });
+    source.observe("remove", (element, index) => {
+        events.push({
+            target: "source",
+            type: "remove",
+            element: element.value(),
+            index: index
+        });
+    });
+    source.observe("update", (source) => {
+        events.push({
+            target: "source",
+            type: "update",
+            value: source.value()
+        });
+    });
+    let shadow = source.shadow();
+    shadow.observe("insert", (element, index) => {
+        events.push({
+            target: "shadow",
+            type: "insert",
+            element: element.value(),
+            index: index
+        });
+    });
+    shadow.observe("remove", (element, index) => {
+        events.push({
+            target: "shadow",
+            type: "remove",
+            element: element.value(),
+            index: index
+        });
+    });
+    shadow.observe("update", (shadow) => {
+        events.push({
+            target: "shadow",
+            type: "update",
+            value: source.value()
+        });
+    });
+    shadow.insert(0, "a");
+    source.insert(0, "b");
+    shadow.remove(0);
+    source.remove(0);
+    assert.equals(events, [
+        { target: "source", type: "insert", element: "a", index: 0 },
+        { target: "source", type: "update", value: ["a"] },
+        { target: "shadow", type: "insert", element: "a", index: 0 },
+        { target: "shadow", type: "update", value: ["a"] },
+        { target: "source", type: "insert", element: "b", index: 0 },
+        { target: "shadow", type: "insert", element: "b", index: 0 },
+        { target: "shadow", type: "update", value: ["b", "a"] },
+        { target: "source", type: "update", value: ["b", "a"] },
+        { target: "source", type: "remove", element: "b", index: 0 },
+        { target: "source", type: "update", value: ["a"] },
+        { target: "shadow", type: "remove", element: "b", index: 0 },
+        { target: "shadow", type: "update", value: ["a"] },
+        { target: "source", type: "remove", element: "a", index: 0 },
+        { target: "shadow", type: "remove", element: "a", index: 0 },
+        { target: "shadow", type: "update", value: [] },
+        { target: "source", type: "update", value: [] }
+    ]);
+});
+wtf.test(`Record shadow states should synchronize with their source states using the correct events.`, (assert) => {
+    let events = [];
+    let source = (0, state_1.make_state)({});
+    source.observe("insert", (element, key) => {
+        events.push({
+            target: "source",
+            type: "insert",
+            element: element.value(),
+            key: key
+        });
+    });
+    source.observe("remove", (element, key) => {
+        events.push({
+            target: "source",
+            type: "remove",
+            element: element.value(),
+            key: key
+        });
+    });
+    source.observe("update", (source) => {
+        events.push({
+            target: "source",
+            type: "update",
+            value: source.value()
+        });
+    });
+    let shadow = source.shadow();
+    shadow.observe("insert", (element, key) => {
+        events.push({
+            target: "shadow",
+            type: "insert",
+            element: element.value(),
+            key: key
+        });
+    });
+    shadow.observe("remove", (element, key) => {
+        events.push({
+            target: "shadow",
+            type: "remove",
+            element: element.value(),
+            key: key
+        });
+    });
+    shadow.observe("update", (shadow) => {
+        events.push({
+            target: "shadow",
+            type: "update",
+            value: source.value()
+        });
+    });
+    shadow.insert("one", "a");
+    source.insert("two", "b");
+    shadow.remove("one");
+    source.remove("two");
+    assert.equals(events, [
+        { target: "source", type: "insert", element: "a", key: "one" },
+        { target: "source", type: "update", value: { one: "a" } },
+        { target: "shadow", type: "insert", element: "a", key: "one" },
+        { target: "shadow", type: "update", value: { one: "a" } },
+        { target: "source", type: "insert", element: "b", key: "two" },
+        { target: "shadow", type: "insert", element: "b", key: "two" },
+        { target: "shadow", type: "update", value: { one: "a", two: "b" } },
+        { target: "source", type: "update", value: { one: "a", two: "b" } },
+        { target: "source", type: "remove", element: "a", key: "one" },
+        { target: "source", type: "update", value: { two: "b" } },
+        { target: "shadow", type: "remove", element: "a", key: "one" },
+        { target: "shadow", type: "update", value: { two: "b" } },
+        { target: "source", type: "remove", element: "b", key: "two" },
+        { target: "shadow", type: "remove", element: "b", key: "two" },
+        { target: "shadow", type: "update", value: {} },
+        { target: "source", type: "update", value: {} }
+    ]);
+});
