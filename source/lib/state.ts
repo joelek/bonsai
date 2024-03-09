@@ -211,20 +211,20 @@ export abstract class PrimitiveState<A extends PrimitiveValue> extends AbstractS
 // Implement the abstract methods in secret in order for TypeScript not to handle them as if they were own properties.
 export class PrimitiveStateImplementation<A extends PrimitiveValue> extends PrimitiveState<A> {
 	shadow(): State<A> {
-		let subject = this;
-		let controller: "subject" | "shadow" | undefined;
-		let shadow = make_state(subject.value());
-		shadow.subscribe(subject, "update", (subject) => {
+		let source = this;
+		let controller: "source" | "shadow" | undefined;
+		let shadow = make_state(source.value());
+		shadow.subscribe(source, "update", (source) => {
 			if (controller !== "shadow") {
-				controller = "subject";
-				shadow.update(subject.value());
+				controller = "source";
+				shadow.update(source.value());
 				controller = undefined;
 			}
 		});
 		shadow.observe("update", (shadow) => {
-			if (controller !== "subject") {
+			if (controller !== "source") {
 				controller = "shadow";
-				subject.update(shadow.value());
+				source.update(shadow.value());
 				controller = undefined;
 			}
 		});
@@ -264,20 +264,20 @@ export abstract class ReferenceState<A extends ReferenceValue> extends AbstractS
 // Implement the abstract methods in secret in order for TypeScript not to handle them as if they were own properties.
 export class ReferenceStateImplementation<A extends ReferenceValue> extends ReferenceState<A> {
 	shadow(): State<A> {
-		let subject = this;
-		let controller: "subject" | "shadow" | undefined;
-		let shadow = make_state(subject.value());
-		shadow.subscribe(subject, "update", (subject) => {
+		let source = this;
+		let controller: "source" | "shadow" | undefined;
+		let shadow = make_state(source.value());
+		shadow.subscribe(source, "update", (source) => {
 			if (controller !== "shadow") {
-				controller = "subject";
-				shadow.update(subject.value());
+				controller = "source";
+				shadow.update(source.value());
 				controller = undefined;
 			}
 		});
 		shadow.observe("update", (shadow) => {
-			if (controller !== "subject") {
+			if (controller !== "source") {
 				controller = "shadow";
-				subject.update(shadow.value());
+				source.update(shadow.value());
 				controller = undefined;
 			}
 		});
@@ -578,51 +578,51 @@ export abstract class ArrayState<A extends Value> extends AbstractState<Array<A>
 // Implement the abstract methods in secret in order for TypeScript not to handle them as if they were own properties.
 export class ArrayStateImplementation<A extends Value> extends ArrayState<A> {
 	shadow(): State<Array<A>> {
-		let subject = this;
-		let controller: "subject" | "shadow" | undefined;
+		let source = this;
+		let controller: "source" | "shadow" | undefined;
 		let shadow = make_state([] as Array<A>);
-		for (let element of subject.elements) {
+		for (let element of source.elements) {
 			shadow.append(element.shadow());
 		}
-		shadow.subscribe(subject, "insert", (element, index) => {
+		shadow.subscribe(source, "insert", (element, index) => {
 			if (controller !== "shadow") {
-				controller = "subject";
+				controller = "source";
 				shadow.insert(index, element.shadow());
 				controller = undefined;
 			}
 		});
-		shadow.subscribe(subject, "remove", (element, index) => {
+		shadow.subscribe(source, "remove", (element, index) => {
 			if (controller !== "shadow") {
-				controller = "subject";
+				controller = "source";
 				shadow.remove(index);
 				controller = undefined;
 			}
 		});
-		shadow.subscribe(subject, "update", (subject) => {
+		shadow.subscribe(source, "update", (source) => {
 			if (controller !== "shadow") {
-				controller = "subject";
-				shadow.update(subject.value());
+				controller = "source";
+				shadow.update(source.value());
 				controller = undefined;
 			}
 		});
 		shadow.observe("insert", (element, index) => {
-			if (controller !== "subject") {
+			if (controller !== "source") {
 				controller = "shadow";
-				subject.insert(index, element.shadow());
+				source.insert(index, element.shadow());
 				controller = undefined;
 			}
 		});
 		shadow.observe("remove", (element, index) => {
-			if (controller !== "subject") {
+			if (controller !== "source") {
 				controller = "shadow";
-				subject.remove(index);
+				source.remove(index);
 				controller = undefined;
 			}
 		});
 		shadow.observe("update", (shadow) => {
-			if (controller !== "subject") {
+			if (controller !== "source") {
 				controller = "shadow";
-				subject.update(shadow.value());
+				source.update(shadow.value());
 				controller = undefined;
 			}
 		});
@@ -786,52 +786,52 @@ export abstract class ObjectState<A extends RecordValue> extends AbstractState<A
 // Implement the abstract methods in secret in order for TypeScript not to handle them as if they were own properties.
 export class ObjectStateImplementation<A extends RecordValue> extends ObjectState<A> {
 	shadow(): State<A> {
-		let subject = this;
-		let controller: "subject" | "shadow" | undefined;
+		let source = this;
+		let controller: "source" | "shadow" | undefined;
 		let shadow = make_state({} as A);
-		for (let key in subject.members) {
-			let member = subject.members[key];
+		for (let key in source.members) {
+			let member = source.members[key];
 			shadow.insert(key as any, member.shadow() as any);
 		}
-		shadow.subscribe(subject as AbstractState<A, ObjectStateEvents<A>>, "insert", (member, key) => {
+		shadow.subscribe(source as AbstractState<A, ObjectStateEvents<A>>, "insert", (member, key) => {
 			if (controller !== "shadow") {
-				controller = "subject";
+				controller = "source";
 				shadow.insert(key as any, member.shadow());
 				controller = undefined;
 			}
 		});
-		shadow.subscribe(subject as AbstractState<A, ObjectStateEvents<A>>, "remove", (member, key) => {
+		shadow.subscribe(source as AbstractState<A, ObjectStateEvents<A>>, "remove", (member, key) => {
 			if (controller !== "shadow") {
-				controller = "subject";
+				controller = "source";
 				shadow.remove(key as any);
 				controller = undefined;
 			}
 		});
-		shadow.subscribe(subject as AbstractState<A, ObjectStateEvents<A>>, "update", (subject) => {
+		shadow.subscribe(source as AbstractState<A, ObjectStateEvents<A>>, "update", (source) => {
 			if (controller !== "shadow") {
-				controller = "subject";
-				shadow.update(subject.value());
+				controller = "source";
+				shadow.update(source.value());
 				controller = undefined;
 			}
 		});
 		shadow.observe("insert", (member, key) => {
-			if (controller !== "subject") {
+			if (controller !== "source") {
 				controller = "shadow";
-				subject.insert(key, member.shadow());
+				source.insert(key, member.shadow());
 				controller = undefined;
 			}
 		});
 		shadow.observe("remove", (member, key) => {
-			if (controller !== "subject") {
+			if (controller !== "source") {
 				controller = "shadow";
-				subject.remove(key);
+				source.remove(key);
 				controller = undefined;
 			}
 		});
 		shadow.observe("update", (shadow) => {
-			if (controller !== "subject") {
+			if (controller !== "source") {
 				controller = "shadow";
-				subject.update(shadow.value());
+				source.update(shadow.value());
 				controller = undefined;
 			}
 		});
