@@ -718,3 +718,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Investigate issue with `filter()` for array states.
 * Investigate possibility of re-using index states for array states.
 * Investigate issue with computing state from array state length involving array items.
+* Add option to limit the number of cached pages.
