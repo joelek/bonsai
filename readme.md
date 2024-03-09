@@ -525,12 +525,30 @@ State may be observed for events through the `observe(type, observer)` method. T
 * The `type` argument must be used to specify the event type to observe.
 * The `observer` argument must be used to specify the observer.
 
+Observations are stored together with the target and are active until explicitly cancelled.
+
+#### Subscribe
+
+States may subscribe to events being emitted by other states through the `subscribe(target, type, observer)` method. The method returns a subscription handler that may be used to cancel the subscription.
+
+* The `target` argument must be used to specify the target state.
+* The `type` argument must be used to specify the event type to subscribe to.
+* The `callback` argument must be used to specify the subscription callback.
+
+Subscriptions are stored together with the subscriber and are active as long as the subscriber is retained in memory or until explicitly cancelled. Subscriptions are automatically unsubscribed when the subscriber is garbage collected by a modern JavaScript runtime such as V8.
+
 #### Unobserve
 
 Observed state may be unobserved through the `unobserve(type, observer)` method.
 
 * The `type` argument must be used to specify the event type to unobserve.
 * The `observer` argument must be used to specify the observer.
+
+#### Shadow
+
+States may be used to create shadow states through the `shadow()` method. The method returns a shadow state that is bi-directionally differentially synced with the original state.
+
+Shadow state is implemented such that it may be garbage collected by the JavaScript runtime when no longer needed by the application. This process is automatic and can be used for instance to render global application state in disposable application views without causing memory leakage.
 
 #### Update
 
@@ -718,5 +736,3 @@ NB: This project targets TypeScript 4 in strict mode.
 * Investigate possibility of re-using index states for array states.
 * Investigate issue with computing state from array state length involving array items.
 * Add option to limit the number of cached pages.
-* Document shadow states.
-* Document subscriptions.
