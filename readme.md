@@ -702,7 +702,6 @@ NB: This project targets TypeScript 4 in strict mode.
 * Write more unit tests.
 * Serialize classes as "class".
 * Consider adding support for Promise<State<Value>>.
-* Improve life-cycle management of elements.
 * Implement getter and mapped setter for `augment()`.
 * Investigate usability of a promise to state shim.
 * Implement scroll state restoration for router elements.
@@ -719,3 +718,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Investigate possibility of re-using index states for array states.
 * Investigate issue with computing state from array state length involving array items.
 * Add option to limit the number of cached pages.
+* Document shadow states.
