@@ -33,7 +33,6 @@ export type Predicate<A extends Value> = (state: State<A>, index: State<number>)
 export type Observer<A extends any[]> = (...args: A) => void;
 export type Callback<A extends any[]> = (...args: A) => void;
 export type Computer<A extends Value, B extends Value> = (value: A) => B;
-export type Deriver<A extends Value, B extends Value> = (value: A) => B;
 export type CancellationToken = Subscription;
 export type Subscription = (() => void) & {
     is_cancelled: State<boolean>;
@@ -65,7 +64,6 @@ export declare abstract class AbstractState<A extends Value, B extends TupleReco
     protected observe_weakly<C extends keyof B>(type: C, callback: Callback<B[C]>): CancellationToken;
     constructor();
     compute<C extends Value>(computer: Computer<A, C>): State<C>;
-    derive<C extends Value>(deriver: Deriver<A, C>): State<C>;
     observe<C extends keyof B>(type: C, observer: Observer<B[C]>): CancellationToken;
     subscribe<A extends Value, B extends TupleRecord<B> & AbstractStateEvents<A>, C extends keyof B>(target: AbstractState<A, B>, type: C, callback: Callback<B[C]>): Subscription;
     unobserve<C extends keyof B>(type: C, observer: Observer<B[C]>): void;

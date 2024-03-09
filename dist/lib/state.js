@@ -55,13 +55,6 @@ class AbstractState {
         });
         return computed;
     }
-    derive(deriver) {
-        let derived = make_state(deriver(this.value()));
-        derived.subscribe(this, "update", (state) => {
-            derived.update(deriver(state.value()));
-        });
-        return derived;
-    }
     observe(type, observer) {
         let observers = this.observers[type];
         if (observers == null) {
