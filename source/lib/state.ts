@@ -48,8 +48,6 @@ export type Callback<A extends any[]> = (...args: A) => void;
 
 export type Computer<A extends Value, B extends Value> = (value: A) => B;
 
-export type Deriver<A extends Value, B extends Value> = (value: A) => B;
-
 export type CancellationToken = Subscription;
 
 export type Subscription = (() => void) & {
@@ -139,14 +137,6 @@ export abstract class AbstractState<A extends Value, B extends TupleRecord<B> & 
 			computed.update(computer(state.value()));
 		});
 		return computed;
-	}
-
-	derive<C extends Value>(deriver: Deriver<A, C>): State<C> {
-		let derived = make_state(deriver(this.value()));
-		derived.subscribe(this, "update", (state) => {
-			derived.update(deriver(state.value()));
-		});
-		return derived;
 	}
 
 	observe<C extends keyof B>(type: C, observer: Observer<B[C]>): CancellationToken {
