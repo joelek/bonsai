@@ -1819,6 +1819,15 @@ wtf.test(`Generic types should be handled properly.`, (assert) => {
     function test(array) {
         let element = array[0];
     }
+    function test2(generic) {
+        generic.generic;
+    }
+});
+wtf.test(`Classes should be stateified properly.`, (assert) => {
+    let state = (0, state_1.stateify)(undefined);
+});
+wtf.test(`Classes should be valueified properly.`, (assert) => {
+    let value = (0, state_1.valueify)(undefined);
 });
 wtf.test(`Objects with readonly members should be assigned and cast properly.`, (assert) => {
     let value = { a: "" };

@@ -1,5 +1,16 @@
 import * as wtf from "@joelek/wtf";
-import { Attribute, Attributes, merge, make_state, State, stateify, StateOrValue, valueify, Value, computed, fallback, flatten, squash } from "./state";
+import { Attribute, Attributes, merge, make_state, State, stateify, StateOrValue, valueify, Value, computed, fallback, flatten, squash, PrimitiveState } from "./state";
+
+wtf.test(`States should be contravariant.`, (assert) => {
+	function callable(state: PrimitiveState<string | undefined>): void {
+		state.update(undefined);
+	}
+	// @ts-expect-error
+ 	callable(stateify<string>("string") as PrimitiveState<string>);
+	// @ts-expect-error
+	callable(stateify<undefined>(undefined) as PrimitiveState<undefined>);
+	callable(stateify<string | undefined>(undefined) as PrimitiveState<string | undefined>);
+});
 
 wtf.test(`Computed should compute a new state from two string states.`, (assert) => {
 	let one = stateify("one" as string);
@@ -2054,6 +2065,20 @@ wtf.test(`Generic types should be handled properly.`, (assert) => {
 	function test<A extends Value>(array: State<Array<A>>): void {
 		let element: State<A> = array[0];
 	}
+	type Generic<A> = {
+		generic: A;
+	};
+	function test2<A extends Value>(generic: State<Generic<A>>): void {
+		generic.generic;
+	}
+});
+
+wtf.test(`Classes should be stateified properly.`, (assert) => {
+	let state: State<HTMLElement | undefined> = stateify<HTMLElement | undefined>(undefined);
+});
+
+wtf.test(`Classes should be valueified properly.`, (assert) => {
+	let value: HTMLElement | undefined = valueify<HTMLElement | undefined>(undefined);
 });
 
 wtf.test(`Objects with readonly members should be assigned and cast properly.`, (assert) => {

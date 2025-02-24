@@ -384,7 +384,7 @@ class ArrayState extends AbstractState {
         });
         return state;
     }
-    length() {
+    get length() {
         return this.currentLength;
     }
     mapStates(mapper) {
@@ -625,6 +625,7 @@ class ObjectState extends AbstractState {
         member.unobserve("update", this.onMemberUpdate);
         if (true) {
             this.operate(() => {
+                // @ts-ignore
                 this.notify("remove", member, key);
             });
         }
@@ -968,7 +969,7 @@ function squash(records) {
     function attach_member(index, member, key) {
         let array = arrays.get(key);
         if (array == null) {
-            array = make_state(new Array(records.length().value()).fill(absent));
+            array = make_state(new Array(records.length.value()).fill(absent));
             arrays.set(key, array);
             squashed.insert(key, array.compute((values) => {
                 for (let value of values.reverse()) {
@@ -984,7 +985,7 @@ function squash(records) {
     function detach_member(index, member, key) {
         let array = arrays.get(key);
         if (array == null) {
-            array = make_state(new Array(records.length().value()).fill(absent));
+            array = make_state(new Array(records.length.value()).fill(absent));
             arrays.set(key, array);
         }
         array.remove(index);
@@ -1075,7 +1076,7 @@ function flatten(states) {
         if (state instanceof ArrayState) {
             state = state;
             let flattened = flatten(state);
-            length = flattened.length().value();
+            length = flattened.length.value();
             for (let i = 0; i < length; i++) {
                 flattened_states.insert(offset + i, flattened.element(i));
             }
@@ -1099,7 +1100,6 @@ function flatten(states) {
             subscriptions_from_state.set(state, subscriptions);
         }
         else {
-            state = state;
             length = 1;
             flattened_states.insert(offset, state);
         }
@@ -1115,7 +1115,7 @@ function flatten(states) {
         let length = 0;
         if (state instanceof ArrayState) {
             state = state;
-            length = state.length().value();
+            length = state.length.value();
             for (let i = length - 1; i >= 0; i--) {
                 flattened_states.remove(offset + i);
             }
@@ -1126,7 +1126,6 @@ function flatten(states) {
             subscriptions_from_state.delete(state);
         }
         else {
-            state = state;
             length = 1;
             flattened_states.remove(offset);
         }
@@ -1137,7 +1136,7 @@ function flatten(states) {
         lengths.splice(index, 1);
     }
     ;
-    for (let i = 0; i < states.length().value(); i++) {
+    for (let i = 0; i < states.length.value(); i++) {
         insert(states.element(i), i);
     }
     states.observe("insert", (state, index) => {
