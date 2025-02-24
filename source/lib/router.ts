@@ -1,5 +1,5 @@
 import { Boolean, Integer, OptionCodec, Plain, Undefined, Union } from "./codecs";
-import { RecordValue, make_state, State, computed } from "./state";
+import { RecordValue, make_state, State, computed } from "./newstate";
 
 export type ExpansionOf<A> = A extends infer B ? { [C in keyof B]: B[C] } : never;
 
@@ -173,7 +173,7 @@ export class Router<A extends PageOptions<any> = {}> {
 			this.url.update(getUrlFromRoute(stateRoute));
 		});
 		stateIndex.compute((stateIndex) => {
-			for (let i = this.cache.length().value(); i <= stateIndex; i++) {
+			for (let i = this.cache.length.value(); i <= stateIndex; i++) {
 				this.cache.append({
 					title: this.documentTitle
 				});
@@ -216,7 +216,7 @@ export class Router<A extends PageOptions<any> = {}> {
 				if (entryElement.value() == null) {
 					let factory = this.factories.value()[parsedRoute.page as keyof A];
 					let options = make_state(parsedRoute.options as A[keyof A]);
-					entryElement.update(factory.factory(options, entryTitle, this));
+					entryElement.update(factory.factory(options as any, entryTitle, this));
 					options.compute((options) => {
 						entryRoute.update(factory.codec.encode(options));
 					});
@@ -248,12 +248,12 @@ export class Router<A extends PageOptions<any> = {}> {
 		this.factories.update({
 			...this.factories.value(),
 			[page]: factory
-		});
+		} as any);
 		return this as any;
 	}
 
 	default<B extends EmptyPageOptions<A>>(page: B | undefined): Router<A> {
-		this.defaultPage.update(page);
+		this.defaultPage.update(page as any);
 		return this;
 	}
 
@@ -261,7 +261,7 @@ export class Router<A extends PageOptions<any> = {}> {
 		let factory = this.factories.value()[page];
 		let index = this.state.value().index + 1;
 		let route = factory.codec.encode(options);
-		for (let i = this.cache.length().value() - 1; i >= index; i--) {
+		for (let i = this.cache.length.value() - 1; i >= index; i--) {
 			this.cache.remove(i);
 		}
 		// Index needs to be specified after route since index changes trigger page initialization which reads route.
@@ -280,7 +280,7 @@ export class Router<A extends PageOptions<any> = {}> {
 		this.factories.update({
 			...this.factories.value(),
 			[page]: undefined
-		});
+		} as any);
 		return this as any;
 	}
 };

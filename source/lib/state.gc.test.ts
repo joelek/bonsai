@@ -1,7 +1,7 @@
 import * as wtf from "@joelek/wtf";
 import * as v8 from "v8";
 import * as vm from "vm";
-import { stateify } from "./state";
+import { stateify } from "./newstate";
 
 if (typeof globalThis.gc === "undefined") {
 	v8.setFlagsFromString("--expose-gc");
@@ -14,7 +14,8 @@ wtf.test(`Subscribed states should be automatically reclaimed by the garbage col
 	let a = stateify(1 as number);
 	await new Promise<void>((resolve, reject) => {
 		let b = stateify(2 as number);
-		let subscription = b.subscribe(a, "update", (a) => {});
+		//let subscription = b.subscribe(a, "update", (a) => {});
+		let subscription = a.subscribe(b.observe("update", (a) => {}, { weakly: true }));
 		subscription.is_cancelled.observe("update", (is_cancelled) => {
 			if (is_cancelled.value()) {
 				resolve();

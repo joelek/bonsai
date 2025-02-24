@@ -2,37 +2,48 @@ type ExpansionOf<A> = A extends infer B ? {
     [C in keyof B]: B[C];
 } : never;
 type RecursiveArray<A> = Array<A | RecursiveArray<A>>;
-export type StateOrValue<A extends Value> = A | State<A>;
-export type Attribute<A extends Value> = State<A> | (A extends ArrayValue ? {
-    [B in keyof A]: A[B] extends Value ? Attribute<A[B]> : never;
-} : A extends RecordValue ? {
-    [B in keyof A]: A[B] extends Value ? Attribute<A[B]> : never;
-} : A);
-export type Attributes<A extends Value> = Attribute<A>;
-export type ValueFromAttribute<A extends Attribute<Value>> = A extends State<infer B> ? B : A extends ArrayValue ? {
-    [B in keyof A]: A[B] extends Attribute<infer C> ? ValueFromAttribute<C> : never;
-} : A extends RecordValue ? {
-    [B in keyof A]: A[B] extends Attribute<infer C> ? ValueFromAttribute<C> : never;
-} : A;
-export type StateFromAttribute<A extends Attribute<Value>> = State<ValueFromAttribute<A>>;
+type RecursiveArrayType<A> = A extends Array<infer B> ? RecursiveArrayType<B> : A;
+type RecordButNotClass<A> = A extends {
+    [key: string]: unknown;
+} ? A : never;
+type OptionalMembersOf<A> = {
+    [B in keyof A as Omit<A, B> extends A ? B : never]: A[B];
+};
+type RequiredMembersOf<A> = {
+    [B in keyof A as Omit<A, B> extends A ? never : B]: A[B];
+};
+export type StateOrValue<A> = A | State<A>;
+export type Attribute<A> = State<A> | (A extends ArrayValue | ReadonlyArrayValue ? {
+    -readonly [B in keyof A]: Attribute<A[B]>;
+} : A extends RecordValue ? A extends RecordButNotClass<A> ? {
+    [B in keyof OptionalMembersOf<A>]?: State<A[B]> | Attribute<Exclude<A[B], undefined>>;
+} & {
+    [B in keyof RequiredMembersOf<A>]: Attribute<A[B]>;
+} : A : A);
+export type Attributes<A> = Attribute<A>;
+export type ValueFromAttribute<A> = (A extends State<infer B> ? B : A extends ArrayValue | ReadonlyArrayValue ? {
+    -readonly [B in keyof A]: ValueFromAttribute<A[B]>;
+} : A extends RecordValue ? A extends RecordButNotClass<A> ? {
+    [B in keyof A]: ValueFromAttribute<A[B]>;
+} : A : A);
+export type StateFromAttribute<A> = State<ValueFromAttribute<A>>;
 export type TupleRecord<A extends TupleRecord<A>> = {
     [C in keyof A]: any[];
 };
 export type PrimitiveValue = symbol | void | bigint | boolean | number | string | null | undefined;
 export type ReferenceValue = Object;
-export type Value = PrimitiveValue | ReferenceValue | any[] | {
-    [key: string]: any;
-};
+export type Value = any;
 export type ArrayValue = Value[];
+export type ReadonlyArrayValue = readonly Value[];
 export type RecordValue = {
     [key: string]: Value;
 };
-export type StateMapper<A extends Value, B extends Value> = (state: State<A>, index: State<number>) => B | State<B>;
-export type ValueMapper<A extends Value, B extends Value> = (value: A, index: number) => B;
-export type Predicate<A extends Value> = (state: State<A>, index: State<number>) => State<boolean>;
+export type StateMapper<A, B> = (state: State<A>, index: State<number>) => B | State<B>;
+export type ValueMapper<A, B> = (value: A, index: number) => B;
+export type Predicate<A> = (state: State<A>, index: State<number>) => State<boolean>;
 export type Observer<A extends any[]> = (...args: A) => void;
 export type Callback<A extends any[]> = (...args: A) => void;
-export type Computer<A extends Value, B extends Value> = (value: A) => B;
+export type Computer<A, B> = (value: A) => B;
 export type CancellationToken = Subscription;
 export type Subscription = (() => void) & {
     is_cancelled: State<boolean>;
@@ -40,22 +51,22 @@ export type Subscription = (() => void) & {
 export declare const Subscription: {
     create(is_cancelled: State<boolean>, callback: Callback<[]>): Subscription;
 };
-export type State<A extends Value> = AbstractState<A, AbstractStateEvents<A>> & (A extends PrimitiveValue ? PrimitiveState<A> : A extends ReadonlyArray<infer B extends Value> | Array<infer B extends Value> ? ElementStates<A> & ArrayState<B> : A extends RecordValue ? MemberStates<A> & ObjectState<A> : A extends ReferenceValue ? ReferenceState<A> : never);
-export type StateTupleFromValueTuple<A extends Value[]> = {
+export type State<A> = GenericState<A> & (A extends ArrayValue ? ArrayState<A> : A extends RecordButNotClass<A> ? MemberStates<A> & ObjectState<A> : PrimitiveState<A>);
+export type StateTupleFromValueTuple<A extends ArrayValue> = {
     [B in keyof A]: State<A[B]>;
 };
-export type ElementStates<A> = {
-    [B in keyof A & number]: A[B] extends Value ? State<A[B]> : never;
+export type ElementStates<A extends ArrayValue> = {
+    [index: number]: State<A[number]>;
 };
-export type MemberStates<A> = {
-    [B in keyof A]-?: A[B] extends Value ? State<A[B]> : never;
+export type MemberStates<A extends RecordValue> = {
+    [B in keyof A]-?: State<A[B]>;
 };
-export type AbstractStateEvents<A extends Value> = {
+export type AbstractStateEvents<A> = {
     "update": [
-        state: AbstractState<A, AbstractStateEvents<A>>
+        state: GenericState<A>
     ];
 };
-export declare abstract class AbstractState<A extends Value, B extends TupleRecord<B> & AbstractStateEvents<A>> {
+export declare abstract class AbstractState<A, B extends TupleRecord<B> & AbstractStateEvents<A>> {
     protected observers: {
         [C in keyof B]?: Array<Observer<any>>;
     };
@@ -64,111 +75,108 @@ export declare abstract class AbstractState<A extends Value, B extends TupleReco
     protected notify<C extends keyof B>(type: C, ...args: [...B[C]]): void;
     protected observe_weakly<C extends keyof B>(type: C, callback: Callback<B[C]>): CancellationToken;
     constructor();
-    compute<C extends Value>(computer: Computer<A, C>): State<C>;
+    compute<C>(computer: Computer<A, C>): State<C>;
+    observe(type: "update", observer: Observer<AbstractStateEvents<A>["update"]>): CancellationToken;
     observe<C extends keyof B>(type: C, observer: Observer<B[C]>): CancellationToken;
-    subscribe<A extends Value, B extends TupleRecord<B> & AbstractStateEvents<A>, C extends keyof B>(target: AbstractState<A, B>, type: C, callback: Callback<B[C]>): Subscription;
+    subscribe<A, B extends TupleRecord<B> & AbstractStateEvents<A>, C extends keyof B>(target: AbstractState<A, B>, type: C, callback: Callback<B[C]>): Subscription;
+    unobserve(type: "update", observer: Observer<AbstractStateEvents<A>["update"]>): void;
     unobserve<C extends keyof B>(type: C, observer: Observer<B[C]>): void;
     abstract shadow(): State<A>;
     abstract update(value: A): boolean;
     abstract value(): A;
 }
-export type PrimitiveStateEvents<A extends PrimitiveValue> = AbstractStateEvents<A> & {};
-export declare abstract class PrimitiveState<A extends PrimitiveValue> extends AbstractState<A, PrimitiveStateEvents<A>> {
+export type GenericState<A> = AbstractState<A, AbstractStateEvents<A>>;
+export type PrimitiveStateEvents<A> = AbstractStateEvents<A> & {};
+export declare class PrimitiveState<A> extends AbstractState<A, PrimitiveStateEvents<A>> {
     protected lastValue: A;
     constructor(lastValue: A);
-}
-export declare class PrimitiveStateImplementation<A extends PrimitiveValue> extends PrimitiveState<A> {
+    observe(type: "update", observer: Observer<PrimitiveStateEvents<A>["update"]>): CancellationToken;
     shadow(): State<A>;
     update(value: A): boolean;
     value(): A;
 }
-export type ReferenceStateEvents<A extends ReferenceValue> = AbstractStateEvents<A> & {};
-export declare abstract class ReferenceState<A extends ReferenceValue> extends AbstractState<A, ReferenceStateEvents<A>> {
-    protected lastValue: A;
-    constructor(lastValue: A);
-}
-export declare class ReferenceStateImplementation<A extends ReferenceValue> extends ReferenceState<A> {
-    shadow(): State<A>;
-    update(value: A): boolean;
-    value(): A;
-}
-export type ArrayStateEvents<A extends Value> = AbstractStateEvents<Array<A>> & {
+export type ArrayStateEvents<A extends ArrayValue> = AbstractStateEvents<A> & {
     "insert": [
-        state: State<A>,
+        state: State<A[number]>,
         index: number
     ];
     "remove": [
-        state: State<A>,
+        state: State<A[number]>,
         index: number
     ];
 };
-export declare abstract class ArrayState<A extends Value> extends AbstractState<Array<A>, ArrayStateEvents<A>> {
-    protected elements: Array<State<A>>;
+export declare class ArrayState<A extends ArrayValue> extends AbstractState<A, ArrayStateEvents<A>> implements ElementStates<A> {
+    protected elements: Array<State<A[number]>>;
     protected operating: boolean;
     protected currentLength: State<number>;
     protected isUndefined: boolean;
     protected operate(callback: () => void): void;
     protected onElementUpdate: () => void;
-    constructor(elements: Array<State<A>>);
-    [Symbol.iterator](): Iterator<State<A>>;
-    append(...items: Array<StateOrValue<A>>): void;
-    element(index: number | State<number>): State<A>;
-    filter(predicate: Predicate<A>): State<Array<A>>;
-    first(): State<A | undefined>;
-    insert(index: number, item: StateOrValue<A>): void;
-    last(): State<A | undefined>;
-    length(): State<number>;
-    mapStates<B extends Value>(mapper: StateMapper<A, B>): State<Array<B>>;
-    mapValues<B extends Value>(mapper: ValueMapper<A, B>): State<Array<B>>;
+    constructor(elements: Array<State<A[number]>>);
+    [index: number]: State<A[number]>;
+    observe(type: "update", observer: Observer<ArrayStateEvents<A>["update"]>): CancellationToken;
+    observe(type: "insert", observer: Observer<ArrayStateEvents<A>["insert"]>): CancellationToken;
+    observe(type: "remove", observer: Observer<ArrayStateEvents<A>["remove"]>): CancellationToken;
+    [Symbol.iterator](): Iterator<State<A[number]>>;
+    append(...items: Array<StateOrValue<A[number]>>): void;
+    element(index: number | State<number>): State<A[number]>;
+    filter(predicate: Predicate<A[number]>): State<Array<A[number]>>;
+    first(): State<A[number] | undefined>;
+    insert(index: number, item: StateOrValue<A[number]>): void;
+    last(): State<A[number] | undefined>;
+    get length(): State<number>;
+    mapStates<B>(mapper: StateMapper<A[number], B>): State<Array<B>>;
+    mapValues<B>(mapper: ValueMapper<A[number], B>): State<Array<B>>;
     remove(index: number): void;
-    spread(): Array<State<A>>;
+    spread(): Array<State<A[number]>>;
     vacate(): boolean;
-}
-export declare class ArrayStateImplementation<A extends Value> extends ArrayState<A> {
-    shadow(): State<Array<A>>;
-    update(value: Array<A>): boolean;
-    value(): Array<A>;
+    shadow(): State<A>;
+    update(value: A): boolean;
+    value(): A;
 }
 export type ObjectStateEventsTuple<A extends RecordValue> = {
-    [B in keyof A]: [state: State<A[B]>, key: B];
+    [B in keyof A]: [
+        state: State<A[B]>,
+        key: B
+    ];
 }[keyof A];
 export type ObjectStateEvents<A extends RecordValue> = AbstractStateEvents<A> & {
-    "insert": ObjectStateEventsTuple<A>;
-    "remove": ObjectStateEventsTuple<A>;
+    "attach": ObjectStateEventsTuple<A>;
+    "detach": ObjectStateEventsTuple<A>;
 };
-export declare abstract class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectStateEvents<A>> {
+export declare class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectStateEvents<A>> {
     protected members: MemberStates<A>;
     protected operating: boolean;
     protected isUndefined: boolean;
     protected operate(callback: () => void): void;
     protected onMemberUpdate: () => void;
     constructor(members: MemberStates<A>);
-    insert<B extends string, C extends Value>(key: B, item: StateOrValue<C>): State<ExpansionOf<A & {
+    observe(type: "update", observer: Observer<ObjectStateEvents<A>["update"]>): CancellationToken;
+    observe(type: "attach", observer: Observer<ObjectStateEvents<A>["attach"]>): CancellationToken;
+    observe(type: "detach", observer: Observer<ObjectStateEvents<A>["detach"]>): CancellationToken;
+    attach<B extends string, C>(key: B, item: StateOrValue<C>): State<ExpansionOf<A & {
         [key in B]: C;
     }>>;
     member<B extends keyof A>(key: B | State<B>): State<A[B]>;
-    remove<B extends keyof A>(key: B): State<ExpansionOf<Omit<A, B>>>;
+    detach<B extends keyof A>(key: B): State<ExpansionOf<Omit<A, B>>>;
     spread(): MemberStates<A>;
-}
-export declare class ObjectStateImplementation<A extends RecordValue> extends ObjectState<A> {
     shadow(): State<A>;
     update(value: A): boolean;
     value(): A;
 }
 export declare function make_primitive_state<A extends PrimitiveValue>(value: A): PrimitiveState<A>;
-export declare function make_array_state<A extends Value>(elements: Array<State<A>>): ArrayState<A>;
+export declare function make_array_state<A extends ArrayValue>(elements: Array<State<A[number]>>): ArrayState<A>;
 export declare function make_object_state<A extends RecordValue>(members: MemberStates<A>): ObjectState<A>;
-export declare function make_reference_state<A extends ReferenceValue>(value: A): ReferenceState<A>;
-export declare function make_state<A extends Value>(value: A): State<A>;
-export declare function computed<A extends Value[], B extends Value>(states: [...StateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): State<B>;
-export declare function stateify<A extends Attribute<Value>>(attribute: A): StateFromAttribute<A>;
-export declare function valueify<A extends Attribute<Value>>(attribute: A): ValueFromAttribute<A>;
+export declare function make_state<A>(value: A): State<A>;
+export declare function computed<A extends ArrayValue, B>(states: [...StateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): State<B>;
+export declare function stateify<A extends Attribute<any>>(attribute: A): State<ValueFromAttribute<A>>;
+export declare function valueify<A extends Attribute<any>>(attribute: A): ValueFromAttribute<A>;
 export type MergedPair<A extends RecordValue, B extends RecordValue> = ExpansionOf<{
     [C in keyof A | keyof B]: C extends keyof A & keyof B ? undefined extends B[C] ? Exclude<B[C], undefined> | A[C] : B[C] : C extends keyof A ? A[C] : C extends keyof B ? B[C] : never;
 }>;
 export type MergedTuple<A extends RecordValue[]> = ExpansionOf<A extends [infer B extends RecordValue, infer C extends RecordValue, ...infer D extends RecordValue[]] ? MergedTuple<[MergedPair<B, C>, ...D]> : A extends [infer B extends RecordValue, infer C extends RecordValue] ? MergedPair<B, C> : A extends [infer B extends RecordValue] ? B : {}>;
 export declare function squash<A extends RecordValue>(records: State<Array<A>>): State<A>;
-export declare function fallback<A extends Value>(underlying: State<A | undefined>, default_value: Exclude<A, undefined>): State<Exclude<A, undefined>>;
+export declare function fallback<A>(underlying: State<A | undefined>, default_value: Exclude<A, undefined>): State<Exclude<A, undefined>>;
 export declare function merge<A extends RecordValue[]>(...states: StateTupleFromValueTuple<A>): State<MergedTuple<A>>;
-export declare function flatten<A extends PrimitiveValue | ReferenceValue>(states: State<Array<A | RecursiveArray<A>>>): State<Array<A>>;
+export declare function flatten<A extends RecursiveArray<any>>(states: State<Array<A>>): State<Array<RecursiveArrayType<A>>>;
 export {};

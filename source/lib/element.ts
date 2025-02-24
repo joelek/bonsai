@@ -1,4 +1,4 @@
-import { AbstractState, ArrayValue, Attribute, CancellationToken, flatten, RecordValue, State, stateify, Value } from "./state";
+import { StateImplementation, ArrayValue, Attribute, CancellationToken, flatten, RecordValue, State, stateify, Value, ReadableState } from "./newstate";
 
 export type AttributeRecord = { [key: string]: Attribute<Value>; };
 
@@ -8,9 +8,9 @@ export type AttributeArray = Attribute<Value>[];
 
 export type AttributeArrayMapper = (attributes: AttributeArray) => AttributeArray;
 
-export type Child = Array<Child> | (Value | Node) | State<Value | Node>;
+export type Child = Array<Child> | (Value | Node) | ReadableState<Value | Node>;
 
-export type Children = Array<Child | State<Child>>;
+export type Children = Array<Child | ReadableState<Child>>;
 
 export type FunctionalElementListener<A extends Event, B extends Element> = (event: A, element: B) => void;
 
@@ -179,8 +179,8 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 		};
 		let set = (key: string, attribute: Attribute<Value> | AttributeArrayMapper | AttributeRecordMapper | undefined) => {
 			this.unbind(key);
-			if (attribute instanceof AbstractState) {
-				let state = attribute as AbstractState<any, any>;
+			if (attribute instanceof StateImplementation) {
+				let state = attribute as StateImplementation<any>;
 				let bindings = this.bindings;
 				if (bindings == null) {
 					this.bindings = bindings = {};
@@ -216,8 +216,8 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 						let values = [] as ArrayValue;
 						for (let index = 0; index < attributes.length; index++) {
 							let attribute = attributes[index];
-							if (attribute instanceof AbstractState) {
-								let state = attribute as AbstractState<any, any>;
+							if (attribute instanceof StateImplementation) {
+								let state = attribute as StateImplementation<any>;
 								values[index] = attribute.value();
 								this.bindings = this.bindings ?? {};
 								(this.bindings["class"] = this.bindings["class"] ?? []).push(state.observe("update", (value) => {
@@ -237,8 +237,8 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 						let values = {} as RecordValue;
 						for (let key in attributes) {
 							let attribute = attributes[key];
-							if (attribute instanceof AbstractState) {
-								let state = attribute as AbstractState<any, any>;
+							if (attribute instanceof StateImplementation) {
+								let state = attribute as StateImplementation<any>;
 								values[key] = attribute.value();
 								this.bindings = this.bindings ?? {};
 								(this.bindings["style"] = this.bindings["style"] ?? []).push(state.observe("update", (value) => {
@@ -296,7 +296,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 		}
 		let bindings = this.bindings = this.bindings ?? {};
 		let update_bindings = bindings[UPDATE] = bindings[UPDATE] ?? [];
-		let state = flatten(stateify(children));
+		let state = flatten(stateify(children)) as any as State<Array<unknown>>;
 		for (let child of state) {
 			let node = createNode(child.value());
 			this.appendChild(node);

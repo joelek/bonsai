@@ -1,5 +1,5 @@
 import { OptionCodec } from "./codecs";
-import { RecordValue, State } from "./state";
+import { RecordValue, State } from "./newstate";
 export type ExpansionOf<A> = A extends infer B ? {
     [C in keyof B]: B[C];
 } : never;
@@ -58,8 +58,8 @@ export declare class Router<A extends PageOptions<any> = {}> {
     protected documentTitle: string;
     protected cache: State<Array<CacheEntry>>;
     protected state: State<HistoryState>;
-    readonly element: State<Element | undefined>;
-    readonly url: State<string | undefined>;
+    readonly element: import("./newstate").WritableBasicState<Element | undefined>;
+    readonly url: import("./newstate").WritableBasicState<string | undefined>;
     constructor(factories: PageFactories<A>, defaultPage?: EmptyPageOptions<A>);
     add<B extends string, C extends RecordValue>(page: B, factory: PageFactory<C>): Router<ExpansionOf<A & {
         [key in B]: C;

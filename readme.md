@@ -724,15 +724,18 @@ NB: This project targets TypeScript 4 in strict mode.
 * Investigate usability of a promise to state shim.
 * Implement scroll state restoration for router elements.
 * Separate history management from routing.
-* Investigate value caching.
-* Rename `value()` to `serialize()` if not implementing value caching.
 * Decide on behaviour for `merge()` regarding nulls.
-* Consider removing proxies and index signatures.
 * Fix issue with states retrieved through `element()` or `member()` only being updated through `update` events.
-* Document behaviour of applying spread operator to proxy-wrapped states compare to states.
+* Document behaviour of applying spread operator to proxy-wrapped states compared to states.
 * Implement `sort()` for array states.
-* Fix issue with the `length` property being shadowed by the `length()` method on the ArrayState prototype.
 * Investigate issue with `filter()` for array states.
 * Investigate possibility of re-using index states for array states.
 * Investigate issue with computing state from array state length involving array items.
-* Add option to limit the number of cached pages.
+* Add option to limit the number of cached pages in router.
+* Figure out way of removing isUndefined from ArrayState and ObjectState.
+* Notify observers observing the "update" event directly when added.
+* Implemented weakly computed state using subscriptions `derive()`.
+* Solve type-error permitting assignment of `State<string>` to `State<string | undefined>`.
+* Figure out solution for `State<RecordValue | string>`.
+	One state-type that make_state() return interfaces for.
+* Figure out make_state({} as A) and make_state([] as A) within ObjectState and RecordState erases type constraints.
