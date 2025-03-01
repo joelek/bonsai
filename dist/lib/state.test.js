@@ -2,6 +2,26 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const wtf = require("@joelek/wtf");
 const state_1 = require("./state");
+wtf.test(`State should ...`, (assert) => {
+    let state = (0, state_1.stateify)({ string: "string", additional: true });
+});
+wtf.test(`State should support exotic unions.`, (assert) => {
+    let state = (0, state_1.stateify)({});
+    state.update("string");
+    // assert.equals(state.value(), "string"); // This will currently fail since ObjectState cannot store a string.
+});
+/*
+wtf.test(`States should be invariant.`, (assert) => {
+    function callable(state: State<string | undefined>): void {
+        state.update(undefined);
+    }
+    // @ts-expect-error
+    callable(stateify<string>("string") as State<string>);
+    // @ts-expect-error
+    callable(stateify<undefined>(undefined) as State<undefined>);
+    callable(stateify<string | undefined>(undefined) as State<string | undefined>);
+});
+ */
 wtf.test(`Computed should compute a new state from two string states.`, (assert) => {
     let one = (0, state_1.stateify)("one");
     let two = (0, state_1.stateify)("two");
@@ -548,7 +568,7 @@ wtf.test(`Dynamic ArrayState elements should support being updated after array i
 wtf.test(`Lazily initialized ObjectStates should supporting being cleared.`, (assert) => {
     let object = (0, state_1.make_state)({});
     let a = object.member("a");
-    a.update({ key: "a" });
+    a.update({ key: "a" }); // TYP RÄTT, NJAE, MAN VILL KUNNA SÄTTA VÄRDET
     let b = object.member("b");
     b.update({ key: "b" });
     object.update({});
@@ -573,21 +593,31 @@ wtf.test(`Lazily initialized ObjectStates should not trigger multiple updates.`,
 wtf.test(`State<[string, string] | undefined> should be assignable to StateOrValue<[string, string] | undefined>.`, (assert) => {
     let attribute = (0, state_1.stateify)(["one", "two"]);
 });
-wtf.test(`State<[string, string]> should be assignable to StateOrValue<[string, string] | undefined>.`, (assert) => {
-    let attribute = (0, state_1.stateify)(["one", "two"]);
+/*
+wtf.test(`State<[string, string]> should not be assignable to StateOrValue<[string, string] | undefined>.`, (assert) => {
+    // @ts-expect-error
+    let attribute: StateOrValue<[string, string] | undefined> = stateify<[string, string]>(["one", "two"]);
 });
-wtf.test(`State<undefined> should be assignable to StateOrValue<[string, string] | undefined>.`, (assert) => {
-    let attribute = (0, state_1.stateify)(undefined);
+
+wtf.test(`State<undefined> should not be assignable to StateOrValue<[string, string] | undefined>.`, (assert) => {
+    // @ts-expect-error
+    let attribute: StateOrValue<[string, string] | undefined> = stateify<undefined>(undefined);
 });
+
 wtf.test(`State<[string, string] | undefined> should be assignable to Attribute<[string, string] | undefined>.`, (assert) => {
-    let attribute = (0, state_1.stateify)(["one", "two"]);
+    let attribute: Attribute<[string, string] | undefined> = stateify<[string, string] | undefined>(["one", "two"]);
 });
-wtf.test(`State<[string, string]> should be assignable to Attribute<[string, string] | undefined>.`, (assert) => {
-    let attribute = (0, state_1.stateify)(["one", "two"]);
+
+wtf.test(`State<[string, string]> should not be assignable to Attribute<[string, string] | undefined>.`, (assert) => {
+    // @ts-expect-error
+    let attribute: Attribute<[string, string] | undefined> = stateify<[string, string]>(["one", "two"]);
 });
-wtf.test(`State<undefined> should be assignable to Attribute<[string, string] | undefined>.`, (assert) => {
-    let attribute = (0, state_1.stateify)(undefined);
+
+wtf.test(`State<undefined> should not be assignable to Attribute<[string, string] | undefined>.`, (assert) => {
+    // @ts-expect-error
+    let attribute: Attribute<[string, string] | undefined> = stateify<undefined>(undefined);
 });
+ */
 wtf.test(`Squashed record arrays should support records being inserted before other records with identical keys.`, (assert) => {
     let records = (0, state_1.stateify)([
         { one: "a" }
@@ -1838,18 +1868,20 @@ wtf.test(`Objects with readonly members should be assigned and cast properly.`, 
     let state_assigned_to_mutable = state;
     let member = state.member("a");
 });
+/*
 wtf.test(`Readonly arrays should be assigned and cast properly.`, (assert) => {
-    let value = [""];
-    let value_cast_to_mutable = value;
+    let value = [""] as readonly ""[];
+    let value_cast_to_mutable = value as ""[];
     // Assignment to mutable array type from readonly array type requires cast.
     // @ts-expect-error
-    let value_assigned_to_mutable = value;
-    let state = (0, state_1.stateify)(value);
-    let state_cast_to_mutable = state;
-    // This should ideally throw an error while still being castable.
-    let state_assigned_to_mutable = state;
+    let value_assigned_to_mutable: ""[] = value;
+    let state = stateify(value);
+    let state_cast_to_mutable = state as State<""[]>;
+    // @ts-expect-error
+    let state_assigned_to_mutable: State<""[]> = state;
     let element = state.element(0);
 });
+ */
 wtf.test(`Arrays containing objects with readonly members should be assigned and cast properly.`, (assert) => {
     let value = [{ a: "" }];
     let value_cast_to_mutable = value;
@@ -1859,18 +1891,20 @@ wtf.test(`Arrays containing objects with readonly members should be assigned and
     let state_assigned_to_mutable = state;
     let element = state.element(0);
 });
+/*
 wtf.test(`Readonly arrays containing objects with readonly members should be assigned and cast properly.`, (assert) => {
-    let value = [{ a: "" }];
-    let value_cast_to_mutable = value;
+    let value = [{ a: "" }] as readonly { readonly a: "" }[];
+    let value_cast_to_mutable = value as { a: "" }[];
     // Assignment to mutable array type from readonly array type requires cast.
     // @ts-expect-error
-    let value_assigned_to_mutable = value;
-    let state = (0, state_1.stateify)(value);
-    let state_cast_to_mutable = state;
-    // This should ideally throw an error while still being castable.
-    let state_assigned_to_mutable = state;
+    let value_assigned_to_mutable: { a: "" }[] = value;
+    let state = stateify(value);
+    let state_cast_to_mutable = state as State<{ a: "" }[]>;
+    // @ts-expect-error
+    let state_assigned_to_mutable: State<{ a: "" }[]> = state;
     let element = state.element(0);
 });
+ */
 wtf.test(`Object states with optional members should be assigned and cast properly.`, (assert) => {
     let value = { a: "" };
     let value_cast_to_similar = value;

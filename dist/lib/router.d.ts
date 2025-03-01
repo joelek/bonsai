@@ -58,8 +58,8 @@ export declare class Router<A extends PageOptions<any> = {}> {
     protected documentTitle: string;
     protected cache: State<Array<CacheEntry>>;
     protected state: State<HistoryState>;
-    readonly element: State<Element | undefined>;
-    readonly url: State<string | undefined>;
+    readonly element: import("./state").GenericState<Element | undefined>;
+    readonly url: import("./state").GenericState<string | undefined>;
     constructor(factories: PageFactories<A>, defaultPage?: EmptyPageOptions<A>);
     add<B extends string, C extends RecordValue>(page: B, factory: PageFactory<C>): Router<ExpansionOf<A & {
         [key in B]: C;

@@ -736,3 +736,6 @@ NB: This project targets TypeScript 4 in strict mode.
 * Notify observers observing the "update" event directly when added.
 * Implemented weakly computed state using subscriptions `derive()`.
 * Solve type-error permitting assignment of `State<string>` to `State<string | undefined>`.
+* Figure out solution for `State<RecordValue | string>`.
+	One state-type that make_state() return interfaces for.
+* Figure out make_state({} as A) and make_state([] as A) within ObjectState and RecordState erases type constraints.

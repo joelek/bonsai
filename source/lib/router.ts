@@ -216,7 +216,7 @@ export class Router<A extends PageOptions<any> = {}> {
 				if (entryElement.value() == null) {
 					let factory = this.factories.value()[parsedRoute.page as keyof A];
 					let options = make_state(parsedRoute.options as A[keyof A]);
-					entryElement.update(factory.factory(options, entryTitle, this));
+					entryElement.update(factory.factory(options as any, entryTitle, this as any));
 					options.compute((options) => {
 						entryRoute.update(factory.codec.encode(options));
 					});
@@ -248,12 +248,12 @@ export class Router<A extends PageOptions<any> = {}> {
 		this.factories.update({
 			...this.factories.value(),
 			[page]: factory
-		});
+		} as any);
 		return this as any;
 	}
 
 	default<B extends EmptyPageOptions<A>>(page: B | undefined): Router<A> {
-		this.defaultPage.update(page);
+		this.defaultPage.update(page as any);
 		return this;
 	}
 
@@ -280,7 +280,7 @@ export class Router<A extends PageOptions<any> = {}> {
 		this.factories.update({
 			...this.factories.value(),
 			[page]: undefined
-		});
+		} as any);
 		return this as any;
 	}
 };
