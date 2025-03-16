@@ -45,7 +45,7 @@ export const Subscription = {
 			callback();
 			is_cancelled.update(true);
 		}) as Subscription;
-		cancel.is_cancelled = is_cancelled as any;
+		cancel.is_cancelled = is_cancelled;
 		return cancel;
 	}
 };
@@ -92,7 +92,7 @@ export type WritableBasicStateEvents<A extends Value> = {
 	];
 };
 
-export interface WritableBasicState<in out A extends Value> {
+export interface WritableBasicState<A extends Value> {
 	compute<B>(computer: Computer<A, B>): ReadableState<B>;
 
 	observe(type: "update", observer: Observer<WritableBasicStateEvents<A>["update"]>): Subscription;
@@ -123,8 +123,6 @@ export type ReadableArrayStateEvents<A extends ArrayValue> = ReadableBasicStateE
 };
 
 export interface ReadableArrayState<A extends ArrayValue> extends ReadableBasicState<A> {
-	[key: number]: ReadableState<A[number]>;
-
 	element(index: number | ReadableState<number>): ReadableState<A[number]>;
 
 	filter(predicate: ReadablePredicate<A[number]>): ReadableState<Array<A[number]>>;
@@ -160,9 +158,7 @@ export type WritableArrayStateEvents<A extends ArrayValue> = WritableBasicStateE
 	];
 };
 
-export interface WritableArrayState<in out A extends ArrayValue> extends WritableBasicState<A> {
-	[key: number]: ReadableState<A[number]>;
-
+export interface WritableArrayState<A extends ArrayValue> extends WritableBasicState<A> {
 	append(...items: Array<ReadableStateOrValue<A[number]>>): void;
 
 	element(index: number | ReadableState<number>): ReadableState<A[number]>;
@@ -187,6 +183,8 @@ export interface WritableArrayState<in out A extends ArrayValue> extends Writabl
 	observe<B extends keyof WritableArrayStateEvents<A>>(type: B, observer: Observer<WritableArrayStateEvents<A>[B]>): Subscription;
 
 	remove(index: number): void;
+
+	spread(): WritableElementStates<A>;
 
 	vacate(): boolean;
 
@@ -228,7 +226,7 @@ export type WritableRecordStateEvents<A extends RecordValue> = WritableBasicStat
 	"detach": WritableRecordStateEventsTuple<A>;
 };
 
-export interface WritableRecordState<in out A extends RecordValue> extends WritableBasicState<A> {
+export interface WritableRecordState<A extends RecordValue> extends WritableBasicState<A> {
 	observe(type: "update", observer: Observer<WritableRecordStateEvents<A>["update"]>): Subscription;
 	observe(type: "attach", observer: Observer<WritableRecordStateEvents<A>["attach"]>): Subscription;
 	observe(type: "detach", observer: Observer<WritableRecordStateEvents<A>["detach"]>): Subscription;
@@ -252,7 +250,7 @@ type ReadableStateEvents<A> =
 	ReadableRecordStateEvents<RecordType<A>> |
 	ReadableBasicStateEvents<BasicType<A>>;
 
-class StateImplementation<in out A> implements WritableArrayState<ArrayType<A>>, WritableRecordState<RecordType<A>>, WritableBasicState<BasicType<A>> {
+class StateImplementation<A> implements WritableArrayState<ArrayType<A>>, WritableRecordState<RecordType<A>>, WritableBasicState<BasicType<A>> {
 	protected active_value: A;
 
 	constructor(active_value: A) {
@@ -307,7 +305,9 @@ class StateImplementation<in out A> implements WritableArrayState<ArrayType<A>>,
 		throw new Error("Method not implemented.");
 	}
 
-	[Symbol.iterator](): Iterator<WritableArrayState<ArrayType<A>[number]>, any, undefined> {
+	[Symbol.iterator](): Iterator<ReadableState<ArrayType<A>[number]>>;
+	[Symbol.iterator](): Iterator<WritableState<ArrayType<A>[number]>>;
+	[Symbol.iterator](): Iterator<ReadableState<ArrayType<A>[number]>> | Iterator<WritableState<ArrayType<A>[number]>> {
 		throw new Error("Method not implemented.");
 	}
 
@@ -333,9 +333,9 @@ class StateImplementation<in out A> implements WritableArrayState<ArrayType<A>>,
 		throw new Error("Method not implemented.");
 	}
 
-	attach<B extends string, C>(key: B, item: ReadableStateOrValue<C>): ReadableState<ExpansionOf<A & { [key in B]: C; }>>;
+	attach<B extends string, C>(key: B, item: ReadableStateOrValue<C>): WritableState<ExpansionOf<A & { [key in B]: C; }>>;
 	attach<B extends string, C>(key: B, item: WritableStateOrValue<C>): WritableState<ExpansionOf<A & { [key in B]: C; }>>;
-	attach<B extends string, C>(key: B, item: ReadableStateOrValue<C> | ReadableStateOrValue<C>): ReadableState<ExpansionOf<A & { [key in B]: C; }>> | WritableState<ExpansionOf<A & { [key in B]: C; }>> {
+	attach<B extends string, C>(key: B, item: ReadableStateOrValue<C> | WritableStateOrValue<C>): WritableState<ExpansionOf<A & { [key in B]: C; }>> {
 		throw new Error("Method not implemented.");
 	}
 
@@ -361,7 +361,7 @@ class StateImplementation<in out A> implements WritableArrayState<ArrayType<A>>,
 		throw new Error("Method not implemented.");
 	}
 
-	[key: number]: ReadableState<ArrayType<A>[number]>;
+	[key: number]: WritableState<ArrayType<A>[number]>;
 }
 
 export type ReadableElementStates<A extends ArrayValue> = {
@@ -380,14 +380,20 @@ export type WritableMemberStates<A extends RecordValue> = {
 	[B in keyof A]-?: WritableState<A[B]>;
 };
 
-export type ReadableState<A> = (
-	[A] extends [ArrayValue] ? /* ReadableElementStates<A> & */ ReadableArrayState<A> :
+export type ReadableState2<A> = (
+	[A] extends [ArrayValue] ? ReadableElementStates<A> & ReadableArrayState<A> :
 	[A] extends [RecordButNotClass<A>] ? ReadableMemberStates<A> & ReadableRecordState<A> :
 	ReadableBasicState<A>
 );
 
+export type ReadableState<A> = ReadableState2<A> | (
+	A extends ArrayValue ? ReadableElementStates<A> & ReadableArrayState<A> :
+	A extends RecordButNotClass<A> ? ReadableMemberStates<A> & ReadableRecordState<A> :
+	ReadableBasicState<A>
+);
+
 export type WritableState<A> = (
-	[A] extends [ArrayValue] ? /* WritableElementStates<A> & */ WritableArrayState<A> :
+	[A] extends [ArrayValue] ? WritableElementStates<A> & WritableArrayState<A> :
 	[A] extends [RecordButNotClass<A>] ? WritableMemberStates<A> & WritableRecordState<A> :
 	WritableBasicState<A>
 );
@@ -396,14 +402,14 @@ export type State<A> = ReadableState<A> | WritableState<A>;
 
 export type StateOrValue<A> = A | State<A>;
 
-type Attribute<A> = ReadableState<A> | (
+type Attribute<A> = State<A> | (
 	A extends ArrayValue ? { [B in keyof A]: Attribute<A[B]>; } :
 	A extends RecordValue ? A extends RecordButNotClass<A> ? { [B in keyof A]: Attribute<A[B]>; } : A :
 	A
 );
 
 type ValueFromAttribute<A> = (
-	A extends ReadableState<infer B> ? B :
+	A extends State<infer B> ? B :
 	A extends ArrayValue ? { [B in keyof A]: ValueFromAttribute<A[B]>; } :
 	A extends RecordValue ? A extends RecordButNotClass<A> ? { [B in keyof A]: ValueFromAttribute<A[B]>; } : A :
 	A
@@ -413,7 +419,7 @@ function make_state<A>(value: A): WritableState<A> {
 	return new StateImplementation(value) as any;
 };
 
-/* logic: return writable state if attribute is value or writable state */
+/* logic: return writable state only when attribute is value, else readable state */
 function stateify<A extends Attribute<any>>(attribute: A): ReadableState<ValueFromAttribute<A>> {
 	throw "";
 };
@@ -466,7 +472,7 @@ namespace value_from_attribute_value {
 	type mixed_state_1 = ValueFromAttribute<string | { [key: string]: any }>;
 }
 
-namespace value_from_attribute_state {
+namespace value_from_attribute_readable_state {
 	type basic_state_1 = ValueFromAttribute<ReadableState<string>>;
 	type basic_state_2 = ValueFromAttribute<ReadableState<string | number>>;
 	type basic_state_3 = ValueFromAttribute<ReadableState<Element>>;
@@ -538,17 +544,61 @@ function three<A>(state: WritableState<{ [key: string]: A }>): void {
 	state.update(state.value());
 }
 
-function function_expecting_state(state: ReadableState<string | undefined>): void {}
-function_expecting_state(stateify<string>("string"));
-function_expecting_state(stateify<undefined>(undefined));
-function_expecting_state(stateify<string | undefined>(undefined));
+// Attribute should accept any value or state.
+function function_expecting_attribute(attribute: Attribute<string | undefined>): void {
+	let value = valueify(attribute);
+}
+function_expecting_attribute(undefined as any as ReadableState<string>);
+function_expecting_attribute(undefined as any as ReadableState<undefined>);
+function_expecting_attribute(undefined as any as ReadableState<string | undefined>);
+function_expecting_attribute(undefined as any as WritableState<string>);
+function_expecting_attribute(undefined as any as WritableState<undefined>);
+function_expecting_attribute(undefined as any as WritableState<string | undefined>);
+function_expecting_attribute(undefined as any as string);
+function_expecting_attribute(undefined as any as undefined);
+function_expecting_attribute(undefined as any as string | undefined);
 
-function function_expecting_writable_state(state: WritableState<string | undefined>): void {}
+// ReadableState should be covariant. Any state that can be guaranteed to only contain string, undefined or string | undefined should be accepted.
+function function_expecting_readable_state(attribute: ReadableState<string | undefined>): void {
+	let value = valueify(attribute);
+	let shadow = attribute.shadow();
+}
+function_expecting_readable_state(undefined as any as ReadableState<string>);
+function_expecting_readable_state(undefined as any as ReadableState<undefined>);
+function_expecting_readable_state(undefined as any as ReadableState<string | undefined>);
+function_expecting_readable_state(undefined as any as WritableState<string>);
+function_expecting_readable_state(undefined as any as WritableState<undefined>);
+function_expecting_readable_state(undefined as any as WritableState<string | undefined>);
 // @ts-expect-error
-function_expecting_writable_state(stateify<string>("string"));
+function_expecting_readable_state(undefined as any as string);
 // @ts-expect-error
-function_expecting_writable_state(stateify<undefined>(undefined));
-function_expecting_writable_state(stateify<string | undefined>(undefined));
+function_expecting_readable_state(undefined as any as undefined);
+// @ts-expect-error
+function_expecting_readable_state(undefined as any as string | undefined);
+
+// WritableState should be invariant. Only state containing exactly string | undefined should be accepted.
+function function_expecting_writable_state(attribute: WritableState<string | undefined>): void {
+	let value = valueify(attribute);
+	let shadow = attribute.shadow();
+}
+// @ts-expect-error
+function_expecting_writable_state(undefined as any as ReadableState<string>);
+// @ts-expect-error
+function_expecting_writable_state(undefined as any as ReadableState<undefined>);
+// @ts-expect-error
+function_expecting_writable_state(undefined as any as ReadableState<string | undefined>);
+// @ts-expect-error
+function_expecting_writable_state(undefined as any as WritableState<string>);
+// @ts-expect-error
+function_expecting_writable_state(undefined as any as WritableState<undefined>);
+function_expecting_writable_state(undefined as any as WritableState<string | undefined>);
+// @ts-expect-error
+function_expecting_writable_state(undefined as any as string);
+// @ts-expect-error
+function_expecting_writable_state(undefined as any as undefined);
+// @ts-expect-error
+function_expecting_writable_state(undefined as any as string | undefined);
+
 
 export function squash<A extends RecordValue>(records: ReadableState<Array<A>>): ReadableState<A> {
 	throw "";
