@@ -65,7 +65,7 @@ export type WritableStateOrValue<A> = A | WritableState<A>;
 
 export type ReadableBasicStateEvents<A extends Value> = {
 	"update": [
-		state: ReadableBasicState<A>
+		state: ReadableState<A>
 	];
 };
 
@@ -88,7 +88,7 @@ export interface ReadableBasicState<A extends Value> {
 
 export type WritableBasicStateEvents<A extends Value> = {
 	"update": [
-		state: WritableBasicState<A>
+		state: WritableState<A>
 	];
 };
 
@@ -250,6 +250,11 @@ type ReadableStateEvents<A> =
 	ReadableRecordStateEvents<RecordType<A>> |
 	ReadableBasicStateEvents<BasicType<A>>;
 
+type WritableStateEvents<A> =
+	WritableArrayStateEvents<ArrayType<A>> |
+	WritableRecordStateEvents<RecordType<A>> |
+	WritableBasicStateEvents<BasicType<A>>;
+
 class StateImplementation<A> implements WritableArrayState<ArrayType<A>>, WritableRecordState<RecordType<A>>, WritableBasicState<BasicType<A>> {
 	protected active_value: A;
 
@@ -315,7 +320,7 @@ class StateImplementation<A> implements WritableArrayState<ArrayType<A>>, Writab
 		throw new Error("Method not implemented.");
 	}
 
-	observe<B extends keyof ReadableStateEvents<A>>(type: B, observer: Observer<ReadableStateEvents<A>[B]>): Subscription {
+	observe<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): Subscription {
 		throw new Error("Method not implemented.");
 	}
 
@@ -511,6 +516,36 @@ namespace attribute {
 	type mixed_state_1 = Attribute<string | { [key: string]: any }>;
 }
 
+function one1<A>(state: ReadableState<A>): void {
+	state.observe("update", (state) => {
+
+	});
+}
+
+function two2<A>(state: ReadableState<Array<A>>): void {
+	state.observe("update", (state) => {
+
+	});
+	state.observe("insert", (state, index) => {
+
+	});
+	state.observe("remove", (state, index) => {
+
+	});
+}
+
+function three3<A>(state: ReadableState<{ [key: string]: A }>): void {
+	state.observe("update", (state) => {
+
+	});
+	state.observe("attach", (state, key) => {
+
+	});
+	state.observe("detach", (state, key) => {
+
+	});
+}
+
 function one<A>(state: WritableState<A>): void {
 	state.observe("update", (state) => {
 		state.update(state.value());
@@ -562,6 +597,10 @@ function_expecting_attribute(undefined as any as string | undefined);
 function function_expecting_readable_state(attribute: ReadableState<string | undefined>): void {
 	let value = valueify(attribute);
 	let shadow = attribute.shadow();
+	let computed = attribute.compute((value) => value);
+	attribute.observe("update", (state) => {
+		let value = state.value();
+	});
 }
 function_expecting_readable_state(undefined as any as ReadableState<string>);
 function_expecting_readable_state(undefined as any as ReadableState<undefined>);
@@ -580,6 +619,10 @@ function_expecting_readable_state(undefined as any as string | undefined);
 function function_expecting_writable_state(attribute: WritableState<string | undefined>): void {
 	let value = valueify(attribute);
 	let shadow = attribute.shadow();
+	let computed = attribute.compute((value) => value);
+	attribute.observe("update", (state) => {
+		let value = state.value();
+	});
 }
 // @ts-expect-error
 function_expecting_writable_state(undefined as any as ReadableState<string>);
