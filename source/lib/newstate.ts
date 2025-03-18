@@ -435,11 +435,11 @@ export type ReadableState2<A> = (
 	ReadableBasicState<A>
 );
 
-export type ReadableState<A> = ReadableState2<A> | (
+export type ReadableState<A> = (
 	A extends ArrayValue ? ReadableElementStates<A> & ReadableArrayState<A> :
 	A extends RecordButNotClass<A> ? ReadableMemberStates<A> & ReadableRecordState<A> :
 	ReadableBasicState<A>
-);
+) | ReadableState2<A>;
 
 export type GenericReadableState<A> = ReadableBasicState<A>;
 
@@ -572,6 +572,15 @@ function one1<A>(state: GenericReadableState<A>): void {
 	});
 }
 
+one1(undefined as any as ReadableState<string>);
+one1(undefined as any as ReadableState<Array<string>>);
+one1(undefined as any as ReadableState<{ [key: string]: string }>);
+one1(undefined as any as ReadableState<{ one: string, two: number }>);
+one1(undefined as any as WritableState<string>);
+one1(undefined as any as WritableState<Array<string>>);
+one1(undefined as any as WritableState<{ [key: string]: string }>);
+one1(undefined as any as WritableState<{ one: string, two: number }>);
+
 function two2<A>(state: ReadableState<Array<A>>): void {
 	state.observe("update", (state) => {
 		let value = state.value();
@@ -602,6 +611,19 @@ function one<A>(state: GenericWritableState<A>): void {
 	});
 	state.update(state.value());
 }
+
+// @ts-expect-error
+one(undefined as any as ReadableState<string>);
+// @ts-expect-error
+one(undefined as any as ReadableState<Array<string>>);
+// @ts-expect-error
+one(undefined as any as ReadableState<{ [key: string]: string }>);
+// @ts-expect-error
+one(undefined as any as ReadableState<{ one: string, two: number }>);
+one(undefined as any as WritableState<string>);
+one(undefined as any as WritableState<Array<string>>);
+one(undefined as any as WritableState<{ [key: string]: string }>);
+one(undefined as any as WritableState<{ one: string, two: number }>);
 
 function two<A>(state: WritableState<Array<A>>): void {
 	state.observe("update", (state) => {
@@ -718,4 +740,8 @@ export function flatten<A extends RecursiveArray<any>>(states: ReadableState<Arr
 	let array = stateify([array_0, array_1]);
 	let flattened = flatten(array);
 
+	// TODO: Fix inferrence.
+	flattened.subscribe(array as Observable<WritableArrayStateEvents<string[][][]>>, "insert", (state, index) => {
+
+	});
 }
