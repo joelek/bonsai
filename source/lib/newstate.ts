@@ -24,7 +24,7 @@ export type ValueMapper<A, B> = (value: A, index: number) => B;
 
 export type ReadablePredicate<A> = (state: ReadableState<A>, index: ReadableState<number>) => ReadableState<boolean>;
 
-export type Observer<A extends any[]> = (...args: A) => void;
+export type Observer<A extends any[]> = (...args: [...A]) => void;
 
 export type Callback<A extends any[]> = (...args: A) => void;
 
@@ -52,6 +52,22 @@ export const Subscription = {
 
 
 
+/*
+
+type EventNamesFromState<A> = A extends State<any> ? Parameters<A["observe"]>[0] : never;
+type EventTypesFromState<A> = A extends State<any> ? Parameters<A["observe"]>[1] extends Observer<infer B extends any[]> ? B : never : never;
+
+type k = EventTypesFromState<State<Array<number>>>;
+
+
+ */
+export interface Observable<A extends TupleRecord<A>> {
+	observe<B extends keyof A>(type: B, observer: Observer<A[B]>): Subscription;
+	unobserve<B extends keyof A>(type: B, observer: Observer<A[B]>): void;
+};
+
+
+
 
 
 
@@ -63,27 +79,54 @@ export type ReadableStateOrValue<A> = A | ReadableState<A>;
 
 export type WritableStateOrValue<A> = A | WritableState<A>;
 
+
+
+
+
+export interface AbstractReadableState<A extends Value, B extends TupleRecord<B>> extends Observable<B> {
+	compute<C>(computer: Computer<A, C>): ReadableState<C>;
+
+	shadow(): ReadableState<A>;
+
+	subscribe<C extends TupleRecord<C>, D extends keyof C>(target: Observable<C>, type: D, callback: Callback<C[D]>): Subscription;
+
+	value(): A;
+};
+
+export interface AbstractWritableState<A extends Value, B extends TupleRecord<B>> extends Observable<B> {
+	compute<C>(computer: Computer<A, C>): ReadableState<C>;
+
+	shadow(): WritableState<A>;
+
+	subscribe<C extends TupleRecord<C>, D extends keyof C>(target: Observable<C>, type: D, callback: Callback<C[D]>): Subscription;
+
+	value(): A;
+
+	update(value: A): boolean;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export type ReadableBasicStateEvents<A extends Value> = {
 	"update": [
 		state: ReadableState<A>
 	];
 };
 
-export interface ReadableBasicState<A extends Value> {
-	compute<B>(computer: Computer<A, B>): ReadableState<B>;
+export interface ReadableBasicState<A extends Value> extends AbstractReadableState<A, ReadableBasicStateEvents<A>> {
 
-	observe(type: "update", observer: Observer<ReadableBasicStateEvents<A>["update"]>): Subscription;
-	observe<B extends keyof ReadableBasicStateEvents<A>>(type: B, observer: Observer<ReadableBasicStateEvents<A>[B]>): Subscription;
-
-	shadow(): ReadableState<A>;
-
-	// This one seems to require binding between targets event types.
-	subscribe<A, B extends TupleRecord<B>, C extends keyof B>(target: State<A>, type: C, callback: Callback<B[C]>): Subscription;
-
-	unobserve(type: "update", observer: Observer<ReadableBasicStateEvents<A>["update"]>): void;
-	unobserve<B extends keyof ReadableBasicStateEvents<A>>(type: B, observer: Observer<ReadableBasicStateEvents<A>[B]>): void;
-
-	value(): A;
 };
 
 export type WritableBasicStateEvents<A extends Value> = {
@@ -92,24 +135,21 @@ export type WritableBasicStateEvents<A extends Value> = {
 	];
 };
 
-export interface WritableBasicState<A extends Value> {
-	compute<B>(computer: Computer<A, B>): ReadableState<B>;
+export interface WritableBasicState<A extends Value> extends AbstractWritableState<A, WritableBasicStateEvents<A>> {
 
-	observe(type: "update", observer: Observer<WritableBasicStateEvents<A>["update"]>): Subscription;
-	observe<B extends keyof WritableBasicStateEvents<A>>(type: B, observer: Observer<WritableBasicStateEvents<A>[B]>): Subscription;
-
-	shadow(): WritableState<A>;
-
-	// This one seems to require binding between targets event types.
-	subscribe<A, B extends TupleRecord<B>, C extends keyof B>(target: State<A>, type: C, callback: Callback<B[C]>): Subscription;
-
-	unobserve(type: "update", observer: Observer<WritableBasicStateEvents<A>["update"]>): void;
-	unobserve<B extends keyof WritableBasicStateEvents<A>>(type: B, observer: Observer<WritableBasicStateEvents<A>[B]>): void;
-
-	value(): A;
-
-	update(value: A): boolean;
 };
+
+
+
+
+
+
+
+
+
+
+
+
 
 export type ReadableArrayStateEvents<A extends ArrayValue> = ReadableBasicStateEvents<A> & {
 	"insert": [
@@ -122,7 +162,7 @@ export type ReadableArrayStateEvents<A extends ArrayValue> = ReadableBasicStateE
 	];
 };
 
-export interface ReadableArrayState<A extends ArrayValue> extends ReadableBasicState<A> {
+export interface ReadableArrayState<A extends ArrayValue> extends AbstractReadableState<A, ReadableArrayStateEvents<A>> {
 	element(index: number | ReadableState<number>): ReadableState<A[number]>;
 
 	filter(predicate: ReadablePredicate<A[number]>): ReadableState<Array<A[number]>>;
@@ -136,11 +176,6 @@ export interface ReadableArrayState<A extends ArrayValue> extends ReadableBasicS
 	mapStates<B>(mapper: ReadableStateMapper<A[number], B>): ReadableState<Array<B>>;
 
 	mapValues<B>(mapper: ValueMapper<A[number], B>): ReadableState<Array<B>>;
-
-	observe(type: "update", observer: Observer<ReadableArrayStateEvents<A>["update"]>): Subscription;
-	observe(type: "insert", observer: Observer<ReadableArrayStateEvents<A>["insert"]>): Subscription;
-	observe(type: "remove", observer: Observer<ReadableArrayStateEvents<A>["remove"]>): Subscription;
-	observe<B extends keyof ReadableArrayStateEvents<A>>(type: B, observer: Observer<ReadableArrayStateEvents<A>[B]>): Subscription;
 
 	spread(): ReadableElementStates<A>;
 
@@ -158,16 +193,16 @@ export type WritableArrayStateEvents<A extends ArrayValue> = WritableBasicStateE
 	];
 };
 
-export interface WritableArrayState<A extends ArrayValue> extends WritableBasicState<A> {
+export interface WritableArrayState<A extends ArrayValue> extends AbstractWritableState<A, WritableArrayStateEvents<A>> {
 	append(...items: Array<ReadableStateOrValue<A[number]>>): void;
 
-	element(index: number | ReadableState<number>): ReadableState<A[number]>;
+	element(index: number | ReadableState<number>): WritableState<A[number]>;
 
 	filter(predicate: ReadablePredicate<A[number]>): ReadableState<Array<A[number]>>;
 
 	first(): ReadableState<A[number] | undefined>;
 
-	insert(index: number, item: ReadableStateOrValue<A[number]>): ReadableState<A[number]>;
+	insert(index: number, item: WritableStateOrValue<A[number]>): WritableState<A[number]>;
 
 	last(): ReadableState<A[number] | undefined>;
 
@@ -176,11 +211,6 @@ export interface WritableArrayState<A extends ArrayValue> extends WritableBasicS
 	mapStates<B>(mapper: ReadableStateMapper<A[number], B>): ReadableState<Array<B>>;
 
 	mapValues<B>(mapper: ValueMapper<A[number], B>): ReadableState<Array<B>>;
-
-	observe(type: "update", observer: Observer<WritableArrayStateEvents<A>["update"]>): Subscription;
-	observe(type: "insert", observer: Observer<WritableArrayStateEvents<A>["insert"]>): Subscription;
-	observe(type: "remove", observer: Observer<WritableArrayStateEvents<A>["remove"]>): Subscription;
-	observe<B extends keyof WritableArrayStateEvents<A>>(type: B, observer: Observer<WritableArrayStateEvents<A>[B]>): Subscription;
 
 	remove(index: number): void;
 
@@ -203,12 +233,7 @@ export type ReadableRecordStateEvents<A extends RecordValue> = ReadableBasicStat
 	"detach": ReadableRecordStateEventsTuple<A>;
 };
 
-export interface ReadableRecordState<A extends RecordValue> extends ReadableBasicState<A> {
-	observe(type: "update", observer: Observer<ReadableRecordStateEvents<A>["update"]>): Subscription;
-	observe(type: "attach", observer: Observer<ReadableRecordStateEvents<A>["attach"]>): Subscription;
-	observe(type: "detach", observer: Observer<ReadableRecordStateEvents<A>["detach"]>): Subscription;
-	observe<B extends keyof ReadableRecordStateEvents<A>>(type: B, observer: Observer<ReadableRecordStateEvents<A>[B]>): Subscription;
-
+export interface ReadableRecordState<A extends RecordValue> extends AbstractReadableState<A, ReadableRecordStateEvents<A>> {
 	member<B extends keyof A>(key: ReadableStateOrValue<B>): ReadableState<A[B]>;
 
 	spread(): ReadableMemberStates<A>;
@@ -226,12 +251,7 @@ export type WritableRecordStateEvents<A extends RecordValue> = WritableBasicStat
 	"detach": WritableRecordStateEventsTuple<A>;
 };
 
-export interface WritableRecordState<A extends RecordValue> extends WritableBasicState<A> {
-	observe(type: "update", observer: Observer<WritableRecordStateEvents<A>["update"]>): Subscription;
-	observe(type: "attach", observer: Observer<WritableRecordStateEvents<A>["attach"]>): Subscription;
-	observe(type: "detach", observer: Observer<WritableRecordStateEvents<A>["detach"]>): Subscription;
-	observe<B extends keyof WritableRecordStateEvents<A>>(type: B, observer: Observer<WritableRecordStateEvents<A>[B]>): Subscription;
-
+export interface WritableRecordState<A extends RecordValue> extends AbstractWritableState<A, WritableRecordStateEvents<A>> {
 	attach<B extends string, C>(key: B, item: WritableStateOrValue<C>): WritableState<ExpansionOf<A & { [key in B]: C; }>>;
 
 	member<B extends keyof A>(key: WritableStateOrValue<B>): WritableState<A[B]>;
@@ -266,7 +286,7 @@ class StateImplementation<A> implements WritableArrayState<ArrayType<A>>, Writab
 		throw new Error("Method not implemented.");
 	}
 
-	element(index: number | ReadableBasicState<number>): ReadableState<ArrayType<A>[number]> {
+	element(index: number | ReadableBasicState<number>): WritableState<ArrayType<A>[number]> {
 		throw new Error("Method not implemented.");
 	}
 
@@ -320,37 +340,37 @@ class StateImplementation<A> implements WritableArrayState<ArrayType<A>>, Writab
 		throw new Error("Method not implemented.");
 	}
 
+	observe<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): Subscription;
+	observe<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): Subscription;
+	observe<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): Subscription;
 	observe<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): Subscription {
 		throw new Error("Method not implemented.");
 	}
 
-	shadow(): ReadableState<A>;
-	shadow(): WritableState<A>;
-	shadow(): ReadableState<A> | WritableState<A> {
+	shadow(): WritableState<A> {
 		throw new Error("Method not implemented.");
 	}
 
-	subscribe<A, B extends TupleRecord<B>, C extends keyof B>(target: State<A>, type: C, callback: Callback<B[C]>): Subscription {
+	subscribe<C extends TupleRecord<C>, D extends keyof C>(target: Observable<C>, type: D, callback: Callback<C[D]>): Subscription {
 		throw new Error("Method not implemented.");
 	}
 
-	unobserve<B extends keyof ReadableStateEvents<A>>(type: B, observer: Observer<ReadableStateEvents<A>[B]>): void {
+	unobserve<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): void;
+	unobserve<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): void;
+	unobserve<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): void;
+	unobserve<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): void {
 		throw new Error("Method not implemented.");
 	}
 
-	attach<B extends string, C>(key: B, item: ReadableStateOrValue<C>): WritableState<ExpansionOf<A & { [key in B]: C; }>>;
-	attach<B extends string, C>(key: B, item: WritableStateOrValue<C>): WritableState<ExpansionOf<A & { [key in B]: C; }>>;
-	attach<B extends string, C>(key: B, item: ReadableStateOrValue<C> | WritableStateOrValue<C>): WritableState<ExpansionOf<A & { [key in B]: C; }>> {
+	attach<B extends string, C>(key: B, item: WritableStateOrValue<C>): WritableState<ExpansionOf<A & { [key in B]: C; }>> {
 		throw new Error("Method not implemented.");
 	}
 
-	detach<B extends keyof A>(key: B): ReadableState<ExpansionOf<Omit<A, B>>>;
-	detach<B extends keyof A>(key: B): WritableState<ExpansionOf<Omit<A, B>>>;
-	detach<B extends keyof A>(key: B): ReadableState<ExpansionOf<Omit<A, B>>> | WritableState<ExpansionOf<Omit<A, B>>> {
+	detach<B extends keyof A>(key: B): WritableState<ExpansionOf<Omit<A, B>>> {
 		throw new Error("Method not implemented.");
 	}
 
-	insert(index: number, item: ReadableStateOrValue<ArrayType<A>[number]>): ReadableState<ArrayType<A>[number]> {
+	insert(index: number, item: WritableStateOrValue<ArrayType<A>[number]>): WritableState<ArrayType<A>[number]> {
 		throw new Error("Method not implemented.");
 	}
 
@@ -368,6 +388,30 @@ class StateImplementation<A> implements WritableArrayState<ArrayType<A>>, Writab
 
 	[key: number]: WritableState<ArrayType<A>[number]>;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export type ReadableElementStates<A extends ArrayValue> = {
 	[key: number]: ReadableState<A[number]>;
@@ -397,11 +441,17 @@ export type ReadableState<A> = ReadableState2<A> | (
 	ReadableBasicState<A>
 );
 
+export type GenericReadableState<A> = ReadableBasicState<A>;
+
 export type WritableState<A> = (
 	[A] extends [ArrayValue] ? WritableElementStates<A> & WritableArrayState<A> :
 	[A] extends [RecordButNotClass<A>] ? WritableMemberStates<A> & WritableRecordState<A> :
 	WritableBasicState<A>
 );
+
+export type GenericWritableState<A> = WritableBasicState<A>;
+
+export type GenericState<A> = GenericReadableState<A> | GenericWritableState<A>;
 
 export type State<A> = ReadableState<A> | WritableState<A>;
 
@@ -516,37 +566,37 @@ namespace attribute {
 	type mixed_state_1 = Attribute<string | { [key: string]: any }>;
 }
 
-function one1<A>(state: ReadableState<A>): void {
+function one1<A>(state: GenericReadableState<A>): void {
 	state.observe("update", (state) => {
-
+		let value = state.value();
 	});
 }
 
 function two2<A>(state: ReadableState<Array<A>>): void {
 	state.observe("update", (state) => {
-
+		let value = state.value();
 	});
 	state.observe("insert", (state, index) => {
-
+		let value = state.value();
 	});
 	state.observe("remove", (state, index) => {
-
+		let value = state.value();
 	});
 }
 
 function three3<A>(state: ReadableState<{ [key: string]: A }>): void {
 	state.observe("update", (state) => {
-
+		let value = state.value();
 	});
 	state.observe("attach", (state, key) => {
-
+		let value = state.value();
 	});
 	state.observe("detach", (state, key) => {
-
+		let value = state.value();
 	});
 }
 
-function one<A>(state: WritableState<A>): void {
+function one<A>(state: GenericWritableState<A>): void {
 	state.observe("update", (state) => {
 		state.update(state.value());
 	});
