@@ -429,7 +429,7 @@ export type WritableMemberStates<A extends RecordValue> = {
 	[B in keyof A]-?: WritableState<A[B]>;
 };
 
-export type ReadableState2<A> = (
+export type ReadableStateUndistributedUnion<A> = (
 	[A] extends [ArrayValue] ? ReadableElementStates<A> & ReadableArrayState<A> :
 	[A] extends [RecordButNotClass<A>] ? ReadableMemberStates<A> & ReadableRecordState<A> :
 	ReadableBasicState<A>
@@ -439,7 +439,7 @@ export type ReadableState<A> = (
 	A extends ArrayValue ? ReadableElementStates<A> & ReadableArrayState<A> :
 	A extends RecordButNotClass<A> ? ReadableMemberStates<A> & ReadableRecordState<A> :
 	ReadableBasicState<A>
-) | ReadableState2<A>;
+) | ReadableStateUndistributedUnion<A>;
 
 export type GenericReadableState<A> = ReadableBasicState<A>;
 
@@ -538,6 +538,19 @@ namespace value_from_attribute_readable_state {
 	type array_state_1 = ValueFromAttribute<ReadableState<string[]>>;
 	type array_state_2 = ValueFromAttribute<ReadableState<string[] | number[]>>;
 	type mixed_state_1 = ValueFromAttribute<ReadableState<string | { [key: string]: any }>>;
+}
+
+namespace value_from_attribute_writable_state {
+	type basic_state_1 = ValueFromAttribute<WritableState<string>>;
+	type basic_state_2 = ValueFromAttribute<WritableState<string | number>>;
+	type basic_state_3 = ValueFromAttribute<WritableState<Element>>;
+	type basic_state_4 = ValueFromAttribute<WritableState<Element | Date>>;
+	type basic_state_5 = ValueFromAttribute<WritableState<{ key: string } | number>>;
+	type record_state_1 = ValueFromAttribute<WritableState<{ one: string }>>;
+	type record_state_2 = ValueFromAttribute<WritableState<{ one: string } | { one: string, two: string }>>;
+	type array_state_1 = ValueFromAttribute<WritableState<string[]>>;
+	type array_state_2 = ValueFromAttribute<WritableState<string[] | number[]>>;
+	type mixed_state_1 = ValueFromAttribute<WritableState<string | { [key: string]: any }>>;
 }
 
 namespace state {
@@ -741,7 +754,7 @@ export function flatten<A extends RecursiveArray<any>>(states: ReadableState<Arr
 	let flattened = flatten(array);
 
 	// TODO: Fix inferrence.
-	flattened.subscribe(array as Observable<WritableArrayStateEvents<string[][][]>>, "insert", (state, index) => {
+	flattened.subscribe(stateify("string"), "insert", (state, index) => {
 
 	});
 }
