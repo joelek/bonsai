@@ -1,3 +1,5 @@
+import { ArrayState } from "./state";
+
 type ExpansionOf<A> = A extends infer B ? { [C in keyof B]: B[C] } : never;
 type ArrayElementType<A> = [A] extends [Array<infer B>] ? B : never;
 type RecordButNotClass<A> = A extends { [key: string]: unknown; } ? A : never;
@@ -52,7 +54,7 @@ export type MergedTuple<A extends RecordValue[]> = ExpansionOf<
 
 export type ValueMapper<A, B> = (value: A, index: number) => B;
 
-export type ReadablePredicate<A> = (state: ReadableState<A>, index: ReadableState<number>) => ReadableState<boolean>;
+export type Predicate<A> = (state: ReadableState<A>, index: ReadableState<number>) => ReadableState<boolean>;
 
 export type Observer<A extends any[]> = (...args: [...A]) => void;
 
@@ -83,9 +85,13 @@ export const Subscription = {
 
 
 
+export type ObserveOptions = {
+	weakly?: boolean;
+};
 
 export interface Observable<A extends TupleRecord<A>> {
-	observe<B extends keyof A>(type: B, observer: Observer<A[B]>): Subscription;
+	observe<B extends keyof A>(type: B, observer: Observer<A[B]>, options?: ObserveOptions): Subscription;
+	subscribe(subscription: Subscription): Subscription;
 	unobserve<B extends keyof A>(type: B, observer: Observer<A[B]>): void;
 };
 
@@ -178,7 +184,7 @@ export type ReadableArrayStateEvents<A extends ArrayValue> = ReadableBasicStateE
 export interface ReadableArrayState<A extends ArrayValue> extends AbstractReadableState<A, ReadableArrayStateEvents<A>> {
 	element(index: number | ReadableState<number>): ReadableState<A[number]>;
 
-	filter(predicate: ReadablePredicate<A[number]>): ReadableState<Array<A[number]>>;
+	filter(predicate: Predicate<A[number]>): ReadableState<Array<A[number]>>;
 
 	first(): ReadableState<A[number] | undefined>;
 
@@ -211,7 +217,7 @@ export interface WritableArrayState<A extends ArrayValue> extends AbstractWritab
 
 	element(index: number | ReadableState<number>): WritableState<A[number]>;
 
-	filter(predicate: ReadablePredicate<A[number]>): ReadableState<Array<A[number]>>;
+	filter(predicate: Predicate<A[number]>): WritableState<Array<A[number]>>;
 
 	first(): ReadableState<A[number] | undefined>;
 
@@ -303,7 +309,9 @@ class StateImplementation<A> implements WritableArrayState<ArrayType<A>>, Writab
 		throw new Error("Method not implemented.");
 	}
 
-	filter(predicate: ReadablePredicate<ArrayType<A>[number]>): ReadableElementStates<ArrayType<A>[number][]> & ReadableArrayState<ArrayType<A>[number][]> {
+	filter(predicate: Predicate<ArrayType<A>[number]>): ReadableState<Array<ArrayType<A>[number]>>;
+	filter(predicate: Predicate<ArrayType<A>[number]>): WritableState<Array<ArrayType<A>[number]>>;
+	filter(predicate: Predicate<ArrayType<A>[number]>): ReadableState<Array<ArrayType<A>[number]>> | WritableState<Array<ArrayType<A>[number]>> {
 		throw new Error("Method not implemented.");
 	}
 
@@ -364,7 +372,7 @@ class StateImplementation<A> implements WritableArrayState<ArrayType<A>>, Writab
 		throw new Error("Method not implemented.");
 	}
 
-	subscribe<C extends TupleRecord<C>, D extends keyof C>(target: Observable<C>, type: D, callback: Callback<C[D]>): Subscription {
+	subscribe(subscription: Subscription): Subscription {
 		throw new Error("Method not implemented.");
 	}
 
@@ -399,8 +407,6 @@ class StateImplementation<A> implements WritableArrayState<ArrayType<A>>, Writab
 		throw new Error("Method not implemented.");
 	}
 }
-
-
 
 
 
@@ -472,7 +478,7 @@ export type WritableStateOrValue<A> = A | WritableState<A>;
 
 export type StateOrValue<A> = A | State<A>;
 
-type Attribute<A> = State<A> | (
+export type Attribute<A> = State<A> | (
 	A extends ArrayValue ? { [B in keyof A]: Attribute<A[B]>; } :
 	A extends RecordValue ? A extends RecordButNotClass<A> ? { [B in keyof A]: Attribute<A[B]>; } : A :
 	A
@@ -480,21 +486,21 @@ type Attribute<A> = State<A> | (
 
 export type Attributes<A> = Attribute<A>;
 
-type ValueFromAttribute<A> = (
+export type ValueFromAttribute<A> = (
 	A extends State<infer B> ? B :
 	A extends ArrayValue ? { [B in keyof A]: ValueFromAttribute<A[B]>; } :
 	A extends RecordValue ? A extends RecordButNotClass<A> ? { [B in keyof A]: ValueFromAttribute<A[B]>; } : A :
 	A
 );
 
-type ReadableValueFromAttribute<A> = (
+export type ReadableValueFromAttribute<A> = (
 	A extends ReadableState<infer B> ? B :
 	A extends ArrayValue ? { [B in keyof A]: ReadableValueFromAttribute<A[B]>; } :
 	A extends RecordValue ? A extends RecordButNotClass<A> ? { [B in keyof A]: ReadableValueFromAttribute<A[B]>; } : A :
 	A
 );
 
-type WritableValueFromAttribute<A> = (
+export type WritableValueFromAttribute<A> = (
 	A extends WritableState<infer B> ? B :
 	A extends ArrayValue ? { [B in keyof A]: WritableValueFromAttribute<A[B]>; } :
 	A extends RecordValue ? A extends RecordButNotClass<A> ? { [B in keyof A]: WritableValueFromAttribute<A[B]>; } : A :
@@ -527,11 +533,11 @@ type WritableValueFromAttribute<A> = (
 
 
 
-function make_state<A>(value: A): WritableState<A> {
+export function make_state<A>(value: A): WritableState<A> {
 	return new StateImplementation(value) as any;
 };
 
-function stateify<A extends Attribute<any>>(attribute: A): StateFromAttribute<A> {
+export function stateify<A extends Attribute<any>>(attribute: A): StateFromAttribute<A> {
 	throw "";
 };
 
@@ -548,7 +554,7 @@ function stateify<A extends Attribute<any>>(attribute: A): StateFromAttribute<A>
 	let g: WritableState<[string, string]> = stateify(undefined as any as [ReadableState<string>, WritableState<string>]);
 }
 
-function valueify<A extends Attribute<any>>(attribute: A): ValueFromAttribute<A> {
+export function valueify<A extends Attribute<any>>(attribute: A): ValueFromAttribute<A> {
 	throw "";
 };
 
@@ -839,12 +845,12 @@ export function merge<A extends RecordValue[]>(...states: StateTupleFromValueTup
 
 
 
-export function fallback<A>(underlying: State<A | undefined>, default_value: Exclude<A, undefined>): State<Exclude<A, undefined>> {
+export function fallback<A>(underlying: WritableState<A | undefined>, default_value: Exclude<A, undefined>): WritableState<Exclude<A, undefined>> {
 	throw "";
 };
 
 {
-	fallback(make_state("string"), "hello");
+	fallback(make_state("string" as string | undefined), "hello");
 }
 
 export function computed<A extends ArrayValue, B>(states: [...StateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): State<B> {
@@ -856,3 +862,6 @@ export function computed<A extends ArrayValue, B>(states: [...StateTupleFromValu
 
 	});
 }
+
+// fallback
+// spread

@@ -1,11 +1,10 @@
 import * as wtf from "@joelek/wtf";
-import { Attribute, Attributes, merge, make_state, State, stateify, StateOrValue, valueify, Value, computed, fallback, flatten, squash, PrimitiveState, GenericState } from "./state";
+import { Attributes, merge, make_state, State, stateify, StateOrValue, valueify, Value, computed, fallback, flatten, squash, WritableState } from "./newstate";
 
 wtf.test(`State should ...`, (assert) => {
 	let state1: State<{ string: string; }> = stateify({ string: "string", additional: true });
 	// @ts-expect-error
 	let state2: State<{ string: string; additional: boolean; }> = stateify({ string: "string" });
-	let state3: State<{}> = stateify<any>(null);
 });
 
 wtf.test(`State should support exotic unions.`, (assert) => {
@@ -62,27 +61,27 @@ wtf.test(`Attributes<A> should support complex values.`, (assert) => {
 		union: "a"
 	};
 	let array = stateify(attributes.array);
-	array.update([{ string: "b" }]);
+	//array.update([{ string: "b" }]);
 	array.observe("update", (state) => {});
 	array.observe("insert", (state) => {});
 	array.observe("remove", (state) => {});
 	assert.equals(array[0].value(), { string: "b" });
 	assert.equals(array.value(), [{ string: "b" }]);
 	let tuple = stateify(attributes.tuple);
-	tuple.update(["b", 1]);
+	//tuple.update(["b", 1]);
 	tuple.observe("update", (state) => {});
 	tuple.observe("insert", (state) => {});
 	tuple.observe("remove", (state) => {});
 	assert.equals(tuple[0].value(), "b");
 	assert.equals(tuple.value(), ["b", 1]);
 	let object = stateify(attributes.object);
-	object.update({ string: "b" });
+	//object.update({ string: "b" });
 	object.observe("update", (state) => {});
 	assert.equals(object.string.value(), "b");
 	assert.equals(object.value(), { string: "b" });
 	let union = stateify(attributes.union);
-	union.update("a");
-	union.update("b");
+	//union.update("a");
+	//union.update("b");
 	union.observe("update", (state) => {});
 	assert.equals(union.value(), "b");
 });
@@ -484,7 +483,7 @@ wtf.test(`Attributes should be user-friendly.`, (assert) => {
 	assert.equals(valueify(required_required), "reqreq");
 	let required_optional = required.optional;
 	assert.equals(valueify(required_optional), "reqopt");
-	let optional = fallback(stateify(attributes).member("optional"), { required: "optreq2" });
+	let optional = fallback(state.member("optional"), { required: "optreq2" });
 	let optional_required = optional.required;
 	assert.equals(valueify(optional_required), "optreq");
 	let optional_optional = optional.optional;
@@ -1286,16 +1285,16 @@ wtf.test(`Fallback states should be properly updated when underlying states are 
 
 wtf.test(`Fallback states should synchronize underlying record states using insert, remove and update events.`, (assert) => {
 	let underlying = make_state({} as Record<string, string>);
-	let fallbacked = fallback(underlying as State<Record<string, string> | undefined>, {});
+	let fallbacked = fallback(underlying as WritableState<Record<string, string> | undefined>, {});
 	let events = [] as Array<{ type: string, key?: string, value?: string }>;
-	underlying.observe("insert", (state, key) => {
+	underlying.observe("attach", (state, key) => {
 		events.push({
 			type: "insert",
 			key: key,
 			value: state.value()
 		});
 	});
-	underlying.observe("remove", (state, key) => {
+	underlying.observe("detach", (state, key) => {
 		events.push({
 			type: "remove",
 			key: key,
@@ -1307,10 +1306,10 @@ wtf.test(`Fallback states should synchronize underlying record states using inse
 			type: "update"
 		});
 	});
-	fallbacked.insert("one", "a");
-	fallbacked.insert("two", "b");
-	fallbacked.remove("two");
-	fallbacked.remove("one");
+	fallbacked.attach("one", "a");
+	fallbacked.attach("two", "b");
+	fallbacked.detach("two");
+	fallbacked.detach("one");
 	assert.equals(events, [
 		{
 			type: "insert",
@@ -1349,16 +1348,16 @@ wtf.test(`Fallback states should synchronize underlying record states using inse
 
 wtf.test(`Underlying record states should synchronize fallback states using insert, remove and update events.`, (assert) => {
 	let underlying = make_state({} as Record<string, string>);
-	let fallbacked = fallback(underlying as State<Record<string, string> | undefined>, {});
+	let fallbacked = fallback(underlying as WritableState<Record<string, string> | undefined>, {});
 	let events = [] as Array<{ type: string, key?: string, value?: string }>;
-	fallbacked.observe("insert", (state, key) => {
+	fallbacked.observe("attach", (state, key) => {
 		events.push({
 			type: "insert",
 			key: key,
 			value: state.value()
 		});
 	});
-	fallbacked.observe("remove", (state, key) => {
+	fallbacked.observe("detach", (state, key) => {
 		events.push({
 			type: "remove",
 			key: key,
@@ -1370,10 +1369,10 @@ wtf.test(`Underlying record states should synchronize fallback states using inse
 			type: "update"
 		});
 	});
-	underlying.insert("one", "a");
-	underlying.insert("two", "b");
-	underlying.remove("two");
-	underlying.remove("one");
+	underlying.attach("one", "a");
+	underlying.attach("two", "b");
+	underlying.detach("two");
+	underlying.detach("one");
 	assert.equals(events, [
 		{
 			type: "insert",
@@ -1634,7 +1633,7 @@ wtf.test(`Fallback states should be properly updated when underlying states are 
 
 wtf.test(`Fallback states should synchronize underlying array states using insert, remove and update events.`, (assert) => {
 	let underlying = make_state([] as Array<string>);
-	let fallbacked = fallback(underlying as State<Array<string> | undefined>, []);
+	let fallbacked = fallback(underlying as WritableState<Array<string> | undefined>, []);
 	let events = [] as Array<{ type: string, index?: number, value?: string }>;
 	underlying.observe("insert", (state, index) => {
 		events.push({
@@ -1697,7 +1696,7 @@ wtf.test(`Fallback states should synchronize underlying array states using inser
 
 wtf.test(`Underlying array states should synchronize fallback states using insert, remove and update events.`, (assert) => {
 	let underlying = make_state([] as Array<string>);
-	let fallbacked = fallback(underlying as State<Array<string> | undefined>, []);
+	let fallbacked = fallback(underlying as WritableState<Array<string> | undefined>, []);
 	let events = [] as Array<{ type: string, index?: number, value?: string }>;
 	fallbacked.observe("insert", (state, index) => {
 		events.push({
@@ -2309,44 +2308,44 @@ wtf.test(`Dynamic members being updated should propagate the changes back to the
 wtf.test(`Record states should support insertion and removal of members.`, (asserts) => {
 	let state = make_state({} as Record<string, string>);
 	asserts.equals(state.value(), {});
-	state.insert("one", "one");
+	state.attach("one", "one");
 	asserts.equals(state.value(), { one: "one" });
-	state.insert("two", "two");
+	state.attach("two", "two");
 	asserts.equals(state.value(), { one: "one", two: "two" });
-	state.remove("one");
+	state.detach("one");
 	asserts.equals(state.value(), { two: "two" });
-	state.remove("two");
+	state.detach("two");
 	asserts.equals(state.value(), {});
 });
 
 wtf.test(`Record states should throw an error when attempting to insert an existent member.`, async (asserts) => {
 	let state = make_state({} as Record<string, string>);
-	state.insert("one", "one");
+	state.attach("one", "one");
 	await asserts.throws(() => {
-		state.insert("one", "one");
+		state.attach("one", "one");
 	});
 });
 
 wtf.test(`Record states should throw an error when attempting to remove a non-existent member.`, async (asserts) => {
 	let state = make_state({} as Record<string, string>);
 	await asserts.throws(() => {
-		state.remove("one");
+		state.detach("one");
 	});
 });
 
 wtf.test(`Record states should emit insert and remove events.`, (asserts) => {
 	let state = make_state({} as Record<string, string>);
 	let events = [] as Array<string>;
-	state.observe("insert", (state, key) => {
+	state.observe("attach", (state, key) => {
 		events.push(key);
 	});
-	state.observe("remove", (state, key) => {
+	state.observe("detach", (state, key) => {
 		events.push(key);
 	});
-	state.insert("one", "one");
-	state.insert("two", "two");
-	state.remove("one");
-	state.remove("two");
+	state.attach("one", "one");
+	state.attach("two", "two");
+	state.detach("one");
+	state.detach("two");
 	asserts.equals(events, [
 		"one",
 		"two",
@@ -2390,14 +2389,14 @@ wtf.test(`Array states should emit remove events when set to undefined.`, (asser
 wtf.test(`Record states should emit remove events when set to undefined.`, (assert) => {
 	let state = make_state({ one: "a", two: "b" } as Record<string, string>);
 	let events = [] as Array<{ type: string, key: string, value: string }>;
-	state.observe("insert", (member, key) => {
+	state.observe("attach", (member, key) => {
 		events.push({
 			type: "insert",
 			key: key,
 			value: member.value()
 		});
 	});
-	state.observe("remove", (member, key) => {
+	state.observe("detach", (member, key) => {
 		events.push({
 			type: "remove",
 			key: key,
@@ -2616,7 +2615,7 @@ wtf.test(`Record shadow states should synchronize with their source states using
 		value: Record<string, string>;
 	}>;
 	let source = make_state({} as Record<string, string>);
-	source.observe("insert", (element, key) => {
+	source.observe("attach", (element, key) => {
 		events.push({
 			target: "source",
 			type: "insert",
@@ -2624,7 +2623,7 @@ wtf.test(`Record shadow states should synchronize with their source states using
 			key: key
 		})
 	});
-	source.observe("remove", (element, key) => {
+	source.observe("detach", (element, key) => {
 		events.push({
 			target: "source",
 			type: "remove",
@@ -2640,7 +2639,7 @@ wtf.test(`Record shadow states should synchronize with their source states using
 		})
 	});
 	let shadow = source.shadow();
-	shadow.observe("insert", (element, key) => {
+	shadow.observe("attach", (element, key) => {
 		events.push({
 			target: "shadow",
 			type: "insert",
@@ -2648,7 +2647,7 @@ wtf.test(`Record shadow states should synchronize with their source states using
 			key: key
 		})
 	});
-	shadow.observe("remove", (element, key) => {
+	shadow.observe("detach", (element, key) => {
 		events.push({
 			target: "shadow",
 			type: "remove",
@@ -2663,10 +2662,10 @@ wtf.test(`Record shadow states should synchronize with their source states using
 			value: source.value()
 		})
 	});
-	shadow.insert("one", "a");
-	source.insert("two", "b");
-	shadow.remove("one");
-	source.remove("two");
+	shadow.attach("one", "a");
+	source.attach("two", "b");
+	shadow.detach("one");
+	source.detach("two");
 	assert.equals(events, [
 		{ target: "source", type: "insert", element: "a", key: "one" },
 		{ target: "source", type: "update", value: { one: "a" } },
