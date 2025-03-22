@@ -89,8 +89,6 @@ export type State<A> = GenericState<A> & (
 	PrimitiveState<A>
 );
 
-type k = State<any>["append"];
-
 export type StateTupleFromValueTuple<A extends ArrayValue> = {
 	[B in keyof A]: State<A[B]>;
 };

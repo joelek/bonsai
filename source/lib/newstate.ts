@@ -20,6 +20,32 @@ export type RecordValue = { [key: string]: Value; };
 
 export type ReadableStateMapper<A, B> = (state: ReadableState<A>, index: ReadableState<number>) => B | ReadableState<B>;
 
+export type StateTupleFromValueTuple<A extends ArrayValue> = {
+	[B in keyof A]: State<A[B]>;
+};
+
+export type MergedPair<A extends RecordValue, B extends RecordValue> = ExpansionOf<{
+	[C in keyof A | keyof B]: C extends keyof A & keyof B
+		? undefined extends B[C]
+			? Exclude<B[C], undefined> | A[C]
+			: B[C]
+		: C extends keyof A
+			? A[C]
+			: C extends keyof B
+				? B[C]
+				: never;
+}>;
+
+export type MergedTuple<A extends RecordValue[]> = ExpansionOf<
+	A extends [infer B extends RecordValue, infer C extends RecordValue, ...infer D extends RecordValue[]]
+		? MergedTuple<[MergedPair<B, C>, ...D]>
+		: A extends [infer B extends RecordValue, infer C extends RecordValue]
+			? MergedPair<B, C>
+			: A extends [infer B extends RecordValue]
+				? B
+				: {}
+>;
+
 export type ValueMapper<A, B> = (value: A, index: number) => B;
 
 export type ReadablePredicate<A> = (state: ReadableState<A>, index: ReadableState<number>) => ReadableState<boolean>;
@@ -52,15 +78,8 @@ export const Subscription = {
 
 
 
-/*
-
-type EventNamesFromState<A> = A extends State<any> ? Parameters<A["observe"]>[0] : never;
-type EventTypesFromState<A> = A extends State<any> ? Parameters<A["observe"]>[1] extends Observer<infer B extends any[]> ? B : never : never;
-
-type k = EventTypesFromState<State<Array<number>>>;
 
 
- */
 export interface Observable<A extends TupleRecord<A>> {
 	observe<B extends keyof A>(type: B, observer: Observer<A[B]>): Subscription;
 	unobserve<B extends keyof A>(type: B, observer: Observer<A[B]>): void;
@@ -75,20 +94,12 @@ export interface Observable<A extends TupleRecord<A>> {
 
 
 
-export type ReadableStateOrValue<A> = A | ReadableState<A>;
-
-export type WritableStateOrValue<A> = A | WritableState<A>;
-
-
-
 
 
 export interface AbstractReadableState<A extends Value, B extends TupleRecord<B>> extends Observable<B> {
 	compute<C>(computer: Computer<A, C>): ReadableState<C>;
 
 	shadow(): ReadableState<A>;
-
-	subscribe<C extends TupleRecord<C>, D extends keyof C>(target: Observable<C>, type: D, callback: Callback<C[D]>): Subscription;
 
 	value(): A;
 };
@@ -97,8 +108,6 @@ export interface AbstractWritableState<A extends Value, B extends TupleRecord<B>
 	compute<C>(computer: Computer<A, C>): ReadableState<C>;
 
 	shadow(): WritableState<A>;
-
-	subscribe<C extends TupleRecord<C>, D extends keyof C>(target: Observable<C>, type: D, callback: Callback<C[D]>): Subscription;
 
 	value(): A;
 
@@ -455,6 +464,10 @@ export type GenericState<A> = GenericReadableState<A> | GenericWritableState<A>;
 
 export type State<A> = ReadableState<A> | WritableState<A>;
 
+export type ReadableStateOrValue<A> = A | ReadableState<A>;
+
+export type WritableStateOrValue<A> = A | WritableState<A>;
+
 export type StateOrValue<A> = A | State<A>;
 
 type Attribute<A> = State<A> | (
@@ -462,6 +475,8 @@ type Attribute<A> = State<A> | (
 	A extends RecordValue ? A extends RecordButNotClass<A> ? { [B in keyof A]: Attribute<A[B]>; } : A :
 	A
 );
+
+export type Attributes<A> = Attribute<A>;
 
 type ValueFromAttribute<A> = (
 	A extends State<infer B> ? B :
@@ -752,9 +767,32 @@ export function flatten<A extends RecursiveArray<any>>(states: ReadableState<Arr
 	let array_1 = stateify([array_10, array_11]);
 	let array = stateify([array_0, array_1]);
 	let flattened = flatten(array);
+}
 
-	// TODO: Fix inferrence.
-	flattened.subscribe(stateify("string"), "insert", (state, index) => {
+export function merge<A extends RecordValue[]>(...states: StateTupleFromValueTuple<A>): State<MergedTuple<A>> {
+	throw "";
+};
+
+{
+	let one = stateify({ a: 1 });
+	let two = stateify({ a: null as string | null });
+	let merged: Attributes<{ a: string | null }> = merge(one, two);
+}
+
+
+
+
+export function fallback<A>(underlying: State<A | undefined>, default_value: Exclude<A, undefined>): State<Exclude<A, undefined>> {
+	throw "";
+};
+
+
+export function computed<A extends ArrayValue, B>(states: [...StateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): State<B> {
+	throw "";
+};
+
+{
+	computed([make_state(5), make_state("string")], (a, b) => {
 
 	});
 }
