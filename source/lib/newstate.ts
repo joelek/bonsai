@@ -22,6 +22,8 @@ export type RecordValue = { [key: string]: Value; };
 
 export type ReadableStateMapper<A, B> = (state: ReadableState<A>, index: ReadableState<number>) => B | ReadableState<B>;
 
+export type StateFromAttribute<A> = WritableValueFromAttribute<A> extends ValueFromAttribute<A> ? WritableState<ValueFromAttribute<A>> : ReadableState<ValueFromAttribute<A>>
+
 export type StateTupleFromValueTuple<A extends ArrayValue> = {
 	[B in keyof A]: State<A[B]>;
 };
@@ -529,7 +531,7 @@ function make_state<A>(value: A): WritableState<A> {
 	return new StateImplementation(value) as any;
 };
 
-function stateify<A extends Attribute<any>>(attribute: A): WritableValueFromAttribute<A> extends ValueFromAttribute<A> ? WritableState<ValueFromAttribute<A>> : ReadableState<ValueFromAttribute<A>> {
+function stateify<A extends Attribute<any>>(attribute: A): StateFromAttribute<A> {
 	throw "";
 };
 
