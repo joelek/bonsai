@@ -470,7 +470,7 @@ export type GenericWritableState<A> = WritableBasicState<A>;
 
 export type GenericState<A> = GenericReadableState<A> | GenericWritableState<A>;
 
-export type State<A> = ReadableState<A> | WritableState<A>;
+export type State<A> = WritableState<A>;
 
 export type ReadableStateOrValue<A> = A | ReadableState<A>;
 

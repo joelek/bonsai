@@ -1,5 +1,5 @@
 import { Boolean, Integer, OptionCodec, Plain, Undefined, Union } from "./codecs";
-import { RecordValue, make_state, State, computed } from "./state";
+import { RecordValue, make_state, State, computed } from "./newstate";
 
 export type ExpansionOf<A> = A extends infer B ? { [C in keyof B]: B[C] } : never;
 
@@ -216,7 +216,7 @@ export class Router<A extends PageOptions<any> = {}> {
 				if (entryElement.value() == null) {
 					let factory = this.factories.value()[parsedRoute.page as keyof A];
 					let options = make_state(parsedRoute.options as A[keyof A]);
-					entryElement.update(factory.factory(options as any, entryTitle, this as any));
+					entryElement.update(factory.factory(options, entryTitle, this));
 					options.compute((options) => {
 						entryRoute.update(factory.codec.encode(options));
 					});

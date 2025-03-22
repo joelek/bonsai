@@ -1,7 +1,7 @@
 import * as wtf from "@joelek/wtf";
 import * as router from "./router";
 import * as codecs from "./codecs";
-import { RecordValue } from "./state";
+import { RecordValue } from "./newstate";
 
 async function mock(callback: () => (void | Promise<void>)): Promise<void> {
 	let window = globalThis["window"];

@@ -177,7 +177,7 @@ function one<A>(state: State<A>): void {
 }
 
 function two<A>(state: State<RecordValue>): void {
-	state.observe("insert", (state, key) => {
+	state.observe("attach", (state, key) => {
 		state.update(state.value());
 	});
 	state.update(state.value());
@@ -849,8 +849,8 @@ export type ObjectStateEventsTuple<A extends RecordValue> = {
 }[keyof A];
 
 export type ObjectStateEvents<A extends RecordValue> = AbstractStateEvents<A> & {
-	"insert": ObjectStateEventsTuple<A>;
-	"remove": ObjectStateEventsTuple<A>;
+	"attach": ObjectStateEventsTuple<A>;
+	"detach": ObjectStateEventsTuple<A>;
 };
 
 export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectStateEvents<A>> {
@@ -885,13 +885,13 @@ export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectS
 	}
 
 	observe(type: "update", observer: Observer<ObjectStateEvents<A>["update"]>): CancellationToken;
-	observe(type: "insert", observer: Observer<ObjectStateEvents<A>["insert"]>): CancellationToken;
-	observe(type: "remove", observer: Observer<ObjectStateEvents<A>["remove"]>): CancellationToken;
+	observe(type: "attach", observer: Observer<ObjectStateEvents<A>["attach"]>): CancellationToken;
+	observe(type: "detach", observer: Observer<ObjectStateEvents<A>["detach"]>): CancellationToken;
 	observe<C extends keyof ObjectStateEvents<A>>(type: C, observer: Observer<ObjectStateEvents<A>[C]>): CancellationToken {
 		return super.observe(type, observer);
 	}
 
-	insert<B extends string, C>(key: B, item: StateOrValue<C>): State<ExpansionOf<A & { [key in B]: C; }>> {
+	attach<B extends string, C>(key: B, item: StateOrValue<C>): State<ExpansionOf<A & { [key in B]: C; }>> {
 		if (key in this.members) {
 			throw new Error(`Expected member with key ${String(key)} to be absent!`);
 		}
@@ -900,7 +900,7 @@ export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectS
 		member.observe("update", this.onMemberUpdate);
 		if (true) {
 			this.operate(() => {
-				this.notify("insert", member as any, key);
+				this.notify("attach", member as any, key);
 			});
 		}
 		if (!this.operating) {
@@ -932,13 +932,13 @@ export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectS
 			let member = this.members[key];
 			if (member == null) {
 				member = make_state(undefined) as any;
-				this.insert(key as any, member as any);
+				this.attach(key as any, member as any);
 			}
 			return member;
 		}
 	}
 
-	remove<B extends keyof A>(key: B): State<ExpansionOf<Omit<A, B>>> {
+	detach<B extends keyof A>(key: B): State<ExpansionOf<Omit<A, B>>> {
 		if (!(key in this.members)) {
 			throw new Error(`Expected member with key ${String(key)} to be present!`);
 		}
@@ -967,19 +967,19 @@ export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectS
 		let shadow = make_state({} as RecordValue);
 		for (let key in source.members) {
 			let member = source.members[key];
-			shadow.insert(key, member.shadow());
+			shadow.attach(key, member.shadow());
 		}
-		shadow.subscribe(source as AbstractState<A, ObjectStateEvents<A>>, "insert", (member, key) => {
+		shadow.subscribe(source as AbstractState<A, ObjectStateEvents<A>>, "attach", (member, key) => {
 			if (controller !== "shadow") {
 				controller = "source";
-				shadow.insert(key as any, member.shadow());
+				shadow.attach(key as any, member.shadow());
 				controller = undefined;
 			}
 		});
-		shadow.subscribe(source as AbstractState<A, ObjectStateEvents<A>>, "remove", (member, key) => {
+		shadow.subscribe(source as AbstractState<A, ObjectStateEvents<A>>, "detach", (member, key) => {
 			if (controller !== "shadow") {
 				controller = "source";
-				shadow.remove(key as any);
+				shadow.detach(key as any);
 				controller = undefined;
 			}
 		});
@@ -990,17 +990,17 @@ export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectS
 				controller = undefined;
 			}
 		});
-		shadow.observe("insert", (member, key) => {
+		shadow.observe("attach", (member, key) => {
 			if (controller !== "source") {
 				controller = "shadow";
-				source.insert(key, member.shadow());
+				source.attach(key, member.shadow());
 				controller = undefined;
 			}
 		});
-		shadow.observe("remove", (member, key) => {
+		shadow.observe("detach", (member, key) => {
 			if (controller !== "source") {
 				controller = "shadow";
-				source.remove(key);
+				source.detach(key);
 				controller = undefined;
 			}
 		});
@@ -1023,7 +1023,7 @@ export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectS
 			for (let key in this.members) {
 				let member = this.member(key);
 				if (typeof value === "undefined" || !(key in value)) {
-					this.remove(key);
+					this.detach(key);
 					updated = true;
 				} else {
 					if (member.update(value[key] as any)) {
@@ -1033,7 +1033,7 @@ export class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectS
 			}
 			for (let key in value) {
 				if (!(key in this.members)) {
-					this.insert(key, value[key]);
+					this.attach(key, value[key]);
 					updated = true;
 				}
 			}
@@ -1315,7 +1315,7 @@ export function squash<A extends RecordValue>(records: State<Array<A>>): State<A
 		if (array == null) {
 			array = make_state(new Array<Value | symbol>(records.length.value()).fill(absent));
 			arrays.set(key, array);
-			squashed.insert(key, array.compute((values) => {
+			squashed.attach(key, array.compute((values) => {
 				for (let value of values.reverse()) {
 					if (typeof value !== "undefined" && value !== absent) {
 						return value;
@@ -1339,7 +1339,7 @@ export function squash<A extends RecordValue>(records: State<Array<A>>): State<A
 				return;
 			}
 		}
-		squashed.remove(key);
+		squashed.detach(key);
 		arrays.delete(key);
 	}
 	let inserts = [] as Array<CancellationToken>;
@@ -1352,11 +1352,11 @@ export function squash<A extends RecordValue>(records: State<Array<A>>): State<A
 			let member = record[key];
 			attach_member(index, member, key);
 		}
-		let insert = record.observe("insert", (member, key) => {
+		let insert = record.observe("attach", (member, key) => {
 			attach_member(index, member, key);
 		});
 		inserts.splice(index, 0, insert);
-		let remove = record.observe("remove", (member, key) => {
+		let remove = record.observe("detach", (member, key) => {
 			detach_member(index, member, key);
 		});
 		removes.splice(index, 0, remove);

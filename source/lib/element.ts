@@ -1,4 +1,4 @@
-import { AbstractState, ArrayValue, Attribute, CancellationToken, flatten, RecordValue, State, stateify, Value } from "./state";
+import { AbstractState, ArrayValue, Attribute, CancellationToken, flatten, RecordValue, State, stateify, Value } from "./newstate";
 
 export type AttributeRecord = { [key: string]: Attribute<Value>; };
 
