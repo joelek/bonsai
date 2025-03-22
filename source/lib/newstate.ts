@@ -485,6 +485,19 @@ type ValueFromAttribute<A> = (
 	A
 );
 
+type ReadableValueFromAttribute<A> = (
+	A extends ReadableState<infer B> ? B :
+	A extends ArrayValue ? { [B in keyof A]: ReadableValueFromAttribute<A[B]>; } :
+	A extends RecordValue ? A extends RecordButNotClass<A> ? { [B in keyof A]: ReadableValueFromAttribute<A[B]>; } : A :
+	A
+);
+
+type WritableValueFromAttribute<A> = (
+	A extends WritableState<infer B> ? B :
+	A extends ArrayValue ? { [B in keyof A]: WritableValueFromAttribute<A[B]>; } :
+	A extends RecordValue ? A extends RecordButNotClass<A> ? { [B in keyof A]: WritableValueFromAttribute<A[B]>; } : A :
+	A
+);
 
 
 
@@ -516,19 +529,21 @@ function make_state<A>(value: A): WritableState<A> {
 	return new StateImplementation(value) as any;
 };
 
-function stateify<A extends Attribute<any>>(attribute: A): A extends ReadableState<infer B> ? A : WritableState<ValueFromAttribute<A>> {
+function stateify<A extends Attribute<any>>(attribute: A): WritableValueFromAttribute<A> extends ValueFromAttribute<A> ? WritableState<ValueFromAttribute<A>> : ReadableState<ValueFromAttribute<A>> {
 	throw "";
 };
 
 {
+	let a: WritableState<string> = stateify(undefined as any as string);
 	// @ts-expect-error
-	let a: WritableState<string> = stateify(undefined as any as ReadableState<string>);
-	let b: WritableState<string> = stateify(undefined as any as string);
+	let b: WritableState<string> = stateify(undefined as any as ReadableState<string>);
 	let c: WritableState<string> = stateify(undefined as any as WritableState<string>);
-
-
-
-
+	let d: WritableState<[string, string]> = stateify(undefined as any as [string, string]);
+	// @ts-expect-error
+	let e: WritableState<[string, string]> = stateify(undefined as any as [string, ReadableState<string>]);
+	let f: WritableState<[string, string]> = stateify(undefined as any as [string, WritableState<string>]);
+	// @ts-expect-error
+	let g: WritableState<[string, string]> = stateify(undefined as any as [ReadableState<string>, WritableState<string>]);
 }
 
 function valueify<A extends Attribute<any>>(attribute: A): ValueFromAttribute<A> {
