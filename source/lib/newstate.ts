@@ -3,6 +3,8 @@ type ArrayElementType<A> = [A] extends [Array<infer B>] ? B : never;
 type RecordButNotClass<A> = A extends { [key: string]: unknown; } ? A : never;
 type RecursiveArray<A> = Array<A | RecursiveArray<A>>;
 type RecursiveArrayType<A> = A extends Array<infer B> ? RecursiveArrayType<B> : A;
+type IsTuple<A> = Extract<keyof A, `${number}`> extends number ? false : true;
+type TupleButNotArray<A> = Extract<keyof A, `${number}`> extends number ? A : never;
 
 export type TupleRecord<A extends TupleRecord<A>> = { [C in keyof A]: any[]; };
 
@@ -423,7 +425,7 @@ class StateImplementation<A> implements WritableArrayState<ArrayType<A>>, Writab
 
 
 export type ReadableElementStates<A extends ArrayValue> = {
-	[key: number]: ReadableState<A[number]>;
+	[B in number]: ReadableState<A[B]>;
 };
 
 export type ReadableMemberStates<A extends RecordValue> = {
@@ -431,7 +433,7 @@ export type ReadableMemberStates<A extends RecordValue> = {
 };
 
 export type WritableElementStates<A extends ArrayValue> = {
-	[key: number]: WritableState<A[number]>;
+	[B in number]: WritableState<A[B]>;
 };
 
 export type WritableMemberStates<A extends RecordValue> = {
@@ -485,6 +487,35 @@ type ValueFromAttribute<A> = (
 	A
 );
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function make_state<A>(value: A): WritableState<A> {
 	return new StateImplementation(value) as any;
 };
@@ -498,10 +529,13 @@ function valueify<A extends Attribute<any>>(attribute: A): ValueFromAttribute<A>
 	throw "";
 };
 
-let state = stateify([make_state("a"), "b"]);
-let state2 = stateify(["a", "b"] as ["a", "b"]);
+let state1 = stateify([make_state("a"), "b"])[0];
+let state2 = stateify(["a", "b"] as ["a", "b"])[0];
 let state3 = stateify({ one: "a", two: "b" });
-let value = valueify([make_state("a"), "b"]);
+
+let value1 = valueify([make_state("a"), "b"]);
+let value2 = valueify(["a", "b"] as ["a", "b"]);
+let value3 = valueify({ one: "a", two: "b" });
 
 
 
@@ -786,6 +820,9 @@ export function fallback<A>(underlying: State<A | undefined>, default_value: Exc
 	throw "";
 };
 
+{
+	fallback(make_state("string"), "hello");
+}
 
 export function computed<A extends ArrayValue, B>(states: [...StateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): State<B> {
 	throw "";
