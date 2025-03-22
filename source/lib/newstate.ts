@@ -265,7 +265,7 @@ export type WritableRecordStateEvents<A extends RecordValue> = WritableBasicStat
 export interface WritableRecordState<A extends RecordValue> extends AbstractWritableState<A, WritableRecordStateEvents<A>> {
 	attach<B extends string, C>(key: B, item: WritableStateOrValue<C>): WritableState<ExpansionOf<A & { [key in B]: C; }>>;
 
-	member<B extends keyof A>(key: WritableStateOrValue<B>): WritableState<A[B]>;
+	member<B extends keyof A>(key: ReadableStateOrValue<B>): WritableState<A[B]>;
 
 	detach<B extends keyof A>(key: B): WritableState<ExpansionOf<Omit<A, B>>>;
 
@@ -396,8 +396,6 @@ class StateImplementation<A> implements WritableArrayState<ArrayType<A>>, Writab
 	value(): A {
 		throw new Error("Method not implemented.");
 	}
-
-	[key: number]: WritableState<ArrayType<A>[number]>;
 }
 
 
@@ -514,23 +512,31 @@ type ValueFromAttribute<A> = (
 
 
 
-
-
 function make_state<A>(value: A): WritableState<A> {
 	return new StateImplementation(value) as any;
 };
 
-/* logic: return writable state only when attribute is value, else readable state */
-function stateify<A extends Attribute<any>>(attribute: A): ReadableState<ValueFromAttribute<A>> {
+function stateify<A extends Attribute<any>>(attribute: A): A extends ReadableState<infer B> ? A : WritableState<ValueFromAttribute<A>> {
 	throw "";
 };
+
+{
+	// @ts-expect-error
+	let a: WritableState<string> = stateify(undefined as any as ReadableState<string>);
+	let b: WritableState<string> = stateify(undefined as any as string);
+	let c: WritableState<string> = stateify(undefined as any as WritableState<string>);
+
+
+
+
+}
 
 function valueify<A extends Attribute<any>>(attribute: A): ValueFromAttribute<A> {
 	throw "";
 };
 
-let state1 = stateify([make_state("a"), "b"])[0];
-let state2 = stateify(["a", "b"] as ["a", "b"])[0];
+let state1 = stateify([make_state("a"), "b"]);
+let state2 = stateify(["a", "b"] as ["a", "b"]);
 let state3 = stateify({ one: "a", two: "b" });
 
 let value1 = valueify([make_state("a"), "b"]);
