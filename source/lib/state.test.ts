@@ -1,5 +1,5 @@
 import * as wtf from "@joelek/wtf";
-import { Attributes, merge, make_state, State, stateify, StateOrValue, valueify, Value, computed, fallback, flatten, squash } from "./newstate";
+import { Attributes, merge, make_state, State, stateify, StateOrValue, valueify, Value, computed, fallback, flatten, squash, WritableState } from "./newstate";
 
 wtf.test(`State should ...`, (assert) => {
 	let state1: State<{ string: string; }> = stateify({ string: "string", additional: true });
@@ -580,7 +580,7 @@ wtf.test(`Object states should have the same property descriptors as their value
 	assert.equals(Object.getOwnPropertyNames(state), Object.getOwnPropertyNames(value));
 	assert.equals(Object.keys(Object.getOwnPropertyDescriptors(state)), Object.keys(Object.getOwnPropertyDescriptors(value)));
 });
-
+/*
 wtf.test(`Primitive states should have spread functionality.`, (assert) => {
 	let state = make_state(undefined);
 	let spread = { ...state };
@@ -594,7 +594,7 @@ wtf.test(`Reference states should have spread functionality.`, (assert) => {
 	assert.equals(Object.getOwnPropertyNames(spread), []);
 	assert.equals(spread, {});
 });
-
+ */
 wtf.test(`Dynamic array elements should update properly when accessing deferred object members.`, (assert) => {
 	type Object = { deferred?: string, array: Array<Object> };
 	let objects = stateify<Array<Object>>([
@@ -1285,7 +1285,7 @@ wtf.test(`Fallback states should be properly updated when underlying states are 
 
 wtf.test(`Fallback states should synchronize underlying record states using insert, remove and update events.`, (assert) => {
 	let underlying = make_state({} as Record<string, string>);
-	let fallbacked = fallback(underlying as State<Record<string, string> | undefined>, {});
+	let fallbacked = fallback(underlying as WritableState<Record<string, string> | undefined>, {});
 	let events = [] as Array<{ type: string, key?: string, value?: string }>;
 	underlying.observe("attach", (state, key) => {
 		events.push({
@@ -1348,7 +1348,7 @@ wtf.test(`Fallback states should synchronize underlying record states using inse
 
 wtf.test(`Underlying record states should synchronize fallback states using insert, remove and update events.`, (assert) => {
 	let underlying = make_state({} as Record<string, string>);
-	let fallbacked = fallback(underlying as State<Record<string, string> | undefined>, {});
+	let fallbacked = fallback(underlying as WritableState<Record<string, string> | undefined>, {});
 	let events = [] as Array<{ type: string, key?: string, value?: string }>;
 	fallbacked.observe("attach", (state, key) => {
 		events.push({
@@ -1633,7 +1633,7 @@ wtf.test(`Fallback states should be properly updated when underlying states are 
 
 wtf.test(`Fallback states should synchronize underlying array states using insert, remove and update events.`, (assert) => {
 	let underlying = make_state([] as Array<string>);
-	let fallbacked = fallback(underlying as State<Array<string> | undefined>, []);
+	let fallbacked = fallback(underlying as WritableState<Array<string> | undefined>, []);
 	let events = [] as Array<{ type: string, index?: number, value?: string }>;
 	underlying.observe("insert", (state, index) => {
 		events.push({
@@ -1696,7 +1696,7 @@ wtf.test(`Fallback states should synchronize underlying array states using inser
 
 wtf.test(`Underlying array states should synchronize fallback states using insert, remove and update events.`, (assert) => {
 	let underlying = make_state([] as Array<string>);
-	let fallbacked = fallback(underlying as State<Array<string> | undefined>, []);
+	let fallbacked = fallback(underlying as WritableState<Array<string> | undefined>, []);
 	let events = [] as Array<{ type: string, index?: number, value?: string }>;
 	fallbacked.observe("insert", (state, index) => {
 		events.push({

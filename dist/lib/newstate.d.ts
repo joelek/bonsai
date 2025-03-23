@@ -1,4 +1,3 @@
-import { ArrayValue, Callback, Computer, Observer, Predicate, RecordValue, StateMapper, Subscription, TupleRecord, Value, ValueMapper } from "./state";
 type ExpansionOf<A> = A extends infer B ? {
     [C in keyof B]: B[C];
 } : never;
@@ -7,86 +6,249 @@ type RecordButNotClass<A> = A extends {
 } ? A : never;
 type RecursiveArray<A> = Array<A | RecursiveArray<A>>;
 type RecursiveArrayType<A> = A extends Array<infer B> ? RecursiveArrayType<B> : A;
-export type StateOrValue<A> = A | State<A>;
-export type BasicStateEvents<A extends Value> = {
-    "update": [
-        state: BasicState<A>
-    ];
+export type TupleRecord<A extends TupleRecord<A>> = {
+    [C in keyof A]: any[];
 };
-interface BasicState<in out A extends Value> {
-    compute<B>(computer: Computer<A, B>): State<B>;
-    observe(type: "update", observer: Observer<BasicStateEvents<A>["update"]>): Subscription;
-    observe<B extends keyof BasicStateEvents<A>>(type: B, observer: Observer<BasicStateEvents<A>[B]>): Subscription;
-    shadow(): State<A>;
-    subscribe<A, B extends TupleRecord<B> & BasicStateEvents<A>, C extends keyof B>(target: State<A>, type: C, callback: Callback<B[C]>): Subscription;
-    unobserve(type: "update", observer: Observer<BasicStateEvents<A>["update"]>): void;
-    unobserve<B extends keyof BasicStateEvents<A>>(type: B, observer: Observer<BasicStateEvents<A>[B]>): void;
-    update(value: A): boolean;
+export type PrimitiveValue = symbol | void | bigint | boolean | number | string | null | undefined;
+export type ReferenceValue = Object;
+export type Value = any;
+export type ArrayValue = Value[];
+export type ReadonlyArrayValue = readonly Value[];
+export type RecordValue = {
+    [key: string]: Value;
+};
+export type ReadableStateMapper<A, B> = (state: ReadableState<A>, index: ReadableState<number>) => B | ReadableState<B>;
+export type StateFromAttribute<A> = WritableValueFromAttribute<A> extends ValueFromAttribute<A> ? WritableState<ValueFromAttribute<A>> : ReadableState<ValueFromAttribute<A>>;
+export type ReadableStateTupleFromValueTuple<A extends ArrayValue> = {
+    [B in keyof A]: ReadableState<A[B]>;
+};
+export type MergedPair<A extends RecordValue, B extends RecordValue> = ExpansionOf<{
+    [C in keyof A | keyof B]: C extends keyof A & keyof B ? undefined extends B[C] ? Exclude<B[C], undefined> | A[C] : B[C] : C extends keyof A ? A[C] : C extends keyof B ? B[C] : never;
+}>;
+export type MergedTuple<A extends RecordValue[]> = ExpansionOf<A extends [infer B extends RecordValue, infer C extends RecordValue, ...infer D extends RecordValue[]] ? MergedTuple<[MergedPair<B, C>, ...D]> : A extends [infer B extends RecordValue, infer C extends RecordValue] ? MergedPair<B, C> : A extends [infer B extends RecordValue] ? B : {}>;
+export type ValueMapper<A, B> = (value: A, index: number) => B;
+export type Predicate<A> = (state: ReadableState<A>, index: ReadableState<number>) => ReadableState<boolean>;
+export type Observer<A extends any[]> = (...args: [...A]) => void;
+export type Callback<A extends any[]> = (...args: A) => void;
+export type Computer<A, B> = (value: A) => B;
+export type CancellationToken = Subscription;
+export type Subscription = (() => void) & {
+    is_cancelled: ReadableState<boolean>;
+};
+export declare const Subscription: {
+    create(is_cancelled: WritableState<boolean>, callback: Callback<[]>): Subscription;
+};
+export type ObserveOptions = {
+    weakly?: boolean;
+};
+export interface Observable<A extends TupleRecord<A>> {
+    observe<B extends keyof A>(type: B, observer: Observer<A[B]>, options?: ObserveOptions): Subscription;
+    subscribe(subscription: Subscription): Subscription;
+    unobserve<B extends keyof A>(type: B, observer: Observer<A[B]>): void;
+}
+export interface AbstractReadableState<A extends Value, B extends TupleRecord<B>> extends Observable<B> {
+    compute<C>(computer: Computer<A, C>): ReadableState<C>;
+    shadow(): ReadableState<A>;
     value(): A;
 }
-export type ArrayStateEvents<A extends ArrayValue> = BasicStateEvents<A> & {
+export interface AbstractWritableState<A extends Value, B extends TupleRecord<B>> extends Observable<B> {
+    compute<C>(computer: Computer<A, C>): ReadableState<C>;
+    shadow(): WritableState<A>;
+    value(): A;
+    update(value: A): boolean;
+}
+export type ReadableBasicStateEvents<A extends Value> = {
+    "update": [
+        state: ReadableState<A>
+    ];
+};
+export interface ReadableBasicState<A extends Value> extends AbstractReadableState<A, ReadableBasicStateEvents<A>> {
+}
+export type WritableBasicStateEvents<A extends Value> = {
+    "update": [
+        state: WritableState<A>
+    ];
+};
+export interface WritableBasicState<A extends Value> extends AbstractWritableState<A, WritableBasicStateEvents<A>> {
+}
+export type ReadableArrayStateEvents<A extends ArrayValue> = ReadableBasicStateEvents<A> & {
     "insert": [
-        state: State<A[number]>,
+        state: ReadableState<A[number]>,
         index: number
     ];
     "remove": [
-        state: State<A[number]>,
+        state: ReadableState<A[number]>,
         index: number
     ];
 };
-interface ArrayState<in out A extends ArrayValue> extends BasicState<A> {
-    [key: number]: State<A[number]>;
-    append(...items: Array<StateOrValue<A[number]>>): void;
-    element(index: number | State<number>): State<A[number]>;
-    filter(predicate: Predicate<A[number]>): State<Array<A[number]>>;
-    first(): State<A[number] | undefined>;
-    insert(index: number, item: StateOrValue<A[number]>): State<A[number]>;
-    last(): State<A[number] | undefined>;
-    get length(): State<number>;
-    mapStates<B>(mapper: StateMapper<A[number], B>): State<Array<B>>;
-    mapValues<B>(mapper: ValueMapper<A[number], B>): State<Array<B>>;
-    observe(type: "update", observer: Observer<ArrayStateEvents<A>["update"]>): Subscription;
-    observe(type: "insert", observer: Observer<ArrayStateEvents<A>["insert"]>): Subscription;
-    observe(type: "remove", observer: Observer<ArrayStateEvents<A>["remove"]>): Subscription;
-    observe<B extends keyof ArrayStateEvents<A>>(type: B, observer: Observer<ArrayStateEvents<A>[B]>): Subscription;
-    remove(index: number): void;
-    spread(): ElementStates<A>;
-    vacate(): boolean;
-    [Symbol.iterator](): Iterator<State<A[number]>>;
+export interface ReadableArrayState<A extends ArrayValue> extends AbstractReadableState<A, ReadableArrayStateEvents<A>> {
+    element(index: number | ReadableState<number>): ReadableState<A[number]>;
+    filter(predicate: Predicate<A[number]>): ReadableState<Array<A[number]>>;
+    first(): ReadableState<A[number] | undefined>;
+    last(): ReadableState<A[number] | undefined>;
+    get length(): ReadableState<number>;
+    mapStates<B>(mapper: ReadableStateMapper<A[number], B>): ReadableState<Array<B>>;
+    mapValues<B>(mapper: ValueMapper<A[number], B>): ReadableState<Array<B>>;
+    spread(): ReadableElementStates<A>;
+    [Symbol.iterator](): Iterator<ReadableState<A[number]>>;
 }
-export type ObjectStateEventsTuple<A extends RecordValue> = {
+export type WritableArrayStateEvents<A extends ArrayValue> = WritableBasicStateEvents<A> & {
+    "insert": [
+        state: WritableState<A[number]>,
+        index: number
+    ];
+    "remove": [
+        state: WritableState<A[number]>,
+        index: number
+    ];
+};
+export interface WritableArrayState<A extends ArrayValue> extends AbstractWritableState<A, WritableArrayStateEvents<A>> {
+    append(...items: Array<ReadableStateOrValue<A[number]>>): void;
+    element(index: number | ReadableState<number>): WritableState<A[number]>;
+    filter(predicate: Predicate<A[number]>): WritableState<Array<A[number]>>;
+    first(): ReadableState<A[number] | undefined>;
+    insert(index: number, item: WritableStateOrValue<A[number]>): WritableState<A[number]>;
+    last(): ReadableState<A[number] | undefined>;
+    get length(): ReadableState<number>;
+    mapStates<B>(mapper: ReadableStateMapper<A[number], B>): ReadableState<Array<B>>;
+    mapValues<B>(mapper: ValueMapper<A[number], B>): ReadableState<Array<B>>;
+    remove(index: number): void;
+    spread(): WritableElementStates<A>;
+    vacate(): boolean;
+    [Symbol.iterator](): Iterator<WritableState<A[number]>>;
+}
+export type ReadableRecordStateEventsTuple<A extends RecordValue> = {
     [B in keyof A]: [
-        state: State<A[B]>,
+        state: ReadableState<A[B]>,
         key: B
     ];
 }[keyof A];
-export type RecordStateEvents<A extends RecordValue> = BasicStateEvents<A> & {
-    "attach": ObjectStateEventsTuple<A>;
-    "detach": ObjectStateEventsTuple<A>;
+export type ReadableRecordStateEvents<A extends RecordValue> = ReadableBasicStateEvents<A> & {
+    "attach": ReadableRecordStateEventsTuple<A>;
+    "detach": ReadableRecordStateEventsTuple<A>;
 };
-interface RecordState<in out A extends RecordValue> extends BasicState<A> {
-    observe(type: "update", observer: Observer<RecordStateEvents<A>["update"]>): Subscription;
-    observe(type: "attach", observer: Observer<RecordStateEvents<A>["attach"]>): Subscription;
-    observe(type: "detach", observer: Observer<RecordStateEvents<A>["detach"]>): Subscription;
-    observe<B extends keyof RecordStateEvents<A>>(type: B, observer: Observer<RecordStateEvents<A>[B]>): Subscription;
-    attach<B extends string, C>(key: B, item: StateOrValue<C>): State<ExpansionOf<A & {
+export interface ReadableRecordState<A extends RecordValue> extends AbstractReadableState<A, ReadableRecordStateEvents<A>> {
+    member<B extends keyof A>(key: ReadableStateOrValue<B>): ReadableState<A[B]>;
+    spread(): ReadableMemberStates<A>;
+}
+export type WritableRecordStateEventsTuple<A extends RecordValue> = {
+    [B in keyof A]: [
+        state: WritableState<A[B]>,
+        key: B
+    ];
+}[keyof A];
+export type WritableRecordStateEvents<A extends RecordValue> = WritableBasicStateEvents<A> & {
+    "attach": WritableRecordStateEventsTuple<A>;
+    "detach": WritableRecordStateEventsTuple<A>;
+};
+export interface WritableRecordState<A extends RecordValue> extends AbstractWritableState<A, WritableRecordStateEvents<A>> {
+    attach<B extends string, C>(key: B, item: WritableStateOrValue<C>): WritableState<ExpansionOf<A & {
         [key in B]: C;
     }>>;
-    member<B extends keyof A>(key: StateOrValue<B>): State<A[B]>;
-    detach<B extends keyof A>(key: B): State<ExpansionOf<Omit<A, B>>>;
-    spread(): MemberStates<A>;
+    member<B extends keyof A>(key: ReadableStateOrValue<B>): WritableState<A[B]>;
+    detach<B extends keyof A>(key: B): WritableState<ExpansionOf<Omit<A, B>>>;
+    spread(): WritableMemberStates<A>;
 }
-export type ElementStates<A extends ArrayValue> = {
-    [key: number]: State<A[number]>;
+type ArrayType<A> = [A] extends [ArrayValue] ? A : any;
+type RecordType<A> = [A] extends [RecordValue] ? A : any;
+type BasicType<A> = [A] extends [Value] ? A : any;
+export type ReadableStateEvents<A> = ReadableArrayStateEvents<ArrayType<A>> | ReadableRecordStateEvents<RecordType<A>> | ReadableBasicStateEvents<BasicType<A>>;
+export type WritableStateEvents<A> = WritableArrayStateEvents<ArrayType<A>> | WritableRecordStateEvents<RecordType<A>> | WritableBasicStateEvents<BasicType<A>>;
+export declare class StateImplementation<A> implements WritableArrayState<ArrayType<A>>, WritableRecordState<RecordType<A>>, WritableBasicState<BasicType<A>> {
+    protected active_value: A;
+    constructor(active_value: A);
+    append(...items: ReadableStateOrValue<ArrayType<A>[number]>[]): void;
+    element(index: number | ReadableBasicState<number>): WritableState<ArrayType<A>[number]>;
+    filter(predicate: Predicate<ArrayType<A>[number]>): ReadableState<Array<ArrayType<A>[number]>>;
+    filter(predicate: Predicate<ArrayType<A>[number]>): WritableState<Array<ArrayType<A>[number]>>;
+    first(): ReadableState<ArrayType<A>[number] | undefined>;
+    last(): ReadableState<ArrayType<A>[number] | undefined>;
+    get length(): ReadableBasicState<number>;
+    mapStates<B>(mapper: ReadableStateMapper<ArrayType<A>[number], B>): ReadableElementStates<B[]> & ReadableArrayState<B[]>;
+    mapValues<B>(mapper: ValueMapper<ArrayType<A>[number], B>): ReadableElementStates<B[]> & ReadableArrayState<B[]>;
+    member<B extends keyof A>(key: ReadableStateOrValue<B>): ReadableState<A[B]>;
+    member<B extends keyof A>(key: WritableStateOrValue<B>): WritableState<A[B]>;
+    spread(): WritableMemberStates<RecordType<A>>;
+    spread(): WritableElementStates<ArrayType<A>>;
+    vacate(): boolean;
+    [Symbol.iterator](): Iterator<ReadableState<ArrayType<A>[number]>>;
+    [Symbol.iterator](): Iterator<WritableState<ArrayType<A>[number]>>;
+    compute<B>(computer: Computer<A, B>): ReadableState<B>;
+    observe<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): Subscription;
+    observe<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): Subscription;
+    observe<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): Subscription;
+    shadow(): WritableState<A>;
+    subscribe(subscription: Subscription): Subscription;
+    unobserve<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): void;
+    unobserve<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): void;
+    unobserve<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): void;
+    attach<B extends string, C>(key: B, item: WritableStateOrValue<C>): WritableState<ExpansionOf<A & {
+        [key in B]: C;
+    }>>;
+    detach<B extends keyof A>(key: B): WritableState<ExpansionOf<Omit<A, B>>>;
+    insert(index: number, item: WritableStateOrValue<ArrayType<A>[number]>): WritableState<ArrayType<A>[number]>;
+    remove(): void;
+    update(value: A): boolean;
+    value(): A;
+}
+export type ReadableElementStates<A extends ArrayValue> = {
+    [B in number]: ReadableState<A[B]>;
 };
-export type MemberStates<A extends RecordValue> = {
-    [B in keyof A]-?: State<A[B]>;
+export type ReadableMemberStates<A extends RecordValue> = {
+    [B in keyof A]-?: ReadableState<A[B]>;
 };
-type State<A> = ([
+export type WritableElementStates<A extends ArrayValue> = {
+    [B in number]: WritableState<A[B]>;
+};
+export type WritableMemberStates<A extends RecordValue> = {
+    [B in keyof A]-?: WritableState<A[B]>;
+};
+export type ReadableStateUndistributedUnion<A> = ([
     A
-] extends [ArrayValue] ? ArrayState<A> : [
+] extends [ArrayValue] ? ReadableElementStates<A> & ReadableArrayState<A> : [
     A
-] extends [RecordButNotClass<A>] ? MemberStates<A> & RecordState<A> : BasicState<A>);
-export declare function squash<A extends RecordValue>(records: State<Array<A>>): State<A>;
-export declare function flatten<A extends RecursiveArray<any>>(states: State<Array<A>>): State<Array<RecursiveArrayType<A>>>;
+] extends [RecordButNotClass<A>] ? ReadableMemberStates<A> & ReadableRecordState<A> : ReadableBasicState<A>);
+export type ReadableState<A> = (A extends ArrayValue ? ReadableElementStates<A> & ReadableArrayState<A> : A extends RecordButNotClass<A> ? ReadableMemberStates<A> & ReadableRecordState<A> : ReadableBasicState<A>) | ReadableStateUndistributedUnion<A>;
+export type GenericReadableState<A> = ReadableBasicState<A>;
+export type WritableState<A> = ([
+    A
+] extends [ArrayValue] ? WritableElementStates<A> & WritableArrayState<A> : [
+    A
+] extends [RecordButNotClass<A>] ? WritableMemberStates<A> & WritableRecordState<A> : WritableBasicState<A>);
+export type GenericWritableState<A> = WritableBasicState<A>;
+export type GenericState<A> = GenericReadableState<A> | GenericWritableState<A>;
+export type State<A> = WritableState<A>;
+export type ReadableOrWritableState<A> = ReadableState<A> | WritableState<A>;
+export type ReadableStateOrValue<A> = A | ReadableState<A>;
+export type WritableStateOrValue<A> = A | WritableState<A>;
+export type StateOrValue<A> = A | ReadableOrWritableState<A>;
+export type Attribute<A> = ReadableOrWritableState<A> | (A extends ArrayValue ? {
+    [B in keyof A]: Attribute<A[B]>;
+} : A extends RecordValue ? A extends RecordButNotClass<A> ? {
+    [B in keyof A]: Attribute<A[B]>;
+} : A : A);
+export type Attributes<A> = Attribute<A>;
+export type ValueFromAttribute<A> = (A extends ReadableOrWritableState<infer B> ? B : A extends ArrayValue ? {
+    [B in keyof A]: ValueFromAttribute<A[B]>;
+} : A extends RecordValue ? A extends RecordButNotClass<A> ? {
+    [B in keyof A]: ValueFromAttribute<A[B]>;
+} : A : A);
+export type ReadableValueFromAttribute<A> = (A extends ReadableState<infer B> ? B : A extends ArrayValue ? {
+    [B in keyof A]: ReadableValueFromAttribute<A[B]>;
+} : A extends RecordValue ? A extends RecordButNotClass<A> ? {
+    [B in keyof A]: ReadableValueFromAttribute<A[B]>;
+} : A : A);
+export type WritableValueFromAttribute<A> = (A extends WritableState<infer B> ? B : A extends ArrayValue ? {
+    [B in keyof A]: WritableValueFromAttribute<A[B]>;
+} : A extends RecordValue ? A extends RecordButNotClass<A> ? {
+    [B in keyof A]: WritableValueFromAttribute<A[B]>;
+} : A : A);
+export declare function make_state<A>(value: A): WritableState<A>;
+export declare function stateify<A extends Attribute<any>>(attribute: A): StateFromAttribute<A>;
+export declare function valueify<A extends Attribute<any>>(attribute: A): ValueFromAttribute<A>;
+export declare function squash<A extends RecordValue>(records: ReadableState<Array<A>>): ReadableState<A>;
+export declare function flatten<A extends RecursiveArray<any>>(states: ReadableState<Array<A>>): ReadableState<Array<RecursiveArrayType<A>>>;
+export declare function merge<A extends RecordValue[]>(...states: ReadableStateTupleFromValueTuple<A>): ReadableState<MergedTuple<A>>;
+export declare function fallback<A>(underlying: WritableState<A | undefined>, default_value: Exclude<A, undefined>): WritableState<Exclude<A, undefined>>;
+export declare function computed<A extends ArrayValue, B>(states: [...ReadableStateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): ReadableState<B>;
 export {};

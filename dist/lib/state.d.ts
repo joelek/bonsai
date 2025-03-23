@@ -49,13 +49,9 @@ export type Subscription = (() => void) & {
     is_cancelled: State<boolean>;
 };
 export declare const Subscription: {
-    create(is_cancelled: GenericState<boolean>, callback: Callback<[]>): Subscription;
+    create(is_cancelled: State<boolean>, callback: Callback<[]>): Subscription;
 };
-export type State<A> = GenericState<A> & ([
-    A
-] extends [ArrayValue] ? ArrayState<A> : [
-    A
-] extends [RecordButNotClass<A>] ? MemberStates<A> & ObjectState<A> : GenericState<A>);
+export type State<A> = GenericState<A> & (A extends ArrayValue ? ArrayState<A> : A extends RecordButNotClass<A> ? MemberStates<A> & ObjectState<A> : PrimitiveState<A>);
 export type StateTupleFromValueTuple<A extends ArrayValue> = {
     [B in keyof A]: State<A[B]>;
 };
@@ -90,7 +86,7 @@ export declare abstract class AbstractState<A, B extends TupleRecord<B> & Abstra
 }
 export type GenericState<A> = AbstractState<A, AbstractStateEvents<A>>;
 export type PrimitiveStateEvents<A> = AbstractStateEvents<A> & {};
-export declare class PrimitiveState<A extends PrimitiveValue> extends AbstractState<A, PrimitiveStateEvents<A>> {
+export declare class PrimitiveState<A> extends AbstractState<A, PrimitiveStateEvents<A>> {
     protected lastValue: A;
     constructor(lastValue: A);
     observe(type: "update", observer: Observer<PrimitiveStateEvents<A>["update"]>): CancellationToken;
@@ -138,11 +134,14 @@ export declare class ArrayState<A extends ArrayValue> extends AbstractState<A, A
     value(): A;
 }
 export type ObjectStateEventsTuple<A extends RecordValue> = {
-    [B in keyof A]: [state: State<A[B]>, key: B];
+    [B in keyof A]: [
+        state: State<A[B]>,
+        key: B
+    ];
 }[keyof A];
 export type ObjectStateEvents<A extends RecordValue> = AbstractStateEvents<A> & {
-    "insert": ObjectStateEventsTuple<A>;
-    "remove": ObjectStateEventsTuple<A>;
+    "attach": ObjectStateEventsTuple<A>;
+    "detach": ObjectStateEventsTuple<A>;
 };
 export declare class ObjectState<A extends RecordValue> extends AbstractState<A, ObjectStateEvents<A>> {
     protected members: MemberStates<A>;
@@ -152,13 +151,13 @@ export declare class ObjectState<A extends RecordValue> extends AbstractState<A,
     protected onMemberUpdate: () => void;
     constructor(members: MemberStates<A>);
     observe(type: "update", observer: Observer<ObjectStateEvents<A>["update"]>): CancellationToken;
-    observe(type: "insert", observer: Observer<ObjectStateEvents<A>["insert"]>): CancellationToken;
-    observe(type: "remove", observer: Observer<ObjectStateEvents<A>["remove"]>): CancellationToken;
-    insert<B extends string, C>(key: B, item: StateOrValue<C>): State<ExpansionOf<A & {
+    observe(type: "attach", observer: Observer<ObjectStateEvents<A>["attach"]>): CancellationToken;
+    observe(type: "detach", observer: Observer<ObjectStateEvents<A>["detach"]>): CancellationToken;
+    attach<B extends string, C>(key: B, item: StateOrValue<C>): State<ExpansionOf<A & {
         [key in B]: C;
     }>>;
     member<B extends keyof A>(key: B | State<B>): State<A[B]>;
-    remove<B extends keyof A>(key: B): State<ExpansionOf<Omit<A, B>>>;
+    detach<B extends keyof A>(key: B): State<ExpansionOf<Omit<A, B>>>;
     spread(): MemberStates<A>;
     shadow(): State<A>;
     update(value: A): boolean;

@@ -23,7 +23,7 @@ function one(state) {
     state.update(state.value());
 }
 function two(state) {
-    state.observe("insert", (state, key) => {
+    state.observe("attach", (state, key) => {
         state.update(state.value());
     });
     state.update(state.value());
@@ -541,7 +541,7 @@ class ObjectState extends AbstractState {
     observe(type, observer) {
         return super.observe(type, observer);
     }
-    insert(key, item) {
+    attach(key, item) {
         if (key in this.members) {
             throw new Error(`Expected member with key ${String(key)} to be absent!`);
         }
@@ -550,7 +550,7 @@ class ObjectState extends AbstractState {
         member.observe("update", this.onMemberUpdate);
         if (true) {
             this.operate(() => {
-                this.notify("insert", member, key);
+                this.notify("attach", member, key);
             });
         }
         if (!this.operating) {
@@ -582,12 +582,12 @@ class ObjectState extends AbstractState {
             let member = this.members[key];
             if (member == null) {
                 member = make_state(undefined);
-                this.insert(key, member);
+                this.attach(key, member);
             }
             return member;
         }
     }
-    remove(key) {
+    detach(key) {
         if (!(key in this.members)) {
             throw new Error(`Expected member with key ${String(key)} to be present!`);
         }
@@ -614,19 +614,19 @@ class ObjectState extends AbstractState {
         let shadow = make_state({});
         for (let key in source.members) {
             let member = source.members[key];
-            shadow.insert(key, member.shadow());
+            shadow.attach(key, member.shadow());
         }
-        shadow.subscribe(source, "insert", (member, key) => {
+        shadow.subscribe(source, "attach", (member, key) => {
             if (controller !== "shadow") {
                 controller = "source";
-                shadow.insert(key, member.shadow());
+                shadow.attach(key, member.shadow());
                 controller = undefined;
             }
         });
-        shadow.subscribe(source, "remove", (member, key) => {
+        shadow.subscribe(source, "detach", (member, key) => {
             if (controller !== "shadow") {
                 controller = "source";
-                shadow.remove(key);
+                shadow.detach(key);
                 controller = undefined;
             }
         });
@@ -637,17 +637,17 @@ class ObjectState extends AbstractState {
                 controller = undefined;
             }
         });
-        shadow.observe("insert", (member, key) => {
+        shadow.observe("attach", (member, key) => {
             if (controller !== "source") {
                 controller = "shadow";
-                source.insert(key, member.shadow());
+                source.attach(key, member.shadow());
                 controller = undefined;
             }
         });
-        shadow.observe("remove", (member, key) => {
+        shadow.observe("detach", (member, key) => {
             if (controller !== "source") {
                 controller = "shadow";
-                source.remove(key);
+                source.detach(key);
                 controller = undefined;
             }
         });
@@ -669,7 +669,7 @@ class ObjectState extends AbstractState {
             for (let key in this.members) {
                 let member = this.member(key);
                 if (typeof value === "undefined" || !(key in value)) {
-                    this.remove(key);
+                    this.detach(key);
                     updated = true;
                 }
                 else {
@@ -680,7 +680,7 @@ class ObjectState extends AbstractState {
             }
             for (let key in value) {
                 if (!(key in this.members)) {
-                    this.insert(key, value[key]);
+                    this.attach(key, value[key]);
                     updated = true;
                 }
             }
@@ -928,7 +928,7 @@ function squash(records) {
         if (array == null) {
             array = make_state(new Array(records.length.value()).fill(absent));
             arrays.set(key, array);
-            squashed.insert(key, array.compute((values) => {
+            squashed.attach(key, array.compute((values) => {
                 for (let value of values.reverse()) {
                     if (typeof value !== "undefined" && value !== absent) {
                         return value;
@@ -952,7 +952,7 @@ function squash(records) {
                 return;
             }
         }
-        squashed.remove(key);
+        squashed.detach(key);
         arrays.delete(key);
     }
     let inserts = [];
@@ -965,11 +965,11 @@ function squash(records) {
             let member = record[key];
             attach_member(index, member, key);
         }
-        let insert = record.observe("insert", (member, key) => {
+        let insert = record.observe("attach", (member, key) => {
             attach_member(index, member, key);
         });
         inserts.splice(index, 0, insert);
-        let remove = record.observe("remove", (member, key) => {
+        let remove = record.observe("detach", (member, key) => {
             detach_member(index, member, key);
         });
         removes.splice(index, 0, remove);

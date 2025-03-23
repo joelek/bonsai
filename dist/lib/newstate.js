@@ -1,6 +1,28 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.flatten = exports.squash = void 0;
+exports.computed = exports.fallback = exports.merge = exports.flatten = exports.squash = exports.valueify = exports.stateify = exports.make_state = exports.StateImplementation = exports.Subscription = void 0;
+exports.Subscription = {
+    create(is_cancelled, callback) {
+        let cancel = (() => {
+            if (is_cancelled.value()) {
+                return;
+            }
+            callback();
+            is_cancelled.update(true);
+        });
+        cancel.is_cancelled = is_cancelled;
+        return cancel;
+    }
+};
+;
+;
+;
+;
+;
+;
+;
+;
+;
 class StateImplementation {
     active_value;
     constructor(active_value) {
@@ -51,7 +73,7 @@ class StateImplementation {
     shadow() {
         throw new Error("Method not implemented.");
     }
-    subscribe(target, type, callback) {
+    subscribe(subscription) {
         throw new Error("Method not implemented.");
     }
     unobserve(type, observer) {
@@ -76,26 +98,93 @@ class StateImplementation {
         throw new Error("Method not implemented.");
     }
 }
+exports.StateImplementation = StateImplementation;
 function make_state(value) {
     return new StateImplementation(value);
 }
+exports.make_state = make_state;
 ;
 function stateify(attribute) {
     throw "";
 }
+exports.stateify = stateify;
+;
+{
+    let a = stateify(undefined);
+    // @ts-expect-error
+    let b = stateify(undefined);
+    let c = stateify(undefined);
+    let d = stateify(undefined);
+    // @ts-expect-error
+    let e = stateify(undefined);
+    let f = stateify(undefined);
+    // @ts-expect-error
+    let g = stateify(undefined);
+}
 function valueify(attribute) {
     throw "";
 }
-let state = stateify([make_state("a"), "b"]);
+exports.valueify = valueify;
+;
+let state1 = stateify([make_state("a"), "b"]);
 let state2 = stateify(["a", "b"]);
 let state3 = stateify({ one: "a", two: "b" });
-let value = valueify([make_state("a"), "b"]);
+let value1 = valueify([make_state("a"), "b"]);
+let value2 = valueify(["a", "b"]);
+let value3 = valueify({ one: "a", two: "b" });
+function one1(state) {
+    state.observe("update", (state) => {
+        let value = state.value();
+    });
+}
+one1(undefined);
+one1(undefined);
+one1(undefined);
+one1(undefined);
+one1(undefined);
+one1(undefined);
+one1(undefined);
+one1(undefined);
+function two2(state) {
+    state.observe("update", (state) => {
+        let value = state.value();
+    });
+    state.observe("insert", (state, index) => {
+        let value = state.value();
+    });
+    state.observe("remove", (state, index) => {
+        let value = state.value();
+    });
+}
+function three3(state) {
+    state.observe("update", (state) => {
+        let value = state.value();
+    });
+    state.observe("attach", (state, key) => {
+        let value = state.value();
+    });
+    state.observe("detach", (state, key) => {
+        let value = state.value();
+    });
+}
 function one(state) {
     state.observe("update", (state) => {
         state.update(state.value());
     });
     state.update(state.value());
 }
+// @ts-expect-error
+one(undefined);
+// @ts-expect-error
+one(undefined);
+// @ts-expect-error
+one(undefined);
+// @ts-expect-error
+one(undefined);
+one(undefined);
+one(undefined);
+one(undefined);
+one(undefined);
 function two(state) {
     state.observe("update", (state) => {
         state.update(state.value());
@@ -120,13 +209,66 @@ function three(state) {
     });
     state.update(state.value());
 }
-function callable(state) {
+// Attribute should accept any value or state.
+function function_expecting_attribute(attribute) {
+    let value = valueify(attribute);
+}
+function_expecting_attribute(undefined);
+function_expecting_attribute(undefined);
+function_expecting_attribute(undefined);
+function_expecting_attribute(undefined);
+function_expecting_attribute(undefined);
+function_expecting_attribute(undefined);
+function_expecting_attribute(undefined);
+function_expecting_attribute(undefined);
+function_expecting_attribute(undefined);
+// ReadableState should be covariant. Any state that can be guaranteed to only contain string, undefined or string | undefined should be accepted.
+function function_expecting_readable_state(attribute) {
+    let value = valueify(attribute);
+    let shadow = attribute.shadow();
+    let computed = attribute.compute((value) => value);
+    attribute.observe("update", (state) => {
+        let value = state.value();
+    });
+}
+function_expecting_readable_state(undefined);
+function_expecting_readable_state(undefined);
+function_expecting_readable_state(undefined);
+function_expecting_readable_state(undefined);
+function_expecting_readable_state(undefined);
+function_expecting_readable_state(undefined);
+// @ts-expect-error
+function_expecting_readable_state(undefined);
+// @ts-expect-error
+function_expecting_readable_state(undefined);
+// @ts-expect-error
+function_expecting_readable_state(undefined);
+// WritableState should be invariant. Only state containing exactly string | undefined should be accepted.
+function function_expecting_writable_state(attribute) {
+    let value = valueify(attribute);
+    let shadow = attribute.shadow();
+    let computed = attribute.compute((value) => value);
+    attribute.observe("update", (state) => {
+        let value = state.value();
+    });
 }
 // @ts-expect-error
-callable(stateify("string"));
+function_expecting_writable_state(undefined);
 // @ts-expect-error
-callable(stateify(undefined));
-callable(stateify(undefined));
+function_expecting_writable_state(undefined);
+// @ts-expect-error
+function_expecting_writable_state(undefined);
+// @ts-expect-error
+function_expecting_writable_state(undefined);
+// @ts-expect-error
+function_expecting_writable_state(undefined);
+function_expecting_writable_state(undefined);
+// @ts-expect-error
+function_expecting_writable_state(undefined);
+// @ts-expect-error
+function_expecting_writable_state(undefined);
+// @ts-expect-error
+function_expecting_writable_state(undefined);
 function squash(records) {
     throw "";
 }
@@ -153,3 +295,32 @@ exports.flatten = flatten;
     let array = stateify([array_0, array_1]);
     let flattened = flatten(array);
 }
+function merge(...states) {
+    throw "";
+}
+exports.merge = merge;
+;
+{
+    let one = stateify({ a: 1 });
+    let two = stateify({ a: null });
+    let merged = merge(one, two);
+}
+function fallback(underlying, default_value) {
+    throw "";
+}
+exports.fallback = fallback;
+;
+{
+    fallback(make_state("string"), "hello");
+}
+function computed(states, computer) {
+    throw "";
+}
+exports.computed = computed;
+;
+{
+    computed([make_state(5), make_state("string")], (a, b) => {
+    });
+}
+// fallback
+// spread

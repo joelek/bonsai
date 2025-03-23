@@ -26,8 +26,8 @@ export type ReadableStateMapper<A, B> = (state: ReadableState<A>, index: Readabl
 
 export type StateFromAttribute<A> = WritableValueFromAttribute<A> extends ValueFromAttribute<A> ? WritableState<ValueFromAttribute<A>> : ReadableState<ValueFromAttribute<A>>
 
-export type StateTupleFromValueTuple<A extends ArrayValue> = {
-	[B in keyof A]: State<A[B]>;
+export type ReadableStateTupleFromValueTuple<A extends ArrayValue> = {
+	[B in keyof A]: ReadableState<A[B]>;
 };
 
 export type MergedPair<A extends RecordValue, B extends RecordValue> = ExpansionOf<{
@@ -284,17 +284,17 @@ type ArrayType<A> = [A] extends [ArrayValue] ? A : any;
 type RecordType<A> = [A] extends [RecordValue] ? A : any;
 type BasicType<A> = [A] extends [Value] ? A : any;
 
-type ReadableStateEvents<A> =
+export type ReadableStateEvents<A> =
 	ReadableArrayStateEvents<ArrayType<A>> |
 	ReadableRecordStateEvents<RecordType<A>> |
 	ReadableBasicStateEvents<BasicType<A>>;
 
-type WritableStateEvents<A> =
+export type WritableStateEvents<A> =
 	WritableArrayStateEvents<ArrayType<A>> |
 	WritableRecordStateEvents<RecordType<A>> |
 	WritableBasicStateEvents<BasicType<A>>;
 
-class StateImplementation<A> implements WritableArrayState<ArrayType<A>>, WritableRecordState<RecordType<A>>, WritableBasicState<BasicType<A>> {
+export class StateImplementation<A> implements WritableArrayState<ArrayType<A>>, WritableRecordState<RecordType<A>>, WritableBasicState<BasicType<A>> {
 	protected active_value: A;
 
 	constructor(active_value: A) {
@@ -472,13 +472,15 @@ export type GenericState<A> = GenericReadableState<A> | GenericWritableState<A>;
 
 export type State<A> = WritableState<A>;
 
+export type ReadableOrWritableState<A> = ReadableState<A> | WritableState<A>;
+
 export type ReadableStateOrValue<A> = A | ReadableState<A>;
 
 export type WritableStateOrValue<A> = A | WritableState<A>;
 
-export type StateOrValue<A> = A | State<A>;
+export type StateOrValue<A> = A | ReadableOrWritableState<A>;
 
-export type Attribute<A> = State<A> | (
+export type Attribute<A> = ReadableOrWritableState<A> | (
 	A extends ArrayValue ? { [B in keyof A]: Attribute<A[B]>; } :
 	A extends RecordValue ? A extends RecordButNotClass<A> ? { [B in keyof A]: Attribute<A[B]>; } : A :
 	A
@@ -487,7 +489,7 @@ export type Attribute<A> = State<A> | (
 export type Attributes<A> = Attribute<A>;
 
 export type ValueFromAttribute<A> = (
-	A extends State<infer B> ? B :
+	A extends ReadableOrWritableState<infer B> ? B :
 	A extends ArrayValue ? { [B in keyof A]: ValueFromAttribute<A[B]>; } :
 	A extends RecordValue ? A extends RecordButNotClass<A> ? { [B in keyof A]: ValueFromAttribute<A[B]>; } : A :
 	A
@@ -832,7 +834,7 @@ export function flatten<A extends RecursiveArray<any>>(states: ReadableState<Arr
 	let flattened = flatten(array);
 }
 
-export function merge<A extends RecordValue[]>(...states: StateTupleFromValueTuple<A>): State<MergedTuple<A>> {
+export function merge<A extends RecordValue[]>(...states: ReadableStateTupleFromValueTuple<A>): ReadableState<MergedTuple<A>> {
 	throw "";
 };
 
@@ -853,7 +855,7 @@ export function fallback<A>(underlying: WritableState<A | undefined>, default_va
 	fallback(make_state("string" as string | undefined), "hello");
 }
 
-export function computed<A extends ArrayValue, B>(states: [...StateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): State<B> {
+export function computed<A extends ArrayValue, B>(states: [...ReadableStateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): ReadableState<B> {
 	throw "";
 };
 

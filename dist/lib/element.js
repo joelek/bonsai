@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.svg = exports.html = exports.makeFunctionalElementFactory = exports.FunctionalElementImplementation = exports.serializeStyle = exports.parseStyle = exports.serializeClass = exports.parseClass = exports.createNode = exports.serializeValue = void 0;
-const state_1 = require("./state");
+const newstate_1 = require("./newstate");
 function serializeValue(value) {
     if (typeof value === "string") {
         return value;
@@ -148,7 +148,7 @@ class FunctionalElementImplementation extends Element {
         };
         let set = (key, attribute) => {
             this.unbind(key);
-            if (attribute instanceof state_1.AbstractState) {
+            if (attribute instanceof newstate_1.StateImplementation) {
                 let state = attribute;
                 let bindings = this.bindings;
                 if (bindings == null) {
@@ -188,7 +188,7 @@ class FunctionalElementImplementation extends Element {
                         let values = [];
                         for (let index = 0; index < attributes.length; index++) {
                             let attribute = attributes[index];
-                            if (attribute instanceof state_1.AbstractState) {
+                            if (attribute instanceof newstate_1.StateImplementation) {
                                 let state = attribute;
                                 values[index] = attribute.value();
                                 this.bindings = this.bindings ?? {};
@@ -211,7 +211,7 @@ class FunctionalElementImplementation extends Element {
                         let values = {};
                         for (let key in attributes) {
                             let attribute = attributes[key];
-                            if (attribute instanceof state_1.AbstractState) {
+                            if (attribute instanceof newstate_1.StateImplementation) {
                                 let state = attribute;
                                 values[key] = attribute.value();
                                 this.bindings = this.bindings ?? {};
@@ -272,7 +272,7 @@ class FunctionalElementImplementation extends Element {
         }
         let bindings = this.bindings = this.bindings ?? {};
         let update_bindings = bindings[UPDATE] = bindings[UPDATE] ?? [];
-        let state = (0, state_1.flatten)((0, state_1.stateify)(children));
+        let state = (0, newstate_1.flatten)((0, newstate_1.stateify)(children));
         for (let child of state) {
             let node = createNode(child.value());
             this.appendChild(node);

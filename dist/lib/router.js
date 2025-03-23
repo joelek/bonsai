@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.route = exports.codec = exports.RouteCodecImplementation = exports.Router = exports.getInitialState = exports.getInitialRoute = exports.getInitialPaths = exports.getInitialIndex = exports.getInitialCache = exports.getBaseHref = exports.updateHistoryState = exports.getUrlFromRoute = exports.pathify = void 0;
 const codecs_1 = require("./codecs");
-const state_1 = require("./state");
+const newstate_1 = require("./newstate");
 function pathify(string) {
     return string
         .toLowerCase()
@@ -111,14 +111,14 @@ class Router {
     documentTitle;
     cache;
     state;
-    element = (0, state_1.make_state)(undefined);
-    url = (0, state_1.make_state)(undefined);
+    element = (0, newstate_1.make_state)(undefined);
+    url = (0, newstate_1.make_state)(undefined);
     constructor(factories, defaultPage) {
-        this.factories = (0, state_1.make_state)(factories);
-        this.defaultPage = (0, state_1.make_state)(defaultPage);
+        this.factories = (0, newstate_1.make_state)(factories);
+        this.defaultPage = (0, newstate_1.make_state)(defaultPage);
         this.documentTitle = document.title;
-        this.cache = (0, state_1.make_state)(getInitialCache());
-        this.state = (0, state_1.make_state)(getInitialState());
+        this.cache = (0, newstate_1.make_state)(getInitialCache());
+        this.state = (0, newstate_1.make_state)(getInitialState());
         let stateRoute = this.state.member("route");
         let stateIndex = this.state.member("index");
         this.state.compute((state) => {
@@ -134,10 +134,12 @@ class Router {
                 });
             }
         });
-        let parsedRoute = (0, state_1.make_state)(undefined);
-        let computedParsedRoute = (0, state_1.computed)([stateRoute, this.defaultPage, this.factories], (stateRoute, defaultPage, factories) => {
+        let parsedRoute = (0, newstate_1.make_state)(undefined);
+        // @ts-ignore
+        let computedParsedRoute = (0, newstate_1.computed)([stateRoute, this.defaultPage, this.factories], (stateRoute, defaultPage, factories) => {
             for (let page in factories) {
                 try {
+                    // @ts-ignore
                     let factory = factories[page];
                     let options = factory.codec.decode(stateRoute);
                     return {
@@ -157,9 +159,10 @@ class Router {
             }
         });
         computedParsedRoute.compute((computedParsedRoute) => {
+            // @ts-ignore
             parsedRoute.update(computedParsedRoute);
         });
-        (0, state_1.computed)([stateIndex, parsedRoute], (stateIndex, parsedRoute) => {
+        (0, newstate_1.computed)([stateIndex, parsedRoute], (stateIndex, parsedRoute) => {
             let entry = this.cache.element(stateIndex);
             let entryTitle = entry.member("title");
             let entryRoute = entry.member("route");
@@ -172,7 +175,7 @@ class Router {
             else {
                 if (entryElement.value() == null) {
                     let factory = this.factories.value()[parsedRoute.page];
-                    let options = (0, state_1.make_state)(parsedRoute.options);
+                    let options = (0, newstate_1.make_state)(parsedRoute.options);
                     entryElement.update(factory.factory(options, entryTitle, this));
                     options.compute((options) => {
                         entryRoute.update(factory.codec.encode(options));
