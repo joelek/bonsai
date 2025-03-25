@@ -23,6 +23,7 @@ exports.Subscription = {
 ;
 ;
 ;
+// @ts-expect-error
 class StateImplementation {
     active_value;
     constructor(active_value) {
@@ -99,6 +100,11 @@ class StateImplementation {
     }
 }
 exports.StateImplementation = StateImplementation;
+{
+    let state6 = undefined;
+    let state8 = undefined;
+    // ^^ readable state is distributed into false | true
+}
 function make_state(value) {
     return new StateImplementation(value);
 }
@@ -132,6 +138,12 @@ let state3 = stateify({ one: "a", two: "b" });
 let value1 = valueify([make_state("a"), "b"]);
 let value2 = valueify(["a", "b"]);
 let value3 = valueify({ one: "a", two: "b" });
+let state4 = undefined;
+let state5 = undefined;
+let state6 = undefined;
+let state7 = undefined;
+let state8 = undefined;
+let state9 = undefined;
 function one1(state) {
     state.observe("update", (state) => {
         let value = state.value();
@@ -322,5 +334,5 @@ exports.computed = computed;
     computed([make_state(5), make_state("string")], (a, b) => {
     });
 }
-// fallback
-// spread
+// fallback is used to create writable states (intention is to propagate value backwards if attribute is state)
+// spread (not really a problem with solid typing)

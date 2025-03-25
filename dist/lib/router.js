@@ -135,11 +135,9 @@ class Router {
             }
         });
         let parsedRoute = (0, newstate_1.make_state)(undefined);
-        // @ts-ignore
         let computedParsedRoute = (0, newstate_1.computed)([stateRoute, this.defaultPage, this.factories], (stateRoute, defaultPage, factories) => {
             for (let page in factories) {
                 try {
-                    // @ts-ignore
                     let factory = factories[page];
                     let options = factory.codec.decode(stateRoute);
                     return {
@@ -159,7 +157,6 @@ class Router {
             }
         });
         computedParsedRoute.compute((computedParsedRoute) => {
-            // @ts-ignore
             parsedRoute.update(computedParsedRoute);
         });
         (0, newstate_1.computed)([stateIndex, parsedRoute], (stateIndex, parsedRoute) => {

@@ -180,11 +180,9 @@ export class Router<A extends PageOptions<any> = {}> {
 			}
 		});
 		let parsedRoute = make_state(undefined as ParsedRoute | undefined);
-		// @ts-ignore
 		let computedParsedRoute = computed([stateRoute, this.defaultPage, this.factories], (stateRoute, defaultPage, factories) => {
 			for (let page in factories) {
 				try {
-					// @ts-ignore
 					let factory = factories[page];
 					let options = factory.codec.decode(stateRoute);
 					return {
@@ -203,7 +201,6 @@ export class Router<A extends PageOptions<any> = {}> {
 			}
 		});
 		computedParsedRoute.compute((computedParsedRoute) => {
-			// @ts-ignore
 			parsedRoute.update(computedParsedRoute);
 		});
 		computed([stateIndex, parsedRoute], (stateIndex, parsedRoute) => {

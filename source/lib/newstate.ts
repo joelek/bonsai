@@ -26,8 +26,8 @@ export type ReadableStateMapper<A, B> = (state: ReadableState<A>, index: Readabl
 
 export type StateFromAttribute<A> = WritableValueFromAttribute<A> extends ValueFromAttribute<A> ? WritableState<ValueFromAttribute<A>> : ReadableState<ValueFromAttribute<A>>
 
-export type ReadableStateTupleFromValueTuple<A extends ArrayValue> = {
-	[B in keyof A]: ReadableState<A[B]>;
+export type StateTupleFromValueTuple<A extends ArrayValue> = {
+	[B in keyof A]: ReadableOrWritableState<A[B]>;
 };
 
 export type MergedPair<A extends RecordValue, B extends RecordValue> = ExpansionOf<{
@@ -114,7 +114,7 @@ export interface AbstractReadableState<A extends Value, B extends TupleRecord<B>
 	value(): A;
 };
 
-export interface AbstractWritableState<A extends Value, B extends TupleRecord<B>> extends Observable<B> {
+export interface AbstractWritableState<in out A extends Value, B extends TupleRecord<B>> extends Observable<B> {
 	compute<C>(computer: Computer<A, C>): ReadableState<C>;
 
 	shadow(): WritableState<A>;
@@ -154,7 +154,7 @@ export type WritableBasicStateEvents<A extends Value> = {
 	];
 };
 
-export interface WritableBasicState<A extends Value> extends AbstractWritableState<A, WritableBasicStateEvents<A>> {
+export interface WritableBasicState<in out A extends Value> extends AbstractWritableState<A, WritableBasicStateEvents<A>> {
 
 };
 
@@ -181,7 +181,7 @@ export type ReadableArrayStateEvents<A extends ArrayValue> = ReadableBasicStateE
 	];
 };
 
-export interface ReadableArrayState<A extends ArrayValue> extends AbstractReadableState<A, ReadableArrayStateEvents<A>> {
+export interface ReadableArrayState<A extends ArrayValue> extends AbstractReadableState<A, ReadableArrayStateEvents<A>>, ReadableElementStates<A> {
 	element(index: number | ReadableState<number>): ReadableState<A[number]>;
 
 	filter(predicate: Predicate<A[number]>): ReadableState<Array<A[number]>>;
@@ -212,7 +212,7 @@ export type WritableArrayStateEvents<A extends ArrayValue> = WritableBasicStateE
 	];
 };
 
-export interface WritableArrayState<A extends ArrayValue> extends AbstractWritableState<A, WritableArrayStateEvents<A>> {
+export interface WritableArrayState<in out A extends ArrayValue> extends AbstractWritableState<A, WritableArrayStateEvents<A>>, WritableElementStates<A> {
 	append(...items: Array<ReadableStateOrValue<A[number]>>): void;
 
 	element(index: number | ReadableState<number>): WritableState<A[number]>;
@@ -270,7 +270,7 @@ export type WritableRecordStateEvents<A extends RecordValue> = WritableBasicStat
 	"detach": WritableRecordStateEventsTuple<A>;
 };
 
-export interface WritableRecordState<A extends RecordValue> extends AbstractWritableState<A, WritableRecordStateEvents<A>> {
+export interface WritableRecordState<in out A extends RecordValue> extends AbstractWritableState<A, WritableRecordStateEvents<A>> {
 	attach<B extends string, C>(key: B, item: WritableStateOrValue<C>): WritableState<ExpansionOf<A & { [key in B]: C; }>>;
 
 	member<B extends keyof A>(key: ReadableStateOrValue<B>): WritableState<A[B]>;
@@ -294,6 +294,7 @@ export type WritableStateEvents<A> =
 	WritableRecordStateEvents<RecordType<A>> |
 	WritableBasicStateEvents<BasicType<A>>;
 
+// @ts-expect-error
 export class StateImplementation<A> implements WritableArrayState<ArrayType<A>>, WritableRecordState<RecordType<A>>, WritableBasicState<BasicType<A>> {
 	protected active_value: A;
 
@@ -446,22 +447,22 @@ export type WritableMemberStates<A extends RecordValue> = {
 	[B in keyof A]-?: WritableState<A[B]>;
 };
 
-export type ReadableStateUndistributedUnion<A> = (
-	[A] extends [ArrayValue] ? ReadableElementStates<A> & ReadableArrayState<A> :
+export type ReadableState<A> = (
+	[A] extends [ArrayValue] ? /* ReadableElementStates<A> & */ ReadableArrayState<A> :
 	[A] extends [RecordButNotClass<A>] ? ReadableMemberStates<A> & ReadableRecordState<A> :
 	ReadableBasicState<A>
 );
-
-export type ReadableState<A> = (
+/*
+export type ReadableState2<A> = (
 	A extends ArrayValue ? ReadableElementStates<A> & ReadableArrayState<A> :
 	A extends RecordButNotClass<A> ? ReadableMemberStates<A> & ReadableRecordState<A> :
 	ReadableBasicState<A>
-) | ReadableStateUndistributedUnion<A>;
-
+) | ReadableState<A>;
+ */
 export type GenericReadableState<A> = ReadableBasicState<A>;
 
 export type WritableState<A> = (
-	[A] extends [ArrayValue] ? WritableElementStates<A> & WritableArrayState<A> :
+	[A] extends [ArrayValue] ? /* WritableElementStates<A> &  */WritableArrayState<A> :
 	[A] extends [RecordButNotClass<A>] ? WritableMemberStates<A> & WritableRecordState<A> :
 	WritableBasicState<A>
 );
@@ -483,8 +484,18 @@ export type StateOrValue<A> = A | ReadableOrWritableState<A>;
 export type Attribute<A> = ReadableOrWritableState<A> | (
 	A extends ArrayValue ? { [B in keyof A]: Attribute<A[B]>; } :
 	A extends RecordValue ? A extends RecordButNotClass<A> ? { [B in keyof A]: Attribute<A[B]>; } : A :
-	A
-);
+	A extends infer B ? B : A
+)
+
+{
+	let state6: Attribute<false | true | undefined> = undefined as any as ReadableState<false | true>;
+	let state8: Attribute<"one" | "two" | undefined> = undefined as any as ReadableState<"one" | "two">;
+	type k1 = Attribute<boolean | undefined>; // boolean | undefined | ReadableOrWritableState<boolean | undefined>
+	type k2 = ReadableState<boolean | undefined>; // ReadableState<boolean | undefined> | ReadableState<false> | ReadableState<true> | ReadableState<undefined>
+	type k3 = WritableState<boolean | undefined>; // WritableState<boolean | undefined>
+																						// ^^ readable state is distributed into false | true
+}
+
 
 export type Attributes<A> = Attribute<A>;
 
@@ -568,7 +579,27 @@ let value1 = valueify([make_state("a"), "b"]);
 let value2 = valueify(["a", "b"] as ["a", "b"]);
 let value3 = valueify({ one: "a", two: "b" });
 
+let state4: Attribute<string | undefined> = undefined as any as ReadableState<string>;
+let state5: Attribute<string | undefined> = undefined as any as WritableState<string>;
+let state6: Attribute<boolean | undefined> = undefined as any as ReadableState<boolean>;
+let state7: Attribute<boolean | undefined> = undefined as any as WritableState<boolean>;
+let state8: Attribute<"one" | "two" | undefined> = undefined as any as ReadableState<"one" | "two">;
+let state9: Attribute<"one" | "two" | undefined> = undefined as any as WritableState<"one" | "two">;
 
+/*
+something with attributes here from sisu:
+
+Type 'ReadableState<"PIECES" | "HOURS">' is not assignable to type 'string | ReadableBasicState<undefined> | ReadableBasicState<string> | WritableBasicState<string | undefined> | ReadableBasicState<...> | undefined'.
+  Type 'ReadableBasicState<"PIECES">' is not assignable to type 'string | ReadableBasicState<undefined> | ReadableBasicState<string> | WritableBasicState<string | undefined> | ReadableBasicState<...> | undefined'.
+    Type 'ReadableBasicState<"PIECES">' is not assignable to type 'ReadableBasicState<undefined>'.
+      Types of property 'compute' are incompatible.
+        Type '<C>(computer: Computer<"PIECES", C>) => ReadableState<C>' is not assignable to type '<C>(computer: Computer<undefined, C>) => ReadableState<C>'.
+          Types of parameters 'computer' and 'computer' are incompatible.
+
+
+is it the custom string union perhaps? yes
+
+ */
 
 
 
@@ -808,7 +839,7 @@ function_expecting_writable_state(undefined as any as undefined);
 function_expecting_writable_state(undefined as any as string | undefined);
 
 
-export function squash<A extends RecordValue>(records: ReadableState<Array<A>>): ReadableState<A> {
+export function squash<A extends RecordValue>(records: ReadableOrWritableState<Array<A>>): ReadableState<A> {
 	throw "";
 };
 
@@ -819,7 +850,7 @@ export function squash<A extends RecordValue>(records: ReadableState<Array<A>>):
 	let squashed = squash(records);
 }
 
-export function flatten<A extends RecursiveArray<any>>(states: ReadableState<Array<A>>): ReadableState<Array<RecursiveArrayType<A>>> {
+export function flatten<A extends RecursiveArray<any>>(states: ReadableOrWritableState<Array<A>>): ReadableState<Array<RecursiveArrayType<A>>> {
 	throw "";
 };
 
@@ -834,7 +865,7 @@ export function flatten<A extends RecursiveArray<any>>(states: ReadableState<Arr
 	let flattened = flatten(array);
 }
 
-export function merge<A extends RecordValue[]>(...states: ReadableStateTupleFromValueTuple<A>): ReadableState<MergedTuple<A>> {
+export function merge<A extends RecordValue[]>(...states: StateTupleFromValueTuple<A>): ReadableState<MergedTuple<A>> {
 	throw "";
 };
 
@@ -855,7 +886,7 @@ export function fallback<A>(underlying: WritableState<A | undefined>, default_va
 	fallback(make_state("string" as string | undefined), "hello");
 }
 
-export function computed<A extends ArrayValue, B>(states: [...ReadableStateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): ReadableState<B> {
+export function computed<A extends ArrayValue, B>(states: [...StateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): ReadableState<B> {
 	throw "";
 };
 
@@ -865,5 +896,6 @@ export function computed<A extends ArrayValue, B>(states: [...ReadableStateTuple
 	});
 }
 
-// fallback
-// spread
+
+// fallback is used to create writable states (intention is to propagate value backwards if attribute is state)
+// spread (not really a problem with solid typing)
