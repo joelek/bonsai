@@ -157,6 +157,7 @@ export type WritableStateEvents<A> = WritableArrayStateEvents<ArrayType<A>> | Wr
 export declare class StateImplementation<A> implements WritableArrayState<ArrayType<A>>, WritableRecordState<RecordType<A>>, WritableBasicState<BasicType<A>> {
     protected active_value: A;
     constructor(active_value: A);
+    [x: number]: WritableState<ArrayType<A>[number]>;
     append(...items: ReadableStateOrValue<ArrayType<A>[number]>[]): void;
     element(index: number | ReadableBasicState<number>): WritableState<ArrayType<A>[number]>;
     filter(predicate: Predicate<ArrayType<A>[number]>): ReadableState<Array<ArrayType<A>[number]>>;
@@ -226,6 +227,16 @@ export type Attribute<A> = ReadableOrWritableState<A> | (A extends ArrayValue ? 
 } : A extends RecordValue ? A extends RecordButNotClass<A> ? {
     [B in keyof A]: Attribute<A[B]>;
 } : A : A extends infer B ? B : A);
+export type WritableAttribute<A> = WritableState<A> | (A extends ArrayValue ? {
+    [B in keyof A]: WritableAttribute<A[B]>;
+} : A extends RecordValue ? A extends RecordButNotClass<A> ? {
+    [B in keyof A]: WritableAttribute<A[B]>;
+} : A : A extends infer B ? B : A);
+export type ReadableAttribute<A> = ReadableState<A> | (A extends ArrayValue ? {
+    [B in keyof A]: ReadableAttribute<A[B]>;
+} : A extends RecordValue ? A extends RecordButNotClass<A> ? {
+    [B in keyof A]: ReadableAttribute<A[B]>;
+} : A : A extends infer B ? B : A);
 export type Attributes<A> = Attribute<A>;
 export type ValueFromAttribute<A> = (A extends ReadableOrWritableState<infer B> ? B : A extends ArrayValue ? {
     [B in keyof A]: ValueFromAttribute<A[B]>;
@@ -250,4 +261,5 @@ export declare function flatten<A extends RecursiveArray<any>>(states: ReadableO
 export declare function merge<A extends RecordValue[]>(...states: StateTupleFromValueTuple<A>): ReadableState<MergedTuple<A>>;
 export declare function fallback<A>(underlying: WritableState<A | undefined>, default_value: Exclude<A, undefined>): WritableState<Exclude<A, undefined>>;
 export declare function computed<A extends ArrayValue, B>(states: [...StateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): ReadableState<B>;
+export declare function wrap<A>(state: ReadableState<A>): WritableState<A>;
 export {};

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.computed = exports.fallback = exports.merge = exports.flatten = exports.squash = exports.valueify = exports.stateify = exports.make_state = exports.StateImplementation = exports.Subscription = void 0;
+exports.wrap = exports.computed = exports.fallback = exports.merge = exports.flatten = exports.squash = exports.valueify = exports.stateify = exports.make_state = exports.StateImplementation = exports.Subscription = void 0;
 exports.Subscription = {
     create(is_cancelled, callback) {
         let cancel = (() => {
@@ -23,7 +23,6 @@ exports.Subscription = {
 ;
 ;
 ;
-// @ts-expect-error
 class StateImplementation {
     active_value;
     constructor(active_value) {
@@ -336,3 +335,9 @@ exports.computed = computed;
 }
 // fallback is used to create writable states (intention is to propagate value backwards if attribute is state)
 // spread (not really a problem with solid typing)
+// computed states may be settable, it's an overwrite
+function wrap(state) {
+    throw "";
+}
+exports.wrap = wrap;
+;

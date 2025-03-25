@@ -1,5 +1,3 @@
-import { ArrayState } from "./state";
-
 type ExpansionOf<A> = A extends infer B ? { [C in keyof B]: B[C] } : never;
 type ArrayElementType<A> = [A] extends [Array<infer B>] ? B : never;
 type RecordButNotClass<A> = A extends { [key: string]: unknown; } ? A : never;
@@ -294,13 +292,14 @@ export type WritableStateEvents<A> =
 	WritableRecordStateEvents<RecordType<A>> |
 	WritableBasicStateEvents<BasicType<A>>;
 
-// @ts-expect-error
 export class StateImplementation<A> implements WritableArrayState<ArrayType<A>>, WritableRecordState<RecordType<A>>, WritableBasicState<BasicType<A>> {
 	protected active_value: A;
 
 	constructor(active_value: A) {
 		this.active_value = active_value;
 	}
+
+	[x: number]: WritableState<ArrayType<A>[number]>;
 
 	append(...items: ReadableStateOrValue<ArrayType<A>[number]>[]): void {
 		throw new Error("Method not implemented.");
@@ -487,6 +486,18 @@ export type Attribute<A> = ReadableOrWritableState<A> | (
 	A extends infer B ? B : A
 )
 
+export type WritableAttribute<A> = WritableState<A> | (
+	A extends ArrayValue ? { [B in keyof A]: WritableAttribute<A[B]>; } :
+	A extends RecordValue ? A extends RecordButNotClass<A> ? { [B in keyof A]: WritableAttribute<A[B]>; } : A :
+	A extends infer B ? B : A
+)
+
+export type ReadableAttribute<A> = ReadableState<A> | (
+	A extends ArrayValue ? { [B in keyof A]: ReadableAttribute<A[B]>; } :
+	A extends RecordValue ? A extends RecordButNotClass<A> ? { [B in keyof A]: ReadableAttribute<A[B]>; } : A :
+	A extends infer B ? B : A
+)
+
 {
 	let state6: Attribute<false | true | undefined> = undefined as any as ReadableState<false | true>;
 	let state8: Attribute<"one" | "two" | undefined> = undefined as any as ReadableState<"one" | "two">;
@@ -585,22 +596,6 @@ let state6: Attribute<boolean | undefined> = undefined as any as ReadableState<b
 let state7: Attribute<boolean | undefined> = undefined as any as WritableState<boolean>;
 let state8: Attribute<"one" | "two" | undefined> = undefined as any as ReadableState<"one" | "two">;
 let state9: Attribute<"one" | "two" | undefined> = undefined as any as WritableState<"one" | "two">;
-
-/*
-something with attributes here from sisu:
-
-Type 'ReadableState<"PIECES" | "HOURS">' is not assignable to type 'string | ReadableBasicState<undefined> | ReadableBasicState<string> | WritableBasicState<string | undefined> | ReadableBasicState<...> | undefined'.
-  Type 'ReadableBasicState<"PIECES">' is not assignable to type 'string | ReadableBasicState<undefined> | ReadableBasicState<string> | WritableBasicState<string | undefined> | ReadableBasicState<...> | undefined'.
-    Type 'ReadableBasicState<"PIECES">' is not assignable to type 'ReadableBasicState<undefined>'.
-      Types of property 'compute' are incompatible.
-        Type '<C>(computer: Computer<"PIECES", C>) => ReadableState<C>' is not assignable to type '<C>(computer: Computer<undefined, C>) => ReadableState<C>'.
-          Types of parameters 'computer' and 'computer' are incompatible.
-
-
-is it the custom string union perhaps? yes
-
- */
-
 
 
 
@@ -899,3 +894,9 @@ export function computed<A extends ArrayValue, B>(states: [...StateTupleFromValu
 
 // fallback is used to create writable states (intention is to propagate value backwards if attribute is state)
 // spread (not really a problem with solid typing)
+
+// computed states may be settable, it's an overwrite
+
+export function wrap<A>(state: ReadableState<A>): WritableState<A> {
+	throw "";
+};
