@@ -6,6 +6,7 @@ type RecordButNotClass<A> = A extends {
 } ? A : never;
 type RecursiveArray<A> = Array<A | RecursiveArray<A>>;
 type RecursiveArrayType<A> = A extends Array<infer B> ? RecursiveArrayType<B> : A;
+type TupleButNotArray<A> = Extract<keyof A, `${number}`> extends number ? never : A;
 export type TupleRecord<A extends TupleRecord<A>> = {
     [C in keyof A]: any[];
 };
@@ -165,8 +166,8 @@ export declare class StateImplementation<A> implements WritableArrayState<ArrayT
     first(): ReadableState<ArrayType<A>[number] | undefined>;
     last(): ReadableState<ArrayType<A>[number] | undefined>;
     get length(): ReadableBasicState<number>;
-    mapStates<B>(mapper: ReadableStateMapper<ArrayType<A>[number], B>): ReadableElementStates<B[]> & ReadableArrayState<B[]>;
-    mapValues<B>(mapper: ValueMapper<ArrayType<A>[number], B>): ReadableElementStates<B[]> & ReadableArrayState<B[]>;
+    mapStates<B>(mapper: ReadableStateMapper<ArrayType<A>[number], B>): ReadableState<Array<B>>;
+    mapValues<B>(mapper: ValueMapper<ArrayType<A>[number], B>): ReadableState<Array<B>>;
     member<B extends keyof A>(key: ReadableStateOrValue<B>): ReadableState<A[B]>;
     member<B extends keyof A>(key: WritableStateOrValue<B>): WritableState<A[B]>;
     spread(): WritableMemberStates<RecordType<A>>;
@@ -206,13 +207,21 @@ export type WritableMemberStates<A extends RecordValue> = {
 };
 export type ReadableState<A> = ([
     A
-] extends [ArrayValue] ? ReadableArrayState<A> : [
+] extends [ArrayValue] ? [
+    A
+] extends [TupleButNotArray<A>] ? ReadableArrayState<A> & {
+    [B in keyof A]: ReadableState<A[B]>;
+} : ReadableArrayState<A> : [
     A
 ] extends [RecordButNotClass<A>] ? ReadableMemberStates<A> & ReadableRecordState<A> : ReadableBasicState<A>);
 export type GenericReadableState<A> = ReadableBasicState<A>;
 export type WritableState<A> = ([
     A
-] extends [ArrayValue] ? WritableArrayState<A> : [
+] extends [ArrayValue] ? [
+    A
+] extends [TupleButNotArray<A>] ? WritableArrayState<A> & {
+    [B in keyof A]: WritableState<A[B]>;
+} : WritableArrayState<A> : [
     A
 ] extends [RecordButNotClass<A>] ? WritableMemberStates<A> & WritableRecordState<A> : WritableBasicState<A>);
 export type GenericWritableState<A> = WritableBasicState<A>;

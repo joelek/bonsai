@@ -131,6 +131,8 @@ function valueify(attribute) {
 }
 exports.valueify = valueify;
 ;
+let state0a = stateify(["a", 5])[0];
+let state0b = stateify(["a", 5])[1];
 let state1 = stateify([make_state("a"), "b"]);
 let state2 = stateify(["a", "b"]);
 let state3 = stateify({ one: "a", two: "b" });

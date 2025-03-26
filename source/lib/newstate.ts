@@ -4,7 +4,7 @@ type RecordButNotClass<A> = A extends { [key: string]: unknown; } ? A : never;
 type RecursiveArray<A> = Array<A | RecursiveArray<A>>;
 type RecursiveArrayType<A> = A extends Array<infer B> ? RecursiveArrayType<B> : A;
 type IsTuple<A> = Extract<keyof A, `${number}`> extends number ? false : true;
-type TupleButNotArray<A> = Extract<keyof A, `${number}`> extends number ? A : never;
+type TupleButNotArray<A> = Extract<keyof A, `${number}`> extends number ? never : A;
 
 export type TupleRecord<A extends TupleRecord<A>> = { [C in keyof A]: any[]; };
 
@@ -327,11 +327,11 @@ export class StateImplementation<A> implements WritableArrayState<ArrayType<A>>,
 		throw new Error("Method not implemented.");
 	}
 
-	mapStates<B>(mapper: ReadableStateMapper<ArrayType<A>[number], B>): ReadableElementStates<B[]> & ReadableArrayState<B[]> {
+	mapStates<B>(mapper: ReadableStateMapper<ArrayType<A>[number], B>): ReadableState<Array<B>> {
 		throw new Error("Method not implemented.");
 	}
 
-	mapValues<B>(mapper: ValueMapper<ArrayType<A>[number], B>): ReadableElementStates<B[]> & ReadableArrayState<B[]> {
+	mapValues<B>(mapper: ValueMapper<ArrayType<A>[number], B>): ReadableState<Array<B>> {
 		throw new Error("Method not implemented.");
 	}
 
@@ -447,7 +447,10 @@ export type WritableMemberStates<A extends RecordValue> = {
 };
 
 export type ReadableState<A> = (
-	[A] extends [ArrayValue] ? /* ReadableElementStates<A> & */ ReadableArrayState<A> :
+	[A] extends [ArrayValue] ?
+		[A] extends [TupleButNotArray<A>] ?
+			ReadableArrayState<A> & { [B in keyof A]: ReadableState<A[B]>; }:
+			ReadableArrayState<A>/* ReadableElementStates<A> & */ :
 	[A] extends [RecordButNotClass<A>] ? ReadableMemberStates<A> & ReadableRecordState<A> :
 	ReadableBasicState<A>
 );
@@ -461,7 +464,10 @@ export type ReadableState2<A> = (
 export type GenericReadableState<A> = ReadableBasicState<A>;
 
 export type WritableState<A> = (
-	[A] extends [ArrayValue] ? /* WritableElementStates<A> &  */WritableArrayState<A> :
+	[A] extends [ArrayValue] ?
+		[A] extends [TupleButNotArray<A>] ?
+			WritableArrayState<A> & { [B in keyof A]: WritableState<A[B]>; }:
+			WritableArrayState<A> /* WritableElementStates<A> &  */:
 	[A] extends [RecordButNotClass<A>] ? WritableMemberStates<A> & WritableRecordState<A> :
 	WritableBasicState<A>
 );
@@ -581,6 +587,9 @@ export function stateify<A extends Attribute<any>>(attribute: A): StateFromAttri
 export function valueify<A extends Attribute<any>>(attribute: A): ValueFromAttribute<A> {
 	throw "";
 };
+
+let state0a: WritableState<string> = stateify(["a", 5] as [string, number])[0];
+let state0b: WritableState<number> = stateify(["a", 5] as [string, number])[1];
 
 let state1 = stateify([make_state("a"), "b"]);
 let state2 = stateify(["a", "b"] as ["a", "b"]);
