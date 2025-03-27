@@ -450,17 +450,11 @@ export type ReadableState<A> = (
 	[A] extends [ArrayValue] ?
 		[A] extends [TupleButNotArray<A>] ?
 			ReadableArrayState<A> & { [B in keyof A]: ReadableState<A[B]>; }:
-			ReadableArrayState<A>/* ReadableElementStates<A> & */ :
+			ReadableArrayState<A> /* ReadableElementStates<A> & */:
 	[A] extends [RecordButNotClass<A>] ? ReadableMemberStates<A> & ReadableRecordState<A> :
 	ReadableBasicState<A>
 );
-/*
-export type ReadableState2<A> = (
-	A extends ArrayValue ? ReadableElementStates<A> & ReadableArrayState<A> :
-	A extends RecordButNotClass<A> ? ReadableMemberStates<A> & ReadableRecordState<A> :
-	ReadableBasicState<A>
-) | ReadableState<A>;
- */
+
 export type GenericReadableState<A> = ReadableBasicState<A>;
 
 export type WritableState<A> = (
@@ -899,12 +893,6 @@ export function computed<A extends ArrayValue, B>(states: [...StateTupleFromValu
 
 	});
 }
-
-
-// fallback is used to create writable states (intention is to propagate value backwards if attribute is state)
-// spread (not really a problem with solid typing)
-
-// computed states may be settable, it's an overwrite
 
 export function wrap<A>(state: ReadableState<A>): WritableState<A> {
 	throw "";

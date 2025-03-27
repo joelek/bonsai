@@ -335,9 +335,6 @@ exports.computed = computed;
     computed([make_state(5), make_state("string")], (a, b) => {
     });
 }
-// fallback is used to create writable states (intention is to propagate value backwards if attribute is state)
-// spread (not really a problem with solid typing)
-// computed states may be settable, it's an overwrite
 function wrap(state) {
     throw "";
 }
