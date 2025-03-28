@@ -23,9 +23,11 @@ export type ReadonlyArrayValue = readonly Value[];
 
 export type RecordValue = { [key: string]: Value; };
 
-export type ReadableStateMapper<A, B> = (state: ReadableState<A>, index: ReadableState<number>) => B | ReadableState<B>;
+export type ReadableStateMapper<A, B> = (state: ReadableState<A>, index: ReadableState<number>) => ReadableState<B>;
+export type ReadableStateMapper2<A, B> = (state: ReadableState<A>, index: ReadableState<number>) => B;
 
-export type WritableStateMapper<A, B> = (state: WritableState<A>, index: ReadableState<number>) => B | WritableState<B>;
+export type WritableStateMapper<A, B> = (state: WritableState<A>, index: ReadableState<number>) => WritableState<B>;
+export type WritableStateMapper2<A, B> = (state: WritableState<A>, index: ReadableState<number>) => B;
 
 export type StateFromAttribute<A> = WritableValueFromAttribute<A> extends ValueFromAttribute<A> ? WritableState<ValueFromAttribute<A>> : ReadableState<ValueFromAttribute<A>>
 
@@ -196,6 +198,7 @@ export interface ReadableArrayState<A extends ArrayValue> extends AbstractReadab
 	get length(): ReadableState<number>;
 
 	mapStates<B>(mapper: ReadableStateMapper<A[number], B>): ReadableState<Array<B>>;
+	mapStates<B>(mapper: ReadableStateMapper2<A[number], B>): ReadableState<Array<B>>;
 
 	mapValues<B>(mapper: ValueMapper<A[number], B>): ReadableState<Array<B>>;
 
@@ -230,7 +233,8 @@ export interface WritableArrayState<in out A extends ArrayValue> extends Abstrac
 
 	get length(): ReadableState<number>;
 
-	mapStates<B>(mapper: ReadableStateMapper<A[number], B>): ReadableState<Array<B>>;
+	mapStates<B>(mapper: WritableStateMapper<A[number], B>): WritableState<Array<B>>;
+	mapStates<B>(mapper: WritableStateMapper2<A[number], B>): WritableState<Array<B>>;
 
 	mapValues<B>(mapper: ValueMapper<A[number], B>): ReadableState<Array<B>>;
 
@@ -377,7 +381,7 @@ export class StateImplementation<A> implements WritableArrayState<ArrayType<A>>,
 		throw new Error("Method not implemented.");
 	}
 
-	mapStates<B>(mapper: ReadableStateMapper<ArrayType<A>[number], B>): ReadableState<Array<B>> {
+	mapStates<B>(mapper: WritableStateMapper<ArrayType<A>[number], B> | WritableStateMapper2<ArrayType<A>[number], B>): WritableState<Array<B>> {
 		throw new Error("Method not implemented.");
 	}
 

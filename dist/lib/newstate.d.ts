@@ -18,8 +18,10 @@ export type ReadonlyArrayValue = readonly Value[];
 export type RecordValue = {
     [key: string]: Value;
 };
-export type ReadableStateMapper<A, B> = (state: ReadableState<A>, index: ReadableState<number>) => B | ReadableState<B>;
-export type WritableStateMapper<A, B> = (state: WritableState<A>, index: ReadableState<number>) => B | WritableState<B>;
+export type ReadableStateMapper<A, B> = (state: ReadableState<A>, index: ReadableState<number>) => ReadableState<B>;
+export type ReadableStateMapper2<A, B> = (state: ReadableState<A>, index: ReadableState<number>) => B;
+export type WritableStateMapper<A, B> = (state: WritableState<A>, index: ReadableState<number>) => WritableState<B>;
+export type WritableStateMapper2<A, B> = (state: WritableState<A>, index: ReadableState<number>) => B;
 export type StateFromAttribute<A> = WritableValueFromAttribute<A> extends ValueFromAttribute<A> ? WritableState<ValueFromAttribute<A>> : ReadableState<ValueFromAttribute<A>>;
 export type StateTupleFromValueTuple<A extends ArrayValue> = {
     [B in keyof A]: ReadableOrWritableState<A[B]>;
@@ -90,6 +92,7 @@ export interface ReadableArrayState<A extends ArrayValue> extends AbstractReadab
     last(): ReadableState<A[number] | undefined>;
     get length(): ReadableState<number>;
     mapStates<B>(mapper: ReadableStateMapper<A[number], B>): ReadableState<Array<B>>;
+    mapStates<B>(mapper: ReadableStateMapper2<A[number], B>): ReadableState<Array<B>>;
     mapValues<B>(mapper: ValueMapper<A[number], B>): ReadableState<Array<B>>;
     spread(): ReadableElementStates<A>;
     [Symbol.iterator](): Iterator<ReadableState<A[number]>>;
@@ -112,7 +115,8 @@ export interface WritableArrayState<in out A extends ArrayValue> extends Abstrac
     insert(index: number, item: WritableStateOrValue<A[number]>): WritableState<A[number]>;
     last(): WritableState<A[number] | undefined>;
     get length(): ReadableState<number>;
-    mapStates<B>(mapper: ReadableStateMapper<A[number], B>): ReadableState<Array<B>>;
+    mapStates<B>(mapper: WritableStateMapper<A[number], B>): WritableState<Array<B>>;
+    mapStates<B>(mapper: WritableStateMapper2<A[number], B>): WritableState<Array<B>>;
     mapValues<B>(mapper: ValueMapper<A[number], B>): ReadableState<Array<B>>;
     remove(index: number): void;
     spread(): WritableElementStates<A>;
@@ -165,7 +169,7 @@ export declare class StateImplementation<A> implements WritableArrayState<ArrayT
     first(): WritableState<ArrayType<A>[number] | undefined>;
     last(): WritableState<ArrayType<A>[number] | undefined>;
     get length(): ReadableBasicState<number>;
-    mapStates<B>(mapper: ReadableStateMapper<ArrayType<A>[number], B>): ReadableState<Array<B>>;
+    mapStates<B>(mapper: WritableStateMapper<ArrayType<A>[number], B> | WritableStateMapper2<ArrayType<A>[number], B>): WritableState<Array<B>>;
     mapValues<B>(mapper: ValueMapper<ArrayType<A>[number], B>): ReadableState<Array<B>>;
     member<B extends keyof RecordType<A>, C extends RecordType<A>[B]>(key: ReadableStateOrValue<B>): WritableState<C>;
     spread(): WritableMemberStates<RecordType<A>>;
