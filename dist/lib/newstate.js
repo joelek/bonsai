@@ -166,7 +166,11 @@ function two2(state) {
     state.observe("remove", (state, index) => {
         let value = state.value();
     });
+    let element1 = state.element(0);
+    let element2 = state[0];
 }
+two2(undefined);
+two2(undefined);
 function three3(state) {
     state.observe("update", (state) => {
         let value = state.value();
@@ -177,7 +181,11 @@ function three3(state) {
     state.observe("detach", (state, key) => {
         let value = state.value();
     });
+    let member1 = state.member("key");
+    let member2 = state["key"];
 }
+three3(undefined);
+three3(undefined);
 function one(state) {
     state.observe("update", (state) => {
         state.update(state.value());
@@ -207,7 +215,12 @@ function two(state) {
         state.update(state.value());
     });
     state.update(state.value());
+    let element1 = state.element(0);
+    let element2 = state[0];
 }
+// @ts-expect-error
+two(undefined);
+two(undefined);
 function three(state) {
     state.observe("update", (state) => {
         state.update(state.value());
@@ -219,7 +232,12 @@ function three(state) {
         state.update(state.value());
     });
     state.update(state.value());
+    let member1 = state.member("key");
+    let member2 = state["key"];
 }
+// @ts-expect-error
+three(undefined);
+three(undefined);
 // Attribute should accept any value or state.
 function function_expecting_attribute(attribute) {
     let value = valueify(attribute);
@@ -346,3 +364,5 @@ exports.computed = computed;
     computed([make_state(5), make_state("string")], (a, b) => {
     });
 }
+// mapstates
+// mapvalues

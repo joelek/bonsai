@@ -483,7 +483,7 @@ wtf.test(`Attributes should be user-friendly.`, (assert) => {
 	assert.equals(valueify(required_required), "reqreq");
 	let required_optional = required.optional;
 	assert.equals(valueify(required_optional), "reqopt");
-	let optional = fallback(state.member("optional"), { required: "optreq2" });
+	let optional = fallback(state.optional, { required: "optreq2" });
 	let optional_required = optional.required;
 	assert.equals(valueify(optional_required), "optreq");
 	let optional_optional = optional.optional;

@@ -281,7 +281,7 @@ export type ReadableRecordStateEvents<A extends RecordValue> = ReadableBasicStat
 };
 
 export interface ReadableRecordState<A extends RecordValue> extends AbstractReadableState<A, ReadableRecordStateEvents<A>> {
-	member<B extends keyof A>(key: ReadableStateOrValue<B>): ReadableState<A[B]>;
+	member<B extends keyof A, C extends A[B]>(key: ReadableStateOrValue<B>): ReadableState<C>;
 
 	spread(): ReadableMemberStates<A>;
 };
@@ -301,7 +301,7 @@ export type WritableRecordStateEvents<A extends RecordValue> = WritableBasicStat
 export interface WritableRecordState<in out A extends RecordValue> extends AbstractWritableState<A, WritableRecordStateEvents<A>> {
 	attach<B extends string, C>(key: B, item: WritableStateOrValue<C>): WritableState<ExpansionOf<A & { [key in B]: C; }>>;
 
-	member<B extends keyof A>(key: ReadableStateOrValue<B>): WritableState<A[B]>;
+	member<B extends keyof A, C extends A[B]>(key: ReadableStateOrValue<B>): WritableState<C>;
 
 	detach<B extends keyof A>(key: B): WritableState<ExpansionOf<Omit<A, B>>>;
 
@@ -385,7 +385,7 @@ export class StateImplementation<A> implements WritableArrayState<ArrayType<A>>,
 		throw new Error("Method not implemented.");
 	}
 
-	member<B extends keyof RecordType<A>>(key: ReadableStateOrValue<B>): WritableState<RecordType<A>[B]> {
+	member<B extends keyof RecordType<A>, C extends RecordType<A>[B]>(key: ReadableStateOrValue<B>): WritableState<C> {
 		throw new Error("Method not implemented.");
 	}
 
@@ -727,7 +727,7 @@ namespace attribute {
 	type mixed_state_1 = Attribute<string | { [key: string]: any }>;
 }
 
-function one1<A>(state: GenericReadableState<A>): void {
+function one1<A>(state: ReadableState<A> & ReadableBasicState<A>): void {
 	state.observe("update", (state) => {
 		let value = state.value();
 	});
@@ -752,7 +752,12 @@ function two2<A>(state: ReadableState<Array<A>>): void {
 	state.observe("remove", (state, index) => {
 		let value = state.value();
 	});
+	let element1 = state.element(0);
+	let element2 = state[0];
 }
+
+two2(undefined as any as ReadableState<Array<string>>);
+two2(undefined as any as WritableState<Array<string>>);
 
 function three3<A>(state: ReadableState<{ [key: string]: A }>): void {
 	state.observe("update", (state) => {
@@ -764,9 +769,14 @@ function three3<A>(state: ReadableState<{ [key: string]: A }>): void {
 	state.observe("detach", (state, key) => {
 		let value = state.value();
 	});
+	let member1 = state.member("key");
+	let member2 = state["key"];
 }
 
-function one<A>(state: GenericWritableState<A>): void {
+three3(undefined as any as ReadableState<{ [key: string]: string }>);
+three3(undefined as any as WritableState<{ [key: string]: string }>);
+
+function one<A>(state: WritableState<A> & WritableBasicState<A>): void {
 	state.observe("update", (state) => {
 		state.update(state.value());
 	});
@@ -797,7 +807,13 @@ function two<A>(state: WritableState<Array<A>>): void {
 		state.update(state.value());
 	});
 	state.update(state.value());
+	let element1 = state.element(0);
+	let element2 = state[0];
 }
+
+// @ts-expect-error
+two(undefined as any as ReadableState<Array<string>>);
+two(undefined as any as WritableState<Array<string>>);
 
 function three<A>(state: WritableState<{ [key: string]: A }>): void {
 	state.observe("update", (state) => {
@@ -810,7 +826,13 @@ function three<A>(state: WritableState<{ [key: string]: A }>): void {
 		state.update(state.value());
 	});
 	state.update(state.value());
+	let member1 = state.member("key");
+	let member2 = state["key"];
 }
+
+// @ts-expect-error
+three(undefined as any as ReadableState<{ [key: string]: string }>);
+three(undefined as any as WritableState<{ [key: string]: string }>);
 
 // Attribute should accept any value or state.
 function function_expecting_attribute(attribute: Attribute<string | undefined>): void {
@@ -945,3 +967,9 @@ export function computed<A extends ArrayValue, B>(states: [...StateTupleFromValu
 
 	});
 }
+
+
+
+
+// mapstates
+// mapvalues

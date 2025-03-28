@@ -130,7 +130,7 @@ export type ReadableRecordStateEvents<A extends RecordValue> = ReadableBasicStat
     "detach": ReadableRecordStateEventsTuple<A>;
 };
 export interface ReadableRecordState<A extends RecordValue> extends AbstractReadableState<A, ReadableRecordStateEvents<A>> {
-    member<B extends keyof A>(key: ReadableStateOrValue<B>): ReadableState<A[B]>;
+    member<B extends keyof A, C extends A[B]>(key: ReadableStateOrValue<B>): ReadableState<C>;
     spread(): ReadableMemberStates<A>;
 }
 export type WritableRecordStateEventsTuple<A extends RecordValue> = {
@@ -147,7 +147,7 @@ export interface WritableRecordState<in out A extends RecordValue> extends Abstr
     attach<B extends string, C>(key: B, item: WritableStateOrValue<C>): WritableState<ExpansionOf<A & {
         [key in B]: C;
     }>>;
-    member<B extends keyof A>(key: ReadableStateOrValue<B>): WritableState<A[B]>;
+    member<B extends keyof A, C extends A[B]>(key: ReadableStateOrValue<B>): WritableState<C>;
     detach<B extends keyof A>(key: B): WritableState<ExpansionOf<Omit<A, B>>>;
     spread(): WritableMemberStates<A>;
 }
@@ -167,7 +167,7 @@ export declare class StateImplementation<A> implements WritableArrayState<ArrayT
     get length(): ReadableBasicState<number>;
     mapStates<B>(mapper: ReadableStateMapper<ArrayType<A>[number], B>): ReadableState<Array<B>>;
     mapValues<B>(mapper: ValueMapper<ArrayType<A>[number], B>): ReadableState<Array<B>>;
-    member<B extends keyof RecordType<A>>(key: ReadableStateOrValue<B>): WritableState<RecordType<A>[B]>;
+    member<B extends keyof RecordType<A>, C extends RecordType<A>[B]>(key: ReadableStateOrValue<B>): WritableState<C>;
     spread(): WritableMemberStates<RecordType<A>>;
     spread(): WritableElementStates<ArrayType<A>>;
     vacate(): boolean;
