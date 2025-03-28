@@ -5,6 +5,9 @@ type RecursiveArray<A> = Array<A | RecursiveArray<A>>;
 type RecursiveArrayType<A> = A extends Array<infer B> ? RecursiveArrayType<B> : A;
 type IsTuple<A> = Extract<keyof A, `${number}`> extends number ? false : true;
 type TupleButNotArray<A> = Extract<keyof A, `${number}`> extends number ? never : A;
+type EventOnMap<A extends TupleRecord<A>> = {
+	[B in keyof A & string as `on${B}`]: (...args: [...A[B]]) => A[B];
+};
 
 export type TupleRecord<A extends TupleRecord<A>> = { [C in keyof A]: any[]; };
 
@@ -56,7 +59,7 @@ export type Predicate<A> = (state: ReadableState<A>, index: ReadableState<number
 
 export type Observer<A extends any[]> = (...args: [...A]) => void;
 
-export type Callback<A extends any[]> = (...args: A) => void;
+export type Callback<A extends any[]> = (...args: [...A]) => void;
 
 export type Computer<A, B> = (value: A) => B;
 
@@ -780,12 +783,15 @@ function function_expecting_attribute(attribute: Attribute<string | undefined>):
 function_expecting_attribute(undefined as any as ReadableState<string>);
 function_expecting_attribute(undefined as any as ReadableState<undefined>);
 function_expecting_attribute(undefined as any as ReadableState<string | undefined>);
+function_expecting_attribute(undefined as any as ReadableState<"literal">);
 function_expecting_attribute(undefined as any as WritableState<string>);
 function_expecting_attribute(undefined as any as WritableState<undefined>);
 function_expecting_attribute(undefined as any as WritableState<string | undefined>);
+function_expecting_attribute(undefined as any as WritableState<"literal">);
 function_expecting_attribute(undefined as any as string);
 function_expecting_attribute(undefined as any as undefined);
 function_expecting_attribute(undefined as any as string | undefined);
+function_expecting_attribute(undefined as any as "literal");
 
 // ReadableState should be covariant. Any state that can be guaranteed to only contain string, undefined or string | undefined should be accepted.
 function function_expecting_readable_state(attribute: ReadableState<string | undefined>): void {
@@ -799,15 +805,19 @@ function function_expecting_readable_state(attribute: ReadableState<string | und
 function_expecting_readable_state(undefined as any as ReadableState<string>);
 function_expecting_readable_state(undefined as any as ReadableState<undefined>);
 function_expecting_readable_state(undefined as any as ReadableState<string | undefined>);
+function_expecting_readable_state(undefined as any as ReadableState<"literal">);
 function_expecting_readable_state(undefined as any as WritableState<string>);
 function_expecting_readable_state(undefined as any as WritableState<undefined>);
 function_expecting_readable_state(undefined as any as WritableState<string | undefined>);
+function_expecting_readable_state(undefined as any as WritableState<"literal">);
 // @ts-expect-error
 function_expecting_readable_state(undefined as any as string);
 // @ts-expect-error
 function_expecting_readable_state(undefined as any as undefined);
 // @ts-expect-error
 function_expecting_readable_state(undefined as any as string | undefined);
+// @ts-expect-error
+function_expecting_readable_state(undefined as any as "literal");
 
 // WritableState should be invariant. Only state containing exactly string | undefined should be accepted.
 function function_expecting_writable_state(attribute: WritableState<string | undefined>): void {
@@ -825,16 +835,22 @@ function_expecting_writable_state(undefined as any as ReadableState<undefined>);
 // @ts-expect-error
 function_expecting_writable_state(undefined as any as ReadableState<string | undefined>);
 // @ts-expect-error
+function_expecting_writable_state(undefined as any as ReadableState<"literal">);
+// @ts-expect-error
 function_expecting_writable_state(undefined as any as WritableState<string>);
 // @ts-expect-error
 function_expecting_writable_state(undefined as any as WritableState<undefined>);
 function_expecting_writable_state(undefined as any as WritableState<string | undefined>);
+// @ts-expect-error
+function_expecting_writable_state(undefined as any as WritableState<"literal">);
 // @ts-expect-error
 function_expecting_writable_state(undefined as any as string);
 // @ts-expect-error
 function_expecting_writable_state(undefined as any as undefined);
 // @ts-expect-error
 function_expecting_writable_state(undefined as any as string | undefined);
+// @ts-expect-error
+function_expecting_writable_state(undefined as any as "literal");
 
 
 export function squash<A extends RecordValue>(records: ReadableOrWritableState<Array<A>>): ReadableState<A> {
