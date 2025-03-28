@@ -101,7 +101,6 @@ exports.StateImplementation = StateImplementation;
 {
     let state6 = undefined;
     let state8 = undefined;
-    // ^^ readable state is distributed into false | true
 }
 function make_state(value) {
     return new StateImplementation();

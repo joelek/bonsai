@@ -25,6 +25,8 @@ export type RecordValue = { [key: string]: Value; };
 
 export type ReadableStateMapper<A, B> = (state: ReadableState<A>, index: ReadableState<number>) => B | ReadableState<B>;
 
+export type WritableStateMapper<A, B> = (state: WritableState<A>, index: ReadableState<number>) => B | WritableState<B>;
+
 export type StateFromAttribute<A> = WritableValueFromAttribute<A> extends ValueFromAttribute<A> ? WritableState<ValueFromAttribute<A>> : ReadableState<ValueFromAttribute<A>>
 
 export type StateTupleFromValueTuple<A extends ArrayValue> = {
@@ -220,11 +222,11 @@ export interface WritableArrayState<in out A extends ArrayValue> extends Abstrac
 
 	filter(predicate: Predicate<A[number]>): WritableState<Array<A[number]>>;
 
-	first(): ReadableState<A[number] | undefined>;
+	first(): WritableState<A[number] | undefined>;
 
 	insert(index: number, item: WritableStateOrValue<A[number]>): WritableState<A[number]>;
 
-	last(): ReadableState<A[number] | undefined>;
+	last(): WritableState<A[number] | undefined>;
 
 	get length(): ReadableState<number>;
 
@@ -363,11 +365,11 @@ export class StateImplementation<A> implements WritableArrayState<ArrayType<A>>,
 		throw new Error("Method not implemented.");
 	}
 
-	first(): ReadableState<ArrayType<A>[number] | undefined> {
+	first(): WritableState<ArrayType<A>[number] | undefined> {
 		throw new Error("Method not implemented.");
 	}
 
-	last(): ReadableState<ArrayType<A>[number] | undefined> {
+	last(): WritableState<ArrayType<A>[number] | undefined> {
 		throw new Error("Method not implemented.");
 	}
 
@@ -539,10 +541,9 @@ export type ReadableAttribute<A> = ReadableState<A> | (
 {
 	let state6: Attribute<false | true | undefined> = undefined as any as ReadableState<false | true>;
 	let state8: Attribute<"one" | "two" | undefined> = undefined as any as ReadableState<"one" | "two">;
-	type k1 = Attribute<boolean | undefined>; // boolean | undefined | ReadableOrWritableState<boolean | undefined>
-	type k2 = ReadableState<boolean | undefined>; // ReadableState<boolean | undefined> | ReadableState<false> | ReadableState<true> | ReadableState<undefined>
-	type k3 = WritableState<boolean | undefined>; // WritableState<boolean | undefined>
-																						// ^^ readable state is distributed into false | true
+	type k1 = Attribute<boolean | undefined>;
+	type k2 = ReadableState<boolean | undefined>;
+	type k3 = WritableState<boolean | undefined>;
 }
 
 

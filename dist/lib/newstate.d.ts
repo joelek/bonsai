@@ -19,6 +19,7 @@ export type RecordValue = {
     [key: string]: Value;
 };
 export type ReadableStateMapper<A, B> = (state: ReadableState<A>, index: ReadableState<number>) => B | ReadableState<B>;
+export type WritableStateMapper<A, B> = (state: WritableState<A>, index: ReadableState<number>) => B | WritableState<B>;
 export type StateFromAttribute<A> = WritableValueFromAttribute<A> extends ValueFromAttribute<A> ? WritableState<ValueFromAttribute<A>> : ReadableState<ValueFromAttribute<A>>;
 export type StateTupleFromValueTuple<A extends ArrayValue> = {
     [B in keyof A]: ReadableOrWritableState<A[B]>;
@@ -107,9 +108,9 @@ export interface WritableArrayState<in out A extends ArrayValue> extends Abstrac
     append(...items: Array<ReadableStateOrValue<A[number]>>): void;
     element(index: number | ReadableState<number>): WritableState<A[number]>;
     filter(predicate: Predicate<A[number]>): WritableState<Array<A[number]>>;
-    first(): ReadableState<A[number] | undefined>;
+    first(): WritableState<A[number] | undefined>;
     insert(index: number, item: WritableStateOrValue<A[number]>): WritableState<A[number]>;
-    last(): ReadableState<A[number] | undefined>;
+    last(): WritableState<A[number] | undefined>;
     get length(): ReadableState<number>;
     mapStates<B>(mapper: ReadableStateMapper<A[number], B>): ReadableState<Array<B>>;
     mapValues<B>(mapper: ValueMapper<A[number], B>): ReadableState<Array<B>>;
@@ -161,8 +162,8 @@ export declare class StateImplementation<A> implements WritableArrayState<ArrayT
     append(...items: ReadableStateOrValue<ArrayType<A>[number]>[]): void;
     element(index: number | ReadableBasicState<number>): WritableState<ArrayType<A>[number]>;
     filter(predicate: Predicate<ArrayType<A>[number]>): WritableState<Array<ArrayType<A>[number]>>;
-    first(): ReadableState<ArrayType<A>[number] | undefined>;
-    last(): ReadableState<ArrayType<A>[number] | undefined>;
+    first(): WritableState<ArrayType<A>[number] | undefined>;
+    last(): WritableState<ArrayType<A>[number] | undefined>;
     get length(): ReadableBasicState<number>;
     mapStates<B>(mapper: ReadableStateMapper<ArrayType<A>[number], B>): ReadableState<Array<B>>;
     mapValues<B>(mapper: ValueMapper<ArrayType<A>[number], B>): ReadableState<Array<B>>;
