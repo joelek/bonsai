@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.wrap = exports.computed = exports.fallback = exports.merge = exports.flatten = exports.squash = exports.valueify = exports.stateify = exports.make_state = exports.StateImplementation = exports.Subscription = void 0;
+exports.computed = exports.fallback = exports.merge = exports.flatten = exports.squash = exports.valueify = exports.stateify = exports.make_state = exports.StateImplementation = exports.Subscription = void 0;
 exports.Subscription = {
     create(is_cancelled, callback) {
         let cancel = (() => {
@@ -347,8 +347,3 @@ exports.computed = computed;
     computed([make_state(5), make_state("string")], (a, b) => {
     });
 }
-function wrap(state) {
-    throw "";
-}
-exports.wrap = wrap;
-;

@@ -262,5 +262,4 @@ export declare function flatten<A extends RecursiveArray<any>>(states: ReadableO
 export declare function merge<A extends RecordValue[]>(...states: StateTupleFromValueTuple<A>): ReadableState<MergedTuple<A>>;
 export declare function fallback<A>(underlying: WritableState<A | undefined>, default_value: Exclude<A, undefined>): WritableState<Exclude<A, undefined>>;
 export declare function computed<A extends ArrayValue, B>(states: [...StateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): WritableState<B>;
-export declare function wrap<A>(state: ReadableState<A>): WritableState<A>;
 export {};

@@ -944,7 +944,3 @@ export function computed<A extends ArrayValue, B>(states: [...StateTupleFromValu
 
 	});
 }
-
-export function wrap<A>(state: ReadableState<A>): WritableState<A> {
-	throw "";
-};
