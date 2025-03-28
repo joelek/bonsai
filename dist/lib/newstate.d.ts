@@ -48,12 +48,12 @@ export interface Observable<A extends TupleRecord<A>> {
     unobserve<B extends keyof A>(type: B, observer: Observer<A[B]>): void;
 }
 export interface AbstractReadableState<A extends Value, B extends TupleRecord<B>> extends Observable<B> {
-    compute<C>(computer: Computer<A, C>): ReadableState<C>;
+    compute<C>(computer: Computer<A, C>): WritableState<C>;
     shadow(): ReadableState<A>;
     value(): A;
 }
 export interface AbstractWritableState<in out A extends Value, B extends TupleRecord<B>> extends Observable<B> {
-    compute<C>(computer: Computer<A, C>): ReadableState<C>;
+    compute<C>(computer: Computer<A, C>): WritableState<C>;
     shadow(): WritableState<A>;
     value(): A;
     update(value: A): boolean;
@@ -171,17 +171,17 @@ export declare class StateImplementation<A> implements WritableArrayState<ArrayT
     spread(): WritableElementStates<ArrayType<A>>;
     vacate(): boolean;
     [Symbol.iterator](): Iterator<WritableState<ArrayType<A>[number]>>;
-    compute<B>(computer: Computer<A, B>): ReadableState<B>;
+    compute<B>(computer: Computer<A, B>): WritableState<B>;
     observe<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): Subscription;
     shadow(): WritableState<A>;
     subscribe(subscription: Subscription): Subscription;
     unobserve<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): void;
-    attach<B extends string, C>(key: B, item: WritableStateOrValue<C>): WritableState<ExpansionOf<A & {
+    attach<B extends string, C>(key: B, item: WritableStateOrValue<C>): WritableState<ExpansionOf<RecordType<A> & {
         [key in B]: C;
     }>>;
-    detach<B extends keyof A>(key: B): WritableState<ExpansionOf<Omit<A, B>>>;
+    detach<B extends keyof RecordType<A>>(key: B): WritableState<ExpansionOf<Omit<RecordType<A>, B>>>;
     insert(index: number, item: WritableStateOrValue<ArrayType<A>[number]>): WritableState<ArrayType<A>[number]>;
-    remove(): void;
+    remove(index: number): void;
     update(value: A): boolean;
     value(): A;
 }
@@ -261,6 +261,6 @@ export declare function squash<A extends RecordValue>(records: ReadableOrWritabl
 export declare function flatten<A extends RecursiveArray<any>>(states: ReadableOrWritableState<Array<A>>): ReadableState<Array<RecursiveArrayType<A>>>;
 export declare function merge<A extends RecordValue[]>(...states: StateTupleFromValueTuple<A>): ReadableState<MergedTuple<A>>;
 export declare function fallback<A>(underlying: WritableState<A | undefined>, default_value: Exclude<A, undefined>): WritableState<Exclude<A, undefined>>;
-export declare function computed<A extends ArrayValue, B>(states: [...StateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): ReadableState<B>;
+export declare function computed<A extends ArrayValue, B>(states: [...StateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): WritableState<B>;
 export declare function wrap<A>(state: ReadableState<A>): WritableState<A>;
 export {};

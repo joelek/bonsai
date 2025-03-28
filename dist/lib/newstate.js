@@ -87,7 +87,7 @@ class StateImplementation {
     insert(index, item) {
         throw new Error("Method not implemented.");
     }
-    remove() {
+    remove(index) {
         throw new Error("Method not implemented.");
     }
     update(value) {

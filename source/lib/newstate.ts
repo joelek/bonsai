@@ -108,7 +108,7 @@ export interface Observable<A extends TupleRecord<A>> {
 
 
 export interface AbstractReadableState<A extends Value, B extends TupleRecord<B>> extends Observable<B> {
-	compute<C>(computer: Computer<A, C>): ReadableState<C>;
+	compute<C>(computer: Computer<A, C>): WritableState<C>;
 
 	shadow(): ReadableState<A>;
 
@@ -116,7 +116,7 @@ export interface AbstractReadableState<A extends Value, B extends TupleRecord<B>
 };
 
 export interface AbstractWritableState<in out A extends Value, B extends TupleRecord<B>> extends Observable<B> {
-	compute<C>(computer: Computer<A, C>): ReadableState<C>;
+	compute<C>(computer: Computer<A, C>): WritableState<C>;
 
 	shadow(): WritableState<A>;
 
@@ -401,7 +401,7 @@ export class StateImplementation<A> implements WritableArrayState<ArrayType<A>>,
 		throw new Error("Method not implemented.");
 	}
 
-	compute<B>(computer: Computer<A, B>): ReadableState<B> {
+	compute<B>(computer: Computer<A, B>): WritableState<B> {
 		throw new Error("Method not implemented.");
 	}
 
@@ -421,11 +421,11 @@ export class StateImplementation<A> implements WritableArrayState<ArrayType<A>>,
 		throw new Error("Method not implemented.");
 	}
 
-	attach<B extends string, C>(key: B, item: WritableStateOrValue<C>): WritableState<ExpansionOf<A & { [key in B]: C; }>> {
+	attach<B extends string, C>(key: B, item: WritableStateOrValue<C>): WritableState<ExpansionOf<RecordType<A> & { [key in B]: C; }>> {
 		throw new Error("Method not implemented.");
 	}
 
-	detach<B extends keyof A>(key: B): WritableState<ExpansionOf<Omit<A, B>>> {
+	detach<B extends keyof RecordType<A>>(key: B): WritableState<ExpansionOf<Omit<RecordType<A>, B>>> {
 		throw new Error("Method not implemented.");
 	}
 
@@ -433,7 +433,7 @@ export class StateImplementation<A> implements WritableArrayState<ArrayType<A>>,
 		throw new Error("Method not implemented.");
 	}
 
-	remove(): void {
+	remove(index: number): void {
 		throw new Error("Method not implemented.");
 	}
 
@@ -935,7 +935,7 @@ export function fallback<A>(underlying: WritableState<A | undefined>, default_va
 	fallback(make_state("string" as string | undefined), "hello");
 }
 
-export function computed<A extends ArrayValue, B>(states: [...StateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): ReadableState<B> { // maybe produce writable since it's owned by producer
+export function computed<A extends ArrayValue, B>(states: [...StateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): WritableState<B> {
 	throw "";
 };
 
