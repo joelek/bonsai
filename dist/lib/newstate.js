@@ -24,9 +24,8 @@ exports.Subscription = {
 ;
 ;
 class StateImplementation {
-    active_value;
-    constructor(active_value) {
-        this.active_value = active_value;
+    constructor() {
+        throw new Error("Method not implemented.");
     }
     append(...items) {
         throw new Error("Method not implemented.");
@@ -105,7 +104,7 @@ exports.StateImplementation = StateImplementation;
     // ^^ readable state is distributed into false | true
 }
 function make_state(value) {
-    return new StateImplementation(value);
+    return new StateImplementation();
 }
 exports.make_state = make_state;
 ;
@@ -235,6 +234,9 @@ function_expecting_attribute(undefined);
 function_expecting_attribute(undefined);
 function_expecting_attribute(undefined);
 function_expecting_attribute(undefined);
+function_expecting_attribute(undefined);
+function_expecting_attribute(undefined);
+function_expecting_attribute(undefined);
 // ReadableState should be covariant. Any state that can be guaranteed to only contain string, undefined or string | undefined should be accepted.
 function function_expecting_readable_state(attribute) {
     let value = valueify(attribute);
@@ -249,6 +251,10 @@ function_expecting_readable_state(undefined);
 function_expecting_readable_state(undefined);
 function_expecting_readable_state(undefined);
 function_expecting_readable_state(undefined);
+function_expecting_readable_state(undefined);
+function_expecting_readable_state(undefined);
+function_expecting_readable_state(undefined);
+// @ts-expect-error
 function_expecting_readable_state(undefined);
 // @ts-expect-error
 function_expecting_readable_state(undefined);
@@ -275,6 +281,12 @@ function_expecting_writable_state(undefined);
 function_expecting_writable_state(undefined);
 // @ts-expect-error
 function_expecting_writable_state(undefined);
+// @ts-expect-error
+function_expecting_writable_state(undefined);
+function_expecting_writable_state(undefined);
+// @ts-expect-error
+function_expecting_writable_state(undefined);
+// @ts-expect-error
 function_expecting_writable_state(undefined);
 // @ts-expect-error
 function_expecting_writable_state(undefined);

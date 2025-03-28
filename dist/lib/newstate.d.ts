@@ -30,7 +30,7 @@ export type MergedTuple<A extends RecordValue[]> = ExpansionOf<A extends [infer 
 export type ValueMapper<A, B> = (value: A, index: number) => B;
 export type Predicate<A> = (state: ReadableState<A>, index: ReadableState<number>) => ReadableState<boolean>;
 export type Observer<A extends any[]> = (...args: [...A]) => void;
-export type Callback<A extends any[]> = (...args: A) => void;
+export type Callback<A extends any[]> = (...args: [...A]) => void;
 export type Computer<A, B> = (value: A) => B;
 export type CancellationToken = Subscription;
 export type Subscription = (() => void) & {
@@ -153,36 +153,28 @@ export interface WritableRecordState<in out A extends RecordValue> extends Abstr
 type ArrayType<A> = [A] extends [ArrayValue] ? A : any;
 type RecordType<A> = [A] extends [RecordValue] ? A : any;
 type BasicType<A> = [A] extends [Value] ? A : any;
-export type ReadableStateEvents<A> = ReadableArrayStateEvents<ArrayType<A>> | ReadableRecordStateEvents<RecordType<A>> | ReadableBasicStateEvents<BasicType<A>>;
-export type WritableStateEvents<A> = WritableArrayStateEvents<ArrayType<A>> | WritableRecordStateEvents<RecordType<A>> | WritableBasicStateEvents<BasicType<A>>;
+export type ReadableStateEvents<A> = ReadableArrayStateEvents<ArrayType<A>> & ReadableRecordStateEvents<RecordType<A>> & ReadableBasicStateEvents<BasicType<A>>;
+export type WritableStateEvents<A> = WritableArrayStateEvents<ArrayType<A>> & WritableRecordStateEvents<RecordType<A>> & WritableBasicStateEvents<BasicType<A>>;
 export declare class StateImplementation<A> implements WritableArrayState<ArrayType<A>>, WritableRecordState<RecordType<A>>, WritableBasicState<BasicType<A>> {
-    protected active_value: A;
-    constructor(active_value: A);
+    constructor();
     [x: number]: WritableState<ArrayType<A>[number]>;
     append(...items: ReadableStateOrValue<ArrayType<A>[number]>[]): void;
     element(index: number | ReadableBasicState<number>): WritableState<ArrayType<A>[number]>;
-    filter(predicate: Predicate<ArrayType<A>[number]>): ReadableState<Array<ArrayType<A>[number]>>;
     filter(predicate: Predicate<ArrayType<A>[number]>): WritableState<Array<ArrayType<A>[number]>>;
     first(): ReadableState<ArrayType<A>[number] | undefined>;
     last(): ReadableState<ArrayType<A>[number] | undefined>;
     get length(): ReadableBasicState<number>;
     mapStates<B>(mapper: ReadableStateMapper<ArrayType<A>[number], B>): ReadableState<Array<B>>;
     mapValues<B>(mapper: ValueMapper<ArrayType<A>[number], B>): ReadableState<Array<B>>;
-    member<B extends keyof A>(key: ReadableStateOrValue<B>): ReadableState<A[B]>;
-    member<B extends keyof A>(key: WritableStateOrValue<B>): WritableState<A[B]>;
+    member<B extends keyof RecordType<A>>(key: ReadableStateOrValue<B>): WritableState<RecordType<A>[B]>;
     spread(): WritableMemberStates<RecordType<A>>;
     spread(): WritableElementStates<ArrayType<A>>;
     vacate(): boolean;
-    [Symbol.iterator](): Iterator<ReadableState<ArrayType<A>[number]>>;
     [Symbol.iterator](): Iterator<WritableState<ArrayType<A>[number]>>;
     compute<B>(computer: Computer<A, B>): ReadableState<B>;
     observe<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): Subscription;
-    observe<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): Subscription;
-    observe<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): Subscription;
     shadow(): WritableState<A>;
     subscribe(subscription: Subscription): Subscription;
-    unobserve<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): void;
-    unobserve<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): void;
     unobserve<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): void;
     attach<B extends string, C>(key: B, item: WritableStateOrValue<C>): WritableState<ExpansionOf<A & {
         [key in B]: C;

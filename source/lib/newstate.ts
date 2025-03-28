@@ -241,6 +241,31 @@ export interface WritableArrayState<in out A extends ArrayValue> extends Abstrac
 	[Symbol.iterator](): Iterator<WritableState<A[number]>>;
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export type ReadableRecordStateEventsTuple<A extends RecordValue> = {
 	[B in keyof A]: [
 		state: ReadableState<A[B]>,
@@ -281,25 +306,47 @@ export interface WritableRecordState<in out A extends RecordValue> extends Abstr
 	spread(): WritableMemberStates<A>;
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 type ArrayType<A> = [A] extends [ArrayValue] ? A : any;
 type RecordType<A> = [A] extends [RecordValue] ? A : any;
 type BasicType<A> = [A] extends [Value] ? A : any;
 
 export type ReadableStateEvents<A> =
-	ReadableArrayStateEvents<ArrayType<A>> |
-	ReadableRecordStateEvents<RecordType<A>> |
+	ReadableArrayStateEvents<ArrayType<A>> &
+	ReadableRecordStateEvents<RecordType<A>> &
 	ReadableBasicStateEvents<BasicType<A>>;
 
 export type WritableStateEvents<A> =
-	WritableArrayStateEvents<ArrayType<A>> |
-	WritableRecordStateEvents<RecordType<A>> |
+	WritableArrayStateEvents<ArrayType<A>> &
+	WritableRecordStateEvents<RecordType<A>> &
 	WritableBasicStateEvents<BasicType<A>>;
 
 export class StateImplementation<A> implements WritableArrayState<ArrayType<A>>, WritableRecordState<RecordType<A>>, WritableBasicState<BasicType<A>> {
-	protected active_value: A;
-
-	constructor(active_value: A) {
-		this.active_value = active_value;
+	constructor() {
+		throw new Error("Method not implemented.");
 	}
 
 	[x: number]: WritableState<ArrayType<A>[number]>;
@@ -312,9 +359,7 @@ export class StateImplementation<A> implements WritableArrayState<ArrayType<A>>,
 		throw new Error("Method not implemented.");
 	}
 
-	filter(predicate: Predicate<ArrayType<A>[number]>): ReadableState<Array<ArrayType<A>[number]>>;
-	filter(predicate: Predicate<ArrayType<A>[number]>): WritableState<Array<ArrayType<A>[number]>>;
-	filter(predicate: Predicate<ArrayType<A>[number]>): ReadableState<Array<ArrayType<A>[number]>> | WritableState<Array<ArrayType<A>[number]>> {
+	filter(predicate: Predicate<ArrayType<A>[number]>): WritableState<Array<ArrayType<A>[number]>> {
 		throw new Error("Method not implemented.");
 	}
 
@@ -338,9 +383,7 @@ export class StateImplementation<A> implements WritableArrayState<ArrayType<A>>,
 		throw new Error("Method not implemented.");
 	}
 
-	member<B extends keyof A>(key: ReadableStateOrValue<B>): ReadableState<A[B]>;
-	member<B extends keyof A>(key: WritableStateOrValue<B>): WritableState<A[B]>;
-	member<B extends keyof A>(key: ReadableStateOrValue<B> | WritableStateOrValue<B>): ReadableState<A[B]> | WritableState<A[B]> {
+	member<B extends keyof RecordType<A>>(key: ReadableStateOrValue<B>): WritableState<RecordType<A>[B]> {
 		throw new Error("Method not implemented.");
 	}
 
@@ -354,9 +397,7 @@ export class StateImplementation<A> implements WritableArrayState<ArrayType<A>>,
 		throw new Error("Method not implemented.");
 	}
 
-	[Symbol.iterator](): Iterator<ReadableState<ArrayType<A>[number]>>;
-	[Symbol.iterator](): Iterator<WritableState<ArrayType<A>[number]>>;
-	[Symbol.iterator](): Iterator<ReadableState<ArrayType<A>[number]>> | Iterator<WritableState<ArrayType<A>[number]>> {
+	[Symbol.iterator](): Iterator<WritableState<ArrayType<A>[number]>> {
 		throw new Error("Method not implemented.");
 	}
 
@@ -364,9 +405,6 @@ export class StateImplementation<A> implements WritableArrayState<ArrayType<A>>,
 		throw new Error("Method not implemented.");
 	}
 
-	observe<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): Subscription;
-	observe<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): Subscription;
-	observe<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): Subscription;
 	observe<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): Subscription {
 		throw new Error("Method not implemented.");
 	}
@@ -379,9 +417,6 @@ export class StateImplementation<A> implements WritableArrayState<ArrayType<A>>,
 		throw new Error("Method not implemented.");
 	}
 
-	unobserve<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): void;
-	unobserve<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): void;
-	unobserve<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): void;
 	unobserve<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): void {
 		throw new Error("Method not implemented.");
 	}
@@ -561,7 +596,7 @@ export type WritableValueFromAttribute<A> = (
 
 
 export function make_state<A>(value: A): WritableState<A> {
-	return new StateImplementation(value) as any;
+	return new StateImplementation() as any;
 };
 
 export function stateify<A extends Attribute<any>>(attribute: A): StateFromAttribute<A> {
@@ -900,7 +935,7 @@ export function fallback<A>(underlying: WritableState<A | undefined>, default_va
 	fallback(make_state("string" as string | undefined), "hello");
 }
 
-export function computed<A extends ArrayValue, B>(states: [...StateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): ReadableState<B> {
+export function computed<A extends ArrayValue, B>(states: [...StateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): ReadableState<B> { // maybe produce writable since it's owned by producer
 	throw "";
 };
 
