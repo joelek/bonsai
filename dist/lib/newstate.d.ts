@@ -5,7 +5,6 @@ type RecordButNotClass<A> = A extends {
     [key: string]: unknown;
 } ? A : never;
 type RecursiveArray<A> = Array<A | RecursiveArray<A>>;
-type RecursiveArrayType<A> = A extends Array<infer B> ? RecursiveArrayType<B> : A;
 type TupleButNotArray<A> = Extract<keyof A, `${number}`> extends number ? never : A;
 export type TupleRecord<A extends TupleRecord<A>> = {
     [C in keyof A]: any[];
@@ -20,7 +19,7 @@ export type RecordValue = {
 };
 export type ReadableStateMapper<A, B> = (state: ReadableState<A>, index: ReadableState<number>) => ReadableState<B>;
 export type ReadableStateMapper2<A, B> = (state: ReadableState<A>, index: ReadableState<number>) => B;
-export type WritableStateMapper<A, B> = (state: WritableState<A>, index: ReadableState<number>) => WritableState<B>;
+export type WritableStateMapper<A, B> = (state: WritableState<A>, index: ReadableState<number>) => ReadableState<B>;
 export type WritableStateMapper2<A, B> = (state: WritableState<A>, index: ReadableState<number>) => B;
 export type StateFromAttribute<A> = WritableValueFromAttribute<A> extends ValueFromAttribute<A> ? WritableState<ValueFromAttribute<A>> : ReadableState<ValueFromAttribute<A>>;
 export type StateTupleFromValueTuple<A extends ArrayValue> = {
@@ -91,7 +90,7 @@ export interface ReadableArrayState<A extends ArrayValue> extends AbstractReadab
     first(): ReadableState<A[number] | undefined>;
     last(): ReadableState<A[number] | undefined>;
     get length(): ReadableState<number>;
-    mapStates<B>(mapper: ReadableStateMapper<A[number], B>): ReadableState<Array<B>>;
+    mapStates<B>(mapper: ReadableStateMapper2<A[number], ReadableState<B>>): ReadableState<Array<B>>;
     mapStates<B>(mapper: ReadableStateMapper2<A[number], B>): ReadableState<Array<B>>;
     mapValues<B>(mapper: ValueMapper<A[number], B>): ReadableState<Array<B>>;
     spread(): ReadableElementStates<A>;
@@ -115,8 +114,9 @@ export interface WritableArrayState<in out A extends ArrayValue> extends Abstrac
     insert(index: number, item: WritableStateOrValue<A[number]>): WritableState<A[number]>;
     last(): WritableState<A[number] | undefined>;
     get length(): ReadableState<number>;
-    mapStates<B>(mapper: WritableStateMapper<A[number], B>): WritableState<Array<B>>;
-    mapStates<B>(mapper: WritableStateMapper2<A[number], B>): WritableState<Array<B>>;
+    mapStates<B>(mapper: WritableStateMapper2<A[number], ReadableState<B>>): ReadableState<Array<B>>;
+    mapStates<B>(mapper: WritableStateMapper2<A[number], WritableState<B>>): ReadableState<Array<B>>;
+    mapStates<B>(mapper: WritableStateMapper2<A[number], B>): ReadableState<Array<B>>;
     mapValues<B>(mapper: ValueMapper<A[number], B>): ReadableState<Array<B>>;
     remove(index: number): void;
     spread(): WritableElementStates<A>;
@@ -169,7 +169,7 @@ export declare class StateImplementation<A> implements WritableArrayState<ArrayT
     first(): WritableState<ArrayType<A>[number] | undefined>;
     last(): WritableState<ArrayType<A>[number] | undefined>;
     get length(): ReadableBasicState<number>;
-    mapStates<B>(mapper: WritableStateMapper<ArrayType<A>[number], B> | WritableStateMapper2<ArrayType<A>[number], B>): WritableState<Array<B>>;
+    mapStates<B>(mapper: WritableStateMapper<ArrayType<A>[number], WritableState<B>> | WritableStateMapper2<ArrayType<A>[number], B>): ReadableState<Array<B>>;
     mapValues<B>(mapper: ValueMapper<ArrayType<A>[number], B>): ReadableState<Array<B>>;
     member<B extends keyof RecordType<A>, C extends RecordType<A>[B]>(key: ReadableStateOrValue<B>): WritableState<C>;
     spread(): WritableMemberStates<RecordType<A>>;
@@ -263,7 +263,7 @@ export declare function make_state<A>(value: A): WritableState<A>;
 export declare function stateify<A extends Attribute<any>>(attribute: A): StateFromAttribute<A>;
 export declare function valueify<A extends Attribute<any>>(attribute: A): ValueFromAttribute<A>;
 export declare function squash<A extends RecordValue>(records: ReadableOrWritableState<Array<A>>): ReadableState<A>;
-export declare function flatten<A extends RecursiveArray<any>>(states: ReadableOrWritableState<Array<A>>): ReadableState<Array<RecursiveArrayType<A>>>;
+export declare function flatten<A extends PrimitiveValue | ReferenceValue>(states: ReadableOrWritableState<Array<A | RecursiveArray<A>>>): ReadableState<Array<A>>;
 export declare function merge<A extends RecordValue[]>(...states: StateTupleFromValueTuple<A>): ReadableState<MergedTuple<A>>;
 export declare function fallback<A>(underlying: WritableState<A | undefined>, default_value: Exclude<A, undefined>): WritableState<Exclude<A, undefined>>;
 export declare function computed<A extends ArrayValue, B>(states: [...StateTupleFromValueTuple<A>], computer: (...args: [...A]) => B): WritableState<B>;

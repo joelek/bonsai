@@ -168,6 +168,8 @@ function two2(state) {
     });
     let element1 = state.element(0);
     let element2 = state[0];
+    let mapped1 = state.mapStates((f) => 0);
+    let mapped2 = state.mapStates((f) => stateify(0));
 }
 two2(undefined);
 two2(undefined);
@@ -217,6 +219,8 @@ function two(state) {
     state.update(state.value());
     let element1 = state.element(0);
     let element2 = state[0];
+    let mapped1 = state.mapStates((f) => 0);
+    let mapped2 = state.mapStates((f) => stateify(0));
 }
 // @ts-expect-error
 two(undefined);
@@ -364,5 +368,9 @@ exports.computed = computed;
     computed([make_state(5), make_state("string")], (a, b) => {
     });
 }
-// mapstates
-// mapvalues
+/*
+function generic<A extends string>(state: Attribute<A & string>): void {
+    type k = StateFromAttribute<Attribute<A>>["value"];
+
+}
+ */

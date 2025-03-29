@@ -26,7 +26,7 @@ export type RecordValue = { [key: string]: Value; };
 export type ReadableStateMapper<A, B> = (state: ReadableState<A>, index: ReadableState<number>) => ReadableState<B>;
 export type ReadableStateMapper2<A, B> = (state: ReadableState<A>, index: ReadableState<number>) => B;
 
-export type WritableStateMapper<A, B> = (state: WritableState<A>, index: ReadableState<number>) => WritableState<B>;
+export type WritableStateMapper<A, B> = (state: WritableState<A>, index: ReadableState<number>) => ReadableState<B>;
 export type WritableStateMapper2<A, B> = (state: WritableState<A>, index: ReadableState<number>) => B;
 
 export type StateFromAttribute<A> = WritableValueFromAttribute<A> extends ValueFromAttribute<A> ? WritableState<ValueFromAttribute<A>> : ReadableState<ValueFromAttribute<A>>
@@ -197,7 +197,7 @@ export interface ReadableArrayState<A extends ArrayValue> extends AbstractReadab
 
 	get length(): ReadableState<number>;
 
-	mapStates<B>(mapper: ReadableStateMapper<A[number], B>): ReadableState<Array<B>>;
+	mapStates<B>(mapper: ReadableStateMapper2<A[number], ReadableState<B>>): ReadableState<Array<B>>;
 	mapStates<B>(mapper: ReadableStateMapper2<A[number], B>): ReadableState<Array<B>>;
 
 	mapValues<B>(mapper: ValueMapper<A[number], B>): ReadableState<Array<B>>;
@@ -233,8 +233,9 @@ export interface WritableArrayState<in out A extends ArrayValue> extends Abstrac
 
 	get length(): ReadableState<number>;
 
-	mapStates<B>(mapper: WritableStateMapper<A[number], B>): WritableState<Array<B>>;
-	mapStates<B>(mapper: WritableStateMapper2<A[number], B>): WritableState<Array<B>>;
+	mapStates<B>(mapper: WritableStateMapper2<A[number], ReadableState<B>>): ReadableState<Array<B>>;
+	mapStates<B>(mapper: WritableStateMapper2<A[number], WritableState<B>>): ReadableState<Array<B>>;
+	mapStates<B>(mapper: WritableStateMapper2<A[number], B>): ReadableState<Array<B>>;
 
 	mapValues<B>(mapper: ValueMapper<A[number], B>): ReadableState<Array<B>>;
 
@@ -381,7 +382,7 @@ export class StateImplementation<A> implements WritableArrayState<ArrayType<A>>,
 		throw new Error("Method not implemented.");
 	}
 
-	mapStates<B>(mapper: WritableStateMapper<ArrayType<A>[number], B> | WritableStateMapper2<ArrayType<A>[number], B>): WritableState<Array<B>> {
+	mapStates<B>(mapper: WritableStateMapper<ArrayType<A>[number], WritableState<B>> | WritableStateMapper2<ArrayType<A>[number], B>): ReadableState<Array<B>> {
 		throw new Error("Method not implemented.");
 	}
 
@@ -758,6 +759,8 @@ function two2<A>(state: ReadableState<Array<A>>): void {
 	});
 	let element1 = state.element(0);
 	let element2 = state[0];
+	let mapped1 = state.mapStates((f) => 0);
+	let mapped2 = state.mapStates((f) => stateify(0));
 }
 
 two2(undefined as any as ReadableState<Array<string>>);
@@ -813,6 +816,8 @@ function two<A>(state: WritableState<Array<A>>): void {
 	state.update(state.value());
 	let element1 = state.element(0);
 	let element2 = state[0];
+	let mapped1 = state.mapStates((f) => 0);
+	let mapped2 = state.mapStates((f) => stateify(0));
 }
 
 // @ts-expect-error
@@ -925,8 +930,7 @@ export function squash<A extends RecordValue>(records: ReadableOrWritableState<A
 	] as Array<Record<string, string>>);
 	let squashed = squash(records);
 }
-
-export function flatten<A extends RecursiveArray<any>>(states: ReadableOrWritableState<Array<A>>): ReadableState<Array<RecursiveArrayType<A>>> {
+export function flatten<A extends PrimitiveValue | ReferenceValue>(states: ReadableOrWritableState<Array<A | RecursiveArray<A>>>): ReadableState<Array<A>> {
 	throw "";
 };
 
@@ -939,6 +943,7 @@ export function flatten<A extends RecursiveArray<any>>(states: ReadableOrWritabl
 	let array_1 = stateify([array_10, array_11]);
 	let array = stateify([array_0, array_1]);
 	let flattened = flatten(array);
+	// TODO: test with complex arrays containing objects
 }
 
 export function merge<A extends RecordValue[]>(...states: StateTupleFromValueTuple<A>): ReadableState<MergedTuple<A>> {
@@ -971,9 +976,9 @@ export function computed<A extends ArrayValue, B>(states: [...StateTupleFromValu
 
 	});
 }
+/*
+function generic<A extends string>(state: Attribute<A & string>): void {
+	type k = StateFromAttribute<Attribute<A>>["value"];
 
-
-
-
-// mapstates
-// mapvalues
+}
+ */
