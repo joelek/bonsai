@@ -528,19 +528,19 @@ export type StateOrValue<A> = A | ReadableOrWritableState<A>;
 export type Attribute<A> = ReadableOrWritableState<A> | (
 	A extends ArrayValue ? { [B in keyof A]: Attribute<A[B]>; } :
 	A extends RecordValue ? A extends RecordButNotClass<A> ? { [B in keyof A]: Attribute<A[B]>; } : A :
-	A extends infer B ? B : A
+	A
 )
 
 export type WritableAttribute<A> = WritableState<A> | (
 	A extends ArrayValue ? { [B in keyof A]: WritableAttribute<A[B]>; } :
 	A extends RecordValue ? A extends RecordButNotClass<A> ? { [B in keyof A]: WritableAttribute<A[B]>; } : A :
-	A extends infer B ? B : A
+	A
 )
 
 export type ReadableAttribute<A> = ReadableState<A> | (
 	A extends ArrayValue ? { [B in keyof A]: ReadableAttribute<A[B]>; } :
 	A extends RecordValue ? A extends RecordButNotClass<A> ? { [B in keyof A]: ReadableAttribute<A[B]>; } : A :
-	A extends infer B ? B : A
+	A
 )
 
 {
@@ -605,13 +605,13 @@ export function make_state<A>(value: A): WritableState<A> {
 	return new StateImplementation() as any;
 };
 
-export function stateify<A extends Attribute<any>>(attribute: A): StateFromAttribute<A> {
+export function stateify<A>(attribute: Attribute<A>): StateFromAttribute<A> {
 	throw "";
 };
 
 {
 	let a: WritableState<string> = stateify(undefined as any as string);
-	// @ts-expect-error
+	// ----@ts-expect-error
 	let b: WritableState<string> = stateify(undefined as any as ReadableState<string>);
 	let c: WritableState<string> = stateify(undefined as any as WritableState<string>);
 	let d: WritableState<[string, string]> = stateify(undefined as any as [string, string]);
@@ -620,9 +620,13 @@ export function stateify<A extends Attribute<any>>(attribute: A): StateFromAttri
 	let f: WritableState<[string, string]> = stateify(undefined as any as [string, WritableState<string>]);
 	// @ts-expect-error
 	let g: WritableState<[string, string]> = stateify(undefined as any as [ReadableState<string>, WritableState<string>]);
+
+
+	let h = stateify(undefined as any as ReadableAttribute<string>);
+	let i = stateify(undefined as any as WritableAttribute<string>);
 }
 
-export function valueify<A extends Attribute<any>>(attribute: A): ValueFromAttribute<A> {
+export function valueify<A>(attribute: Attribute<A>): ValueFromAttribute<A> {
 	throw "";
 };
 
@@ -732,10 +736,11 @@ namespace attribute {
 	type mixed_state_1 = Attribute<string | { [key: string]: any }>;
 }
 
-function one1<A>(state: ReadableState<A> & ReadableBasicState<A>): void {
+function one1<A>(state: GenericReadableState<A>): void {
 	state.observe("update", (state) => {
 		let value = state.value();
 	});
+	state.value();
 }
 
 one1(undefined as any as ReadableState<string>);
@@ -783,7 +788,7 @@ function three3<A>(state: ReadableState<{ [key: string]: A }>): void {
 three3(undefined as any as ReadableState<{ [key: string]: string }>);
 three3(undefined as any as WritableState<{ [key: string]: string }>);
 
-function one<A>(state: WritableState<A> & WritableBasicState<A>): void {
+function one<A>(state: GenericWritableState<A>): void {
 	state.observe("update", (state) => {
 		state.update(state.value());
 	});
@@ -839,9 +844,57 @@ function three<A>(state: WritableState<{ [key: string]: A }>): void {
 	let member2 = state["key"];
 }
 
+type AssertType<A, B> = A extends B ? B extends A ? A : never : never;
+
+function assertType<A, B>(type: AssertType<A, B>): void {}
+
 // @ts-expect-error
 three(undefined as any as ReadableState<{ [key: string]: string }>);
 three(undefined as any as WritableState<{ [key: string]: string }>);
+
+// ReadableAttribute should accept any value or state.
+function function_expecting_readable_attribute(attribute: ReadableAttribute<string | undefined>) {
+	let value = valueify(attribute);
+	let state = stateify(attribute);
+	assertType<typeof state, ReadableState<string | undefined>>(state);
+}
+function_expecting_readable_attribute(undefined as any as ReadableState<string>);
+function_expecting_readable_attribute(undefined as any as ReadableState<undefined>);
+function_expecting_readable_attribute(undefined as any as ReadableState<string | undefined>);
+function_expecting_readable_attribute(undefined as any as ReadableState<"literal">);
+function_expecting_readable_attribute(undefined as any as WritableState<string>);
+function_expecting_readable_attribute(undefined as any as WritableState<undefined>);
+function_expecting_readable_attribute(undefined as any as WritableState<string | undefined>);
+function_expecting_readable_attribute(undefined as any as WritableState<"literal">);
+function_expecting_readable_attribute(undefined as any as string);
+function_expecting_readable_attribute(undefined as any as undefined);
+function_expecting_readable_attribute(undefined as any as string | undefined);
+function_expecting_readable_attribute(undefined as any as "literal");
+
+// WritableAttribute should only accept state containing exactly string | undefined or values assignable to string | undefined.
+function function_expecting_writable_attribute(attribute: WritableAttribute<string | undefined>): void {
+	let value = valueify(attribute);
+	let state = stateify(attribute);
+}
+// @ts-expect-error
+function_expecting_writable_attribute(undefined as any as ReadableState<string>);
+// @ts-expect-error
+function_expecting_writable_attribute(undefined as any as ReadableState<undefined>);
+// @ts-expect-error
+function_expecting_writable_attribute(undefined as any as ReadableState<string | undefined>);
+// @ts-expect-error
+function_expecting_writable_attribute(undefined as any as ReadableState<"literal">);
+// @ts-expect-error
+function_expecting_writable_attribute(undefined as any as WritableState<string>);
+// @ts-expect-error
+function_expecting_writable_attribute(undefined as any as WritableState<undefined>);
+function_expecting_writable_attribute(undefined as any as WritableState<string | undefined>);
+// @ts-expect-error
+function_expecting_writable_attribute(undefined as any as WritableState<"literal">);
+function_expecting_writable_attribute(undefined as any as string);
+function_expecting_writable_attribute(undefined as any as undefined);
+function_expecting_writable_attribute(undefined as any as string | undefined);
+function_expecting_writable_attribute(undefined as any as "literal");
 
 // Attribute should accept any value or state.
 function function_expecting_attribute(attribute: Attribute<string | undefined>): void {
@@ -956,9 +1009,6 @@ export function merge<A extends RecordValue[]>(...states: StateTupleFromValueTup
 	let merged: Attributes<{ a: string | null }> = merge(one, two);
 }
 
-
-
-
 export function fallback<A>(underlying: WritableState<A | undefined>, default_value: Exclude<A, undefined>): WritableState<Exclude<A, undefined>> {
 	throw "";
 };
@@ -976,9 +1026,8 @@ export function computed<A extends ArrayValue, B>(states: [...StateTupleFromValu
 
 	});
 }
-/*
-function generic<A extends string>(state: Attribute<A & string>): void {
-	type k = StateFromAttribute<Attribute<A>>["value"];
+
+function generic<A>(state: Attribute<A>): void {
+	let k = stateify(state).value();
 
 }
- */

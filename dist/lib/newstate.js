@@ -114,7 +114,7 @@ exports.stateify = stateify;
 ;
 {
     let a = stateify(undefined);
-    // @ts-expect-error
+    // ----@ts-expect-error
     let b = stateify(undefined);
     let c = stateify(undefined);
     let d = stateify(undefined);
@@ -147,6 +147,7 @@ function one1(state) {
     state.observe("update", (state) => {
         let value = state.value();
     });
+    state.value();
 }
 one1(undefined);
 one1(undefined);
@@ -340,6 +341,7 @@ exports.flatten = flatten;
     let array_1 = stateify([array_10, array_11]);
     let array = stateify([array_0, array_1]);
     let flattened = flatten(array);
+    // TODO: test with complex arrays containing objects
 }
 function merge(...states) {
     throw "";
@@ -368,9 +370,6 @@ exports.computed = computed;
     computed([make_state(5), make_state("string")], (a, b) => {
     });
 }
-/*
-function generic<A extends string>(state: Attribute<A & string>): void {
-    type k = StateFromAttribute<Attribute<A>>["value"];
-
+function generic(state) {
+    let k = stateify(state).value();
 }
- */
