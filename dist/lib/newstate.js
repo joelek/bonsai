@@ -114,7 +114,7 @@ exports.stateify = stateify;
 ;
 {
     let a = stateify(undefined);
-    // ----@ts-expect-error
+    // @ts-expect-error
     let b = stateify(undefined);
     let c = stateify(undefined);
     let d = stateify(undefined);
@@ -123,6 +123,8 @@ exports.stateify = stateify;
     let f = stateify(undefined);
     // @ts-expect-error
     let g = stateify(undefined);
+    let h = stateify(undefined);
+    let i = stateify(undefined);
 }
 function valueify(attribute) {
     throw "";
@@ -143,21 +145,21 @@ let state6 = undefined;
 let state7 = undefined;
 let state8 = undefined;
 let state9 = undefined;
-function one1(state) {
+function function_expecting_readable_state_a(state) {
     state.observe("update", (state) => {
         let value = state.value();
     });
-    state.value();
+    let value = state.value();
 }
-one1(undefined);
-one1(undefined);
-one1(undefined);
-one1(undefined);
-one1(undefined);
-one1(undefined);
-one1(undefined);
-one1(undefined);
-function two2(state) {
+function_expecting_readable_state_a(undefined);
+function_expecting_readable_state_a(undefined);
+function_expecting_readable_state_a(undefined);
+function_expecting_readable_state_a(undefined);
+function_expecting_readable_state_a(undefined);
+function_expecting_readable_state_a(undefined);
+function_expecting_readable_state_a(undefined);
+function_expecting_readable_state_a(undefined);
+function function_expecting_readable_state_array_a(state) {
     state.observe("update", (state) => {
         let value = state.value();
     });
@@ -172,9 +174,9 @@ function two2(state) {
     let mapped1 = state.mapStates((f) => 0);
     let mapped2 = state.mapStates((f) => stateify(0));
 }
-two2(undefined);
-two2(undefined);
-function three3(state) {
+function_expecting_readable_state_array_a(undefined);
+function_expecting_readable_state_array_a(undefined);
+function function_expecting_readable_state_record_a(state) {
     state.observe("update", (state) => {
         let value = state.value();
     });
@@ -187,27 +189,27 @@ function three3(state) {
     let member1 = state.member("key");
     let member2 = state["key"];
 }
-three3(undefined);
-three3(undefined);
-function one(state) {
+function_expecting_readable_state_record_a(undefined);
+function_expecting_readable_state_record_a(undefined);
+function function_expecting_writable_state_a(state) {
     state.observe("update", (state) => {
         state.update(state.value());
     });
     state.update(state.value());
 }
 // @ts-expect-error
-one(undefined);
+function_expecting_writable_state_a(undefined);
 // @ts-expect-error
-one(undefined);
+function_expecting_writable_state_a(undefined);
 // @ts-expect-error
-one(undefined);
+function_expecting_writable_state_a(undefined);
 // @ts-expect-error
-one(undefined);
-one(undefined);
-one(undefined);
-one(undefined);
-one(undefined);
-function two(state) {
+function_expecting_writable_state_a(undefined);
+function_expecting_writable_state_a(undefined);
+function_expecting_writable_state_a(undefined);
+function_expecting_writable_state_a(undefined);
+function_expecting_writable_state_a(undefined);
+function function_expecting_writable_state_array_a(state) {
     state.observe("update", (state) => {
         state.update(state.value());
     });
@@ -224,9 +226,9 @@ function two(state) {
     let mapped2 = state.mapStates((f) => stateify(0));
 }
 // @ts-expect-error
-two(undefined);
-two(undefined);
-function three(state) {
+function_expecting_writable_state_array_a(undefined);
+function_expecting_writable_state_array_a(undefined);
+function function_expecting_writable_state_record_a(state) {
     state.observe("update", (state) => {
         state.update(state.value());
     });
@@ -239,13 +241,64 @@ function three(state) {
     state.update(state.value());
     let member1 = state.member("key");
     let member2 = state["key"];
+    assertType(member1);
+    assertType(member2);
+}
+function assertType(type) { }
+// @ts-expect-error
+function_expecting_writable_state_record_a(undefined);
+function_expecting_writable_state_record_a(undefined);
+// ReadableAttribute should accept any value or state.
+function function_expecting_readable_attribute(attribute) {
+    let value = valueify(attribute);
+    let state = stateify(attribute);
+    assertType(value);
+    assertType(state);
+}
+function_expecting_readable_attribute(undefined);
+function_expecting_readable_attribute(undefined);
+function_expecting_readable_attribute(undefined);
+function_expecting_readable_attribute(undefined);
+function_expecting_readable_attribute(undefined);
+function_expecting_readable_attribute(undefined);
+function_expecting_readable_attribute(undefined);
+function_expecting_readable_attribute(undefined);
+function_expecting_readable_attribute(undefined);
+function_expecting_readable_attribute(undefined);
+function_expecting_readable_attribute(undefined);
+function_expecting_readable_attribute(undefined);
+// WritableAttribute should only accept state containing exactly string | undefined or values assignable to string | undefined.
+function function_expecting_writable_attribute(attribute) {
+    let value = valueify(attribute);
+    let state = stateify(attribute);
+    assertType(value);
+    assertType(state);
 }
 // @ts-expect-error
-three(undefined);
-three(undefined);
+function_expecting_writable_attribute(undefined);
+// @ts-expect-error
+function_expecting_writable_attribute(undefined);
+// @ts-expect-error
+function_expecting_writable_attribute(undefined);
+// @ts-expect-error
+function_expecting_writable_attribute(undefined);
+// @ts-expect-error
+function_expecting_writable_attribute(undefined);
+// @ts-expect-error
+function_expecting_writable_attribute(undefined);
+function_expecting_writable_attribute(undefined);
+// @ts-expect-error
+function_expecting_writable_attribute(undefined);
+function_expecting_writable_attribute(undefined);
+function_expecting_writable_attribute(undefined);
+function_expecting_writable_attribute(undefined);
+function_expecting_writable_attribute(undefined);
 // Attribute should accept any value or state.
 function function_expecting_attribute(attribute) {
     let value = valueify(attribute);
+    let state = stateify(attribute);
+    assertType(value);
+    assertType(state);
 }
 function_expecting_attribute(undefined);
 function_expecting_attribute(undefined);
@@ -369,7 +422,4 @@ exports.computed = computed;
 {
     computed([make_state(5), make_state("string")], (a, b) => {
     });
-}
-function generic(state) {
-    let k = stateify(state).value();
 }

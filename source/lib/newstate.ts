@@ -495,7 +495,7 @@ export type ReadableState<A> = (
 	[A] extends [ArrayValue] ?
 		[A] extends [TupleButNotArray<A>] ?
 			ReadableArrayState<A> & { [B in keyof A]: ReadableState<A[B]>; }:
-			ReadableArrayState<A> /* ReadableElementStates<A> & */:
+			ReadableArrayState<A>/*  & ReadableElementStates<A> */:
 	[A] extends [RecordButNotClass<A>] ? ReadableMemberStates<A> & ReadableRecordState<A> :
 	ReadableBasicState<A>
 );
@@ -506,7 +506,7 @@ export type WritableState<A> = (
 	[A] extends [ArrayValue] ?
 		[A] extends [TupleButNotArray<A>] ?
 			WritableArrayState<A> & { [B in keyof A]: WritableState<A[B]>; }:
-			WritableArrayState<A> /* WritableElementStates<A> &  */:
+			WritableArrayState<A>/*  & WritableElementStates<A> */:
 	[A] extends [RecordButNotClass<A>] ? WritableMemberStates<A> & WritableRecordState<A> :
 	WritableBasicState<A>
 );
@@ -605,13 +605,13 @@ export function make_state<A>(value: A): WritableState<A> {
 	return new StateImplementation() as any;
 };
 
-export function stateify<A>(attribute: Attribute<A>): StateFromAttribute<A> {
+export function stateify<A extends Attribute<any>>(attribute: A): StateFromAttribute<A> {
 	throw "";
 };
 
 {
 	let a: WritableState<string> = stateify(undefined as any as string);
-	// ----@ts-expect-error
+	// @ts-expect-error
 	let b: WritableState<string> = stateify(undefined as any as ReadableState<string>);
 	let c: WritableState<string> = stateify(undefined as any as WritableState<string>);
 	let d: WritableState<[string, string]> = stateify(undefined as any as [string, string]);
@@ -626,7 +626,7 @@ export function stateify<A>(attribute: Attribute<A>): StateFromAttribute<A> {
 	let i = stateify(undefined as any as WritableAttribute<string>);
 }
 
-export function valueify<A>(attribute: Attribute<A>): ValueFromAttribute<A> {
+export function valueify<A extends Attribute<any>>(attribute: A): ValueFromAttribute<A> {
 	throw "";
 };
 
@@ -736,23 +736,23 @@ namespace attribute {
 	type mixed_state_1 = Attribute<string | { [key: string]: any }>;
 }
 
-function one1<A>(state: GenericReadableState<A>): void {
+function function_expecting_readable_state_a<A>(state: GenericReadableState<A>): void {
 	state.observe("update", (state) => {
 		let value = state.value();
 	});
-	state.value();
+	let value = state.value();
 }
 
-one1(undefined as any as ReadableState<string>);
-one1(undefined as any as ReadableState<Array<string>>);
-one1(undefined as any as ReadableState<{ [key: string]: string }>);
-one1(undefined as any as ReadableState<{ one: string, two: number }>);
-one1(undefined as any as WritableState<string>);
-one1(undefined as any as WritableState<Array<string>>);
-one1(undefined as any as WritableState<{ [key: string]: string }>);
-one1(undefined as any as WritableState<{ one: string, two: number }>);
+function_expecting_readable_state_a(undefined as any as ReadableState<string>);
+function_expecting_readable_state_a(undefined as any as ReadableState<Array<string>>);
+function_expecting_readable_state_a(undefined as any as ReadableState<{ [key: string]: string }>);
+function_expecting_readable_state_a(undefined as any as ReadableState<{ one: string, two: number }>);
+function_expecting_readable_state_a(undefined as any as WritableState<string>);
+function_expecting_readable_state_a(undefined as any as WritableState<Array<string>>);
+function_expecting_readable_state_a(undefined as any as WritableState<{ [key: string]: string }>);
+function_expecting_readable_state_a(undefined as any as WritableState<{ one: string, two: number }>);
 
-function two2<A>(state: ReadableState<Array<A>>): void {
+function function_expecting_readable_state_array_a<A>(state: ReadableState<Array<A>>): void {
 	state.observe("update", (state) => {
 		let value = state.value();
 	});
@@ -768,10 +768,10 @@ function two2<A>(state: ReadableState<Array<A>>): void {
 	let mapped2 = state.mapStates((f) => stateify(0));
 }
 
-two2(undefined as any as ReadableState<Array<string>>);
-two2(undefined as any as WritableState<Array<string>>);
+function_expecting_readable_state_array_a(undefined as any as ReadableState<Array<string>>);
+function_expecting_readable_state_array_a(undefined as any as WritableState<Array<string>>);
 
-function three3<A>(state: ReadableState<{ [key: string]: A }>): void {
+function function_expecting_readable_state_record_a<A>(state: ReadableState<{ [key: string]: A }>): void {
 	state.observe("update", (state) => {
 		let value = state.value();
 	});
@@ -785,10 +785,10 @@ function three3<A>(state: ReadableState<{ [key: string]: A }>): void {
 	let member2 = state["key"];
 }
 
-three3(undefined as any as ReadableState<{ [key: string]: string }>);
-three3(undefined as any as WritableState<{ [key: string]: string }>);
+function_expecting_readable_state_record_a(undefined as any as ReadableState<{ [key: string]: string }>);
+function_expecting_readable_state_record_a(undefined as any as WritableState<{ [key: string]: string }>);
 
-function one<A>(state: GenericWritableState<A>): void {
+function function_expecting_writable_state_a<A>(state: GenericWritableState<A>): void {
 	state.observe("update", (state) => {
 		state.update(state.value());
 	});
@@ -796,19 +796,19 @@ function one<A>(state: GenericWritableState<A>): void {
 }
 
 // @ts-expect-error
-one(undefined as any as ReadableState<string>);
+function_expecting_writable_state_a(undefined as any as ReadableState<string>);
 // @ts-expect-error
-one(undefined as any as ReadableState<Array<string>>);
+function_expecting_writable_state_a(undefined as any as ReadableState<Array<string>>);
 // @ts-expect-error
-one(undefined as any as ReadableState<{ [key: string]: string }>);
+function_expecting_writable_state_a(undefined as any as ReadableState<{ [key: string]: string }>);
 // @ts-expect-error
-one(undefined as any as ReadableState<{ one: string, two: number }>);
-one(undefined as any as WritableState<string>);
-one(undefined as any as WritableState<Array<string>>);
-one(undefined as any as WritableState<{ [key: string]: string }>);
-one(undefined as any as WritableState<{ one: string, two: number }>);
+function_expecting_writable_state_a(undefined as any as ReadableState<{ one: string, two: number }>);
+function_expecting_writable_state_a(undefined as any as WritableState<string>);
+function_expecting_writable_state_a(undefined as any as WritableState<Array<string>>);
+function_expecting_writable_state_a(undefined as any as WritableState<{ [key: string]: string }>);
+function_expecting_writable_state_a(undefined as any as WritableState<{ one: string, two: number }>);
 
-function two<A>(state: WritableState<Array<A>>): void {
+function function_expecting_writable_state_array_a<A>(state: WritableState<Array<A>>): void {
 	state.observe("update", (state) => {
 		state.update(state.value());
 	});
@@ -826,10 +826,10 @@ function two<A>(state: WritableState<Array<A>>): void {
 }
 
 // @ts-expect-error
-two(undefined as any as ReadableState<Array<string>>);
-two(undefined as any as WritableState<Array<string>>);
+function_expecting_writable_state_array_a(undefined as any as ReadableState<Array<string>>);
+function_expecting_writable_state_array_a(undefined as any as WritableState<Array<string>>);
 
-function three<A>(state: WritableState<{ [key: string]: A }>): void {
+function function_expecting_writable_state_record_a<A>(state: WritableState<{ [key: string]: A }>): void {
 	state.observe("update", (state) => {
 		state.update(state.value());
 	});
@@ -842,20 +842,27 @@ function three<A>(state: WritableState<{ [key: string]: A }>): void {
 	state.update(state.value());
 	let member1 = state.member("key");
 	let member2 = state["key"];
+	assertType<typeof member1, WritableState<A>>(member1);
+	assertType<typeof member2, WritableState<A>>(member2);
 }
 
-type AssertType<A, B> = A extends B ? B extends A ? A : never : never;
+type IfEquals<T, U, Y=T, N=never> =
+  (<G>() => G extends T ? 1 : 2) extends
+  (<G>() => G extends U ? 1 : 2) ? Y : N;
 
-function assertType<A, B>(type: AssertType<A, B>): void {}
+function assertType<A, B>(type: IfEquals<A, B>): void {}
+
+function assertTrue<A extends unknown>(): void {};
 
 // @ts-expect-error
-three(undefined as any as ReadableState<{ [key: string]: string }>);
-three(undefined as any as WritableState<{ [key: string]: string }>);
+function_expecting_writable_state_record_a(undefined as any as ReadableState<{ [key: string]: string }>);
+function_expecting_writable_state_record_a(undefined as any as WritableState<{ [key: string]: string }>);
 
 // ReadableAttribute should accept any value or state.
 function function_expecting_readable_attribute(attribute: ReadableAttribute<string | undefined>) {
 	let value = valueify(attribute);
 	let state = stateify(attribute);
+	assertType<typeof value, string | undefined>(value);
 	assertType<typeof state, ReadableState<string | undefined>>(state);
 }
 function_expecting_readable_attribute(undefined as any as ReadableState<string>);
@@ -875,6 +882,8 @@ function_expecting_readable_attribute(undefined as any as "literal");
 function function_expecting_writable_attribute(attribute: WritableAttribute<string | undefined>): void {
 	let value = valueify(attribute);
 	let state = stateify(attribute);
+	assertType<typeof value, string | undefined>(value);
+	assertType<typeof state, WritableState<string | undefined>>(state);
 }
 // @ts-expect-error
 function_expecting_writable_attribute(undefined as any as ReadableState<string>);
@@ -899,6 +908,9 @@ function_expecting_writable_attribute(undefined as any as "literal");
 // Attribute should accept any value or state.
 function function_expecting_attribute(attribute: Attribute<string | undefined>): void {
 	let value = valueify(attribute);
+	let state = stateify(attribute);
+	assertType<typeof value, string | undefined>(value);
+	assertType<typeof state, ReadableState<string | undefined>>(state);
 }
 function_expecting_attribute(undefined as any as ReadableState<string>);
 function_expecting_attribute(undefined as any as ReadableState<undefined>);
@@ -1025,9 +1037,4 @@ export function computed<A extends ArrayValue, B>(states: [...StateTupleFromValu
 	computed([make_state(5), make_state("string")], (a, b) => {
 
 	});
-}
-
-function generic<A>(state: Attribute<A>): void {
-	let k = stateify(state).value();
-
 }

@@ -260,8 +260,8 @@ export type WritableValueFromAttribute<A> = (A extends WritableState<infer B> ? 
     [B in keyof A]: WritableValueFromAttribute<A[B]>;
 } : A : A);
 export declare function make_state<A>(value: A): WritableState<A>;
-export declare function stateify<A>(attribute: Attribute<A>): StateFromAttribute<A>;
-export declare function valueify<A>(attribute: Attribute<A>): ValueFromAttribute<A>;
+export declare function stateify<A extends Attribute<any>>(attribute: A): StateFromAttribute<A>;
+export declare function valueify<A extends Attribute<any>>(attribute: A): ValueFromAttribute<A>;
 export declare function squash<A extends RecordValue>(records: ReadableOrWritableState<Array<A>>): ReadableState<A>;
 export declare function flatten<A extends PrimitiveValue | ReferenceValue>(states: ReadableOrWritableState<Array<A | RecursiveArray<A>>>): ReadableState<Array<A>>;
 export declare function merge<A extends RecordValue[]>(...states: StateTupleFromValueTuple<A>): ReadableState<MergedTuple<A>>;
