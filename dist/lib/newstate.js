@@ -79,6 +79,7 @@ class StateImplementation {
         throw new Error("Method not implemented.");
     }
     attach(key, item) {
+        //attach<B extends string, C>(key: B, item: WritableStateOrValue<C>): WritableState<ExpansionOf<RecordType<A> & { [key in B]: C; }>> {
         throw new Error("Method not implemented.");
     }
     detach(key) {
@@ -149,7 +150,11 @@ function function_expecting_readable_state_a(state) {
     state.observe("update", (state) => {
         let value = state.value();
     });
+    state.compute((f) => 0);
     let value = state.value();
+    assertType(value);
+    let shadow = state.shadow();
+    assertType(shadow);
 }
 function_expecting_readable_state_a(undefined);
 function_expecting_readable_state_a(undefined);
@@ -196,6 +201,10 @@ function function_expecting_writable_state_a(state) {
         state.update(state.value());
     });
     state.update(state.value());
+    let value = state.value();
+    assertType(value);
+    let shadow = state.shadow();
+    assertType(shadow);
 }
 // @ts-expect-error
 function_expecting_writable_state_a(undefined);
@@ -245,6 +254,8 @@ function function_expecting_writable_state_record_a(state) {
     assertType(member2);
 }
 function assertType(type) { }
+function assertTrue() { }
+;
 // @ts-expect-error
 function_expecting_writable_state_record_a(undefined);
 function_expecting_writable_state_record_a(undefined);

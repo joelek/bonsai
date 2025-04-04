@@ -84,7 +84,7 @@ export type ReadableArrayStateEvents<A extends ArrayValue> = ReadableBasicStateE
         index: number
     ];
 };
-export interface ReadableArrayState<A extends ArrayValue> extends AbstractReadableState<A, ReadableArrayStateEvents<A>>, ReadableElementStates<A> {
+export interface ReadableArrayState<A extends ArrayValue> extends AbstractReadableState<A, ReadableArrayStateEvents<A>> {
     element(index: number | ReadableState<number>): ReadableState<A[number]>;
     filter(predicate: Predicate<A[number]>): ReadableState<Array<A[number]>>;
     first(): ReadableState<A[number] | undefined>;
@@ -106,7 +106,7 @@ export type WritableArrayStateEvents<A extends ArrayValue> = WritableBasicStateE
         index: number
     ];
 };
-export interface WritableArrayState<in out A extends ArrayValue> extends AbstractWritableState<A, WritableArrayStateEvents<A>>, WritableElementStates<A> {
+export interface WritableArrayState<in out A extends ArrayValue> extends AbstractWritableState<A, WritableArrayStateEvents<A>> {
     append(...items: Array<ReadableStateOrValue<A[number]>>): void;
     element(index: number | ReadableState<number>): WritableState<A[number]>;
     filter(predicate: Predicate<A[number]>): WritableState<Array<A[number]>>;
@@ -148,9 +148,7 @@ export type WritableRecordStateEvents<A extends RecordValue> = WritableBasicStat
     "detach": WritableRecordStateEventsTuple<A>;
 };
 export interface WritableRecordState<in out A extends RecordValue> extends AbstractWritableState<A, WritableRecordStateEvents<A>> {
-    attach<B extends string, C>(key: B, item: WritableStateOrValue<C>): WritableState<ExpansionOf<A & {
-        [key in B]: C;
-    }>>;
+    attach<B extends string, C>(key: B, item: WritableStateOrValue<C>): void;
     member<B extends keyof A, C extends A[B]>(key: ReadableStateOrValue<B>): WritableState<C>;
     detach<B extends keyof A>(key: B): WritableState<ExpansionOf<Omit<A, B>>>;
     spread(): WritableMemberStates<A>;
@@ -162,28 +160,27 @@ export type ReadableStateEvents<A> = ReadableArrayStateEvents<ArrayType<A>> & Re
 export type WritableStateEvents<A> = WritableArrayStateEvents<ArrayType<A>> & WritableRecordStateEvents<RecordType<A>> & WritableBasicStateEvents<BasicType<A>>;
 export declare class StateImplementation<A> implements WritableArrayState<ArrayType<A>>, WritableRecordState<RecordType<A>>, WritableBasicState<BasicType<A>> {
     constructor();
-    [x: number]: WritableState<ArrayType<A>[number]>;
     append(...items: ReadableStateOrValue<ArrayType<A>[number]>[]): void;
-    element(index: number | ReadableBasicState<number>): WritableState<ArrayType<A>[number]>;
+    element(index: number | ReadableState<number>): WritableState<ArrayType<A>[number]>;
     filter(predicate: Predicate<ArrayType<A>[number]>): WritableState<Array<ArrayType<A>[number]>>;
     first(): WritableState<ArrayType<A>[number] | undefined>;
     last(): WritableState<ArrayType<A>[number] | undefined>;
-    get length(): ReadableBasicState<number>;
+    get length(): ReadableState<number>;
     mapStates<B>(mapper: WritableStateMapper<ArrayType<A>[number], WritableState<B>> | WritableStateMapper2<ArrayType<A>[number], B>): ReadableState<Array<B>>;
     mapValues<B>(mapper: ValueMapper<ArrayType<A>[number], B>): ReadableState<Array<B>>;
     member<B extends keyof RecordType<A>, C extends RecordType<A>[B]>(key: ReadableStateOrValue<B>): WritableState<C>;
-    spread(): WritableMemberStates<RecordType<A>>;
     spread(): WritableElementStates<ArrayType<A>>;
+    spread(): WritableMemberStates<RecordType<A>>;
     vacate(): boolean;
     [Symbol.iterator](): Iterator<WritableState<ArrayType<A>[number]>>;
     compute<B>(computer: Computer<A, B>): WritableState<B>;
     observe<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): Subscription;
-    shadow(): WritableState<A>;
+    shadow(): WritableState<ArrayType<A>>;
+    shadow(): WritableState<RecordType<A>>;
+    shadow(): WritableState<BasicType<A>>;
     subscribe(subscription: Subscription): Subscription;
     unobserve<B extends keyof WritableStateEvents<A>>(type: B, observer: Observer<WritableStateEvents<A>[B]>): void;
-    attach<B extends string, C>(key: B, item: WritableStateOrValue<C>): WritableState<ExpansionOf<RecordType<A> & {
-        [key in B]: C;
-    }>>;
+    attach<B extends string, C>(key: B, item: WritableStateOrValue<C>): void;
     detach<B extends keyof RecordType<A>>(key: B): WritableState<ExpansionOf<Omit<RecordType<A>, B>>>;
     insert(index: number, item: WritableStateOrValue<ArrayType<A>[number]>): WritableState<ArrayType<A>[number]>;
     remove(index: number): void;
@@ -202,25 +199,39 @@ export type WritableElementStates<A extends ArrayValue> = {
 export type WritableMemberStates<A extends RecordValue> = {
     [B in keyof A]-?: WritableState<A[B]>;
 };
+export type ReadableStateEvents2<A> = TupleRecord<any> & ([
+    A
+] extends [ArrayValue] ? [
+    A
+] extends [TupleButNotArray<A>] ? ReadableArrayStateEvents<A> : ReadableArrayStateEvents<A> : [
+    A
+] extends [RecordButNotClass<A>] ? ReadableRecordStateEvents<A> : ReadableBasicStateEvents<A>);
 export type ReadableState<A> = ([
     A
 ] extends [ArrayValue] ? [
     A
 ] extends [TupleButNotArray<A>] ? ReadableArrayState<A> & {
     [B in keyof A]: ReadableState<A[B]>;
-} : ReadableArrayState<A> : [
+} : ReadableArrayState<A> & ReadableElementStates<A> : [
     A
-] extends [RecordButNotClass<A>] ? ReadableMemberStates<A> & ReadableRecordState<A> : ReadableBasicState<A>);
+] extends [RecordButNotClass<A>] ? ReadableMemberStates<A> & ReadableRecordState<A> : unknown) & ReadableBasicState<A>;
 export type GenericReadableState<A> = ReadableBasicState<A>;
+export type WritableStateEvents2<A> = TupleRecord<any> & ([
+    A
+] extends [ArrayValue] ? [
+    A
+] extends [TupleButNotArray<A>] ? WritableArrayStateEvents<A> : WritableArrayStateEvents<A> : [
+    A
+] extends [RecordButNotClass<A>] ? WritableRecordStateEvents<A> : WritableBasicStateEvents<A>);
 export type WritableState<A> = ([
     A
 ] extends [ArrayValue] ? [
     A
 ] extends [TupleButNotArray<A>] ? WritableArrayState<A> & {
     [B in keyof A]: WritableState<A[B]>;
-} : WritableArrayState<A> : [
+} : WritableArrayState<A> & WritableElementStates<A> : [
     A
-] extends [RecordButNotClass<A>] ? WritableMemberStates<A> & WritableRecordState<A> : WritableBasicState<A>);
+] extends [RecordButNotClass<A>] ? WritableMemberStates<A> & WritableRecordState<A> : unknown) & WritableBasicState<A>;
 export type GenericWritableState<A> = WritableBasicState<A>;
 export type GenericState<A> = GenericReadableState<A> | GenericWritableState<A>;
 export type State<A> = WritableState<A>;
