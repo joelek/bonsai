@@ -700,21 +700,21 @@ class ObjectStateImplementation extends ObjectState {
             updated = (this.isUndefined && !isUndefined) || (!this.isUndefined && isUndefined);
             this.isUndefined = isUndefined;
             for (let key in this.members) {
-                let member = this.member(key);
                 if (typeof value === "undefined" || !(key in value)) {
                     this.remove(key);
                     updated = true;
-                }
-                else {
-                    if (member.update(value[key])) {
-                        updated = true;
-                    }
                 }
             }
             for (let key in value) {
                 if (!(key in this.members)) {
                     this.insert(key, value[key]);
                     updated = true;
+                }
+                else {
+                    let member = this.member(key);
+                    if (member.update(value[key])) {
+                        updated = true;
+                    }
                 }
             }
         });
