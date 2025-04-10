@@ -2644,3 +2644,15 @@ wtf.test(`Record shadow states should synchronize with their source states using
 		{ target: "source", type: "update", value: {} }
 	]);
 });
+
+wtf.test(`Object states should update properly when there are pre-attached member observers deferring the creation of additional member observers.`, (assert) => {
+	let state = make_state({} as { one?: string; two?: string; });
+	state.one.compute((one) => {
+		if (one != null) {
+			state.two.compute((two) => {});
+		}
+	})
+	let value = { one: "one", two: "two" };
+	state.update(value);
+	assert.equals(state.value(), value);
+});
