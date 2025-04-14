@@ -19,16 +19,17 @@ const REGISTRY = typeof FinalizationRegistry === "function" ? new FinalizationRe
 class AbstractState {
     observers;
     subscriptions;
-    notify(type, ...args) {
-        let observers = this.observers[type];
+    notify_observers(observers, type, ...args) {
         if (observers == null) {
             return;
         }
-        // Prevent issues arising from mutating the array of observers while notifying.
-        observers = [...observers];
         for (let index = 0; index < observers.length; index++) {
             observers[index](...args);
         }
+    }
+    notify(type, ...args) {
+        // Prevent issues arising from mutating the array of observers while notifying by slicing.
+        this.notify_observers(this.observers[type]?.slice(), type, ...args);
     }
     observe_weakly(type, callback) {
         if (typeof WeakRef === "function") {
@@ -353,6 +354,8 @@ class ArrayState extends AbstractState {
         return state;
     }
     insert(index, item) {
+        // The list of observers is snapshotted since new observers may be attached when updating currentLength which are then wrongly notified about the element being inserted.
+        let insertObservers = this.observers["insert"]?.slice();
         if (index < 0 || index > this.elements.length) {
             throw new Error(`Expected index to be within bounds!`);
         }
@@ -362,7 +365,7 @@ class ArrayState extends AbstractState {
         this.currentLength.update(this.elements.length);
         if (true) {
             this.operate(() => {
-                this.notify("insert", element, index);
+                this.notify_observers(insertObservers, "insert", element, index);
             });
         }
         if (!this.operating) {
@@ -419,6 +422,8 @@ class ArrayState extends AbstractState {
         return this.mapStates((state, index) => state.compute((value) => mapper(value, index.value())));
     }
     remove(index) {
+        // The list of observers is snapshotted since new observers may be attached when updating currentLength which are then wrongly notified about the element being removed.
+        let removeObservers = this.observers["remove"]?.slice();
         if (index < 0 || index >= this.elements.length) {
             throw new Error(`Expected index to be within bounds!`);
         }
@@ -428,7 +433,7 @@ class ArrayState extends AbstractState {
         this.currentLength.update(this.elements.length);
         if (true) {
             this.operate(() => {
-                this.notify("remove", element, index);
+                this.notify_observers(removeObservers, "remove", element, index);
             });
         }
         if (!this.operating) {

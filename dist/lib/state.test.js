@@ -2358,3 +2358,17 @@ wtf.test(`Object states should update properly when there are pre-attached membe
     state.update(value);
     assert.equals(state.value(), value);
 });
+wtf.test(`Array states should update properly when observers are attached as a result of the first() element changing.`, (assert) => {
+    let state = (0, state_1.make_state)(["one"]);
+    state.first().compute((last) => {
+        state.shadow();
+    });
+    state.update(["two"]);
+});
+wtf.test(`Array states should update properly when observers are attached as a result of the last() element changing.`, (assert) => {
+    let state = (0, state_1.make_state)(["one"]);
+    state.last().compute((last) => {
+        state.shadow();
+    });
+    state.update(["two"]);
+});

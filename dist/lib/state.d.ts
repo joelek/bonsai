@@ -60,6 +60,7 @@ export declare abstract class AbstractState<A extends Value, B extends TupleReco
         [C in keyof B]?: Array<Observer<any>>;
     };
     protected subscriptions: Array<Callback<any>>;
+    protected notify_observers<C extends keyof B>(observers: Array<Observer<B[C]>> | undefined, type: C, ...args: [...B[C]]): void;
     protected notify<C extends keyof B>(type: C, ...args: [...B[C]]): void;
     protected observe_weakly<C extends keyof B>(type: C, callback: Callback<B[C]>): CancellationToken;
     constructor();
