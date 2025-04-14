@@ -100,16 +100,18 @@ export abstract class AbstractState<A extends Value, B extends TupleRecord<B> & 
 	protected observers: { [C in keyof B]?: Array<Observer<any>> };
 	protected subscriptions: Array<Callback<any>>;
 
-	protected notify<C extends keyof B>(type: C, ...args: [...B[C]]): void {
-		let observers = this.observers[type];
+	protected notify_observers<C extends keyof B>(observers: Array<Observer<B[C]>> | undefined, type: C, ...args: [...B[C]]): void {
 		if (observers == null) {
 			return;
 		}
-		// Prevent issues arising from mutating the array of observers while notifying.
-		observers = [ ...observers ];
 		for (let index = 0; index < observers.length; index++) {
 			observers[index](...args);
 		}
+	}
+
+	protected notify<C extends keyof B>(type: C, ...args: [...B[C]]): void {
+		// Prevent issues arising from mutating the array of observers while notifying by slicing.
+		this.notify_observers(this.observers[type]?.slice(), type, ...args);
 	}
 
 	protected observe_weakly<C extends keyof B>(type: C, callback: Callback<B[C]>): CancellationToken {
@@ -468,6 +470,8 @@ export abstract class ArrayState<A extends Value> extends AbstractState<Array<A>
 	}
 
 	insert(index: number, item: StateOrValue<A>): void {
+		// The list of observers is snapshotted since new observers may be attached when updating currentLength which are then wrongly notified about the element being inserted.
+		let insertObservers = this.observers["insert"]?.slice();
 		if (index < 0 || index > this.elements.length) {
 			throw new Error(`Expected index to be within bounds!`);
 		}
@@ -477,7 +481,7 @@ export abstract class ArrayState<A extends Value> extends AbstractState<Array<A>
 		this.currentLength.update(this.elements.length);
 		if (true) {
 			this.operate(() => {
-				this.notify("insert", element, index);
+				this.notify_observers(insertObservers, "insert", element, index);
 			});
 		}
 		if (!this.operating) {
@@ -539,6 +543,8 @@ export abstract class ArrayState<A extends Value> extends AbstractState<Array<A>
 	}
 
 	remove(index: number): void {
+		// The list of observers is snapshotted since new observers may be attached when updating currentLength which are then wrongly notified about the element being removed.
+		let removeObservers = this.observers["remove"]?.slice();
 		if (index < 0 || index >= this.elements.length) {
 			throw new Error(`Expected index to be within bounds!`);
 		}
@@ -548,7 +554,7 @@ export abstract class ArrayState<A extends Value> extends AbstractState<Array<A>
 		this.currentLength.update(this.elements.length);
 		if (true) {
 			this.operate(() => {
-				this.notify("remove", element, index);
+				this.notify_observers(removeObservers, "remove", element, index);
 			});
 		}
 		if (!this.operating) {
