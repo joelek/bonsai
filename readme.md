@@ -736,3 +736,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Investigate possibility of re-using index states for array states.
 * Investigate issue with computing state from array state length involving array items.
 * Add option to limit the number of cached pages.
+* Fix issue with `.shadow().compute()` being reclaimed by the garbage collector.
