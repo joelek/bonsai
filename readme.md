@@ -719,7 +719,7 @@ NB: This project targets TypeScript 4 in strict mode.
 
 * Write more unit tests.
 * Serialize classes as "class".
-* Consider adding support for Promise<State<Value>>.
+* Consider adding support for `Promise<State<Value>>`.
 * Implement getter and mapped setter for `augment()`.
 * Investigate usability of a promise to state shim.
 * Implement scroll state restoration for router elements.
