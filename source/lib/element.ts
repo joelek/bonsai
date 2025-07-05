@@ -36,6 +36,11 @@ export type ListenerAugmentations<A extends FunctionalElementEventMap<A>, B exte
 
 export type Augmentations<A extends FunctionalElementEventMap<A>, B extends Element> = AttributeAugmentations<A, B> & ClassAugmentations<A, B> & StyleAugmentations<A, B> & ListenerAugmentations<A, B>;
 
+export type ElementAugmentations<A extends FunctionalElementEventMap<A>, B extends Element> = Augmentations<A, B> & {
+	["class"]?: AttributeArray;
+	["style"]?: AttributeRecord;
+};
+
 export function serializeValue(value: Value): string {
 	if (typeof value === "string") {
 		return value;
@@ -351,7 +356,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 };
 
 export type FunctionalElement<A extends FunctionalElementEventMap<A>, B extends Element> = FunctionalElementImplementation<A> & B;
-export type FunctionalElementFactory<A extends FunctionalElementEventMap<A>, B extends Element> = (agumentations?: Augmentations<A, B>, ...children: Children) => FunctionalElement<A, B>;
+export type FunctionalElementFactory<A extends FunctionalElementEventMap<A>, B extends Element> = (agumentations?: ElementAugmentations<A, B>, ...children: Children) => FunctionalElement<A, B>;
 
 export type Namespace = "http://www.w3.org/1999/xhtml" | "http://www.w3.org/2000/svg";
 
@@ -384,7 +389,7 @@ export function makeFunctionalElementFactory<A extends FunctionalElementEventMap
 			}
 		});
 	}
-	return (agumentations?: Augmentations<A, B>, ...children: Children) => {
+	return (agumentations?: ElementAugmentations<A, B>, ...children: Children) => {
 		let element = document.createElementNS(namespace, tag) as FunctionalElement<A, B>;
 		Object.setPrototypeOf(element, prototype);
 		if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
@@ -401,6 +406,7 @@ export function makeFunctionalElementFactory<A extends FunctionalElementEventMap
 	}
 };
 
+export type HTMLElementAugmentations<B extends Element> = ElementAugmentations<HTMLElementEventMap, B>;
 export type FunctionalHTMLElement<A extends HTMLElement> = FunctionalElement<HTMLElementEventMap, A>;
 export type FunctionalHTMLElementFactory<A extends HTMLElement> = FunctionalElementFactory<HTMLElementEventMap, A>;
 export type FunctionalHTMLElementFactories = {
@@ -418,6 +424,7 @@ export const html = new Proxy({} as FunctionalHTMLElementFactories, {
 	}
 });
 
+export type SVGElementAugmentations<B extends Element> = ElementAugmentations<SVGElementEventMap, B>;
 export type FunctionalSVGElement<A extends SVGElement> = FunctionalElement<SVGElementEventMap, A>;
 export type FunctionalSVGElementFactory<A extends SVGElement> = FunctionalElementFactory<SVGElementEventMap, A>;
 export type FunctionalSVGElementFactories = {
