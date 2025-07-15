@@ -161,7 +161,7 @@ class FunctionalElementImplementation extends Element {
                 ];
                 update(key, state.value());
                 if (key === "value") {
-                    if (this instanceof HTMLInputElement || this instanceof HTMLTextAreaElement) {
+                    if (this instanceof HTMLInputElement || this instanceof HTMLTextAreaElement || this instanceof HTMLSelectElement) {
                         let element = this;
                         element.onchange = (event) => {
                             state.update(element.value);
@@ -308,7 +308,7 @@ class FunctionalElementImplementation extends Element {
     removeAttribute(key) {
         super.removeAttribute(key);
         if (key === "value") {
-            if (this instanceof HTMLInputElement || this instanceof HTMLTextAreaElement) {
+            if (this instanceof HTMLInputElement || this instanceof HTMLTextAreaElement || this instanceof HTMLSelectElement) {
                 this.value = "";
             }
         }
@@ -316,7 +316,7 @@ class FunctionalElementImplementation extends Element {
     setAttribute(key, value) {
         super.setAttribute(key, value);
         if (key === "value") {
-            if (this instanceof HTMLInputElement || this instanceof HTMLTextAreaElement) {
+            if (this instanceof HTMLInputElement || this instanceof HTMLTextAreaElement || this instanceof HTMLSelectElement) {
                 this.value = value;
             }
         }
@@ -334,7 +334,7 @@ function makeFunctionalElementFactory(namespace, tag) {
         }
         Object.defineProperty(prototype, name, propertyDescriptor);
     }
-    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement) {
         let parentPropertyDescriptor = Object.getOwnPropertyDescriptor(parentPrototype, "value");
         Object.defineProperty(prototype, "value", {
             get() {
@@ -357,7 +357,7 @@ function makeFunctionalElementFactory(namespace, tag) {
     return (agumentations, ...children) => {
         let element = document.createElementNS(namespace, tag);
         Object.setPrototypeOf(element, prototype);
-        if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+        if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement) {
             let that = element;
             that.addEventListener("change", (event) => {
                 that.setAttribute("value", that.value);
