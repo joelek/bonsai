@@ -197,7 +197,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 				];
 				update(key, state.value());
 				if (key === "value") {
-					if (this instanceof HTMLInputElement || this instanceof HTMLTextAreaElement) {
+					if (this instanceof HTMLInputElement || this instanceof HTMLTextAreaElement || this instanceof HTMLSelectElement) {
 						let element = this;
 						element.onchange = (event) => {
 							state.update(element.value);
@@ -339,7 +339,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 	removeAttribute(key: string): void {
 		super.removeAttribute(key);
 		if (key === "value") {
-			if (this instanceof HTMLInputElement || this instanceof HTMLTextAreaElement) {
+			if (this instanceof HTMLInputElement || this instanceof HTMLTextAreaElement || this instanceof HTMLSelectElement) {
 				this.value = "";
 			}
 		}
@@ -348,7 +348,7 @@ export class FunctionalElementImplementation<A extends FunctionalElementEventMap
 	setAttribute(key: string, value: string): void {
 		super.setAttribute(key, value);
 		if (key === "value") {
-			if (this instanceof HTMLInputElement || this instanceof HTMLTextAreaElement) {
+			if (this instanceof HTMLInputElement || this instanceof HTMLTextAreaElement || this instanceof HTMLSelectElement) {
 				this.value = value;
 			}
 		}
@@ -370,13 +370,13 @@ export function makeFunctionalElementFactory<A extends FunctionalElementEventMap
 		}
 		Object.defineProperty(prototype, name, propertyDescriptor);
 	}
-	if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+	if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement) {
 		let parentPropertyDescriptor = Object.getOwnPropertyDescriptor(parentPrototype, "value");
 		Object.defineProperty(prototype, "value", {
-			get(this: HTMLInputElement | HTMLTextAreaElement) {
+			get(this: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement) {
 				return parentPropertyDescriptor?.get?.call?.(this);
 			},
-			set(this: HTMLInputElement | HTMLTextAreaElement, value: any) {
+			set(this: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, value: any) {
 				let oldValue = this.value;
 				try {
 					// Not all input element values may be changed programmatically.
@@ -392,7 +392,7 @@ export function makeFunctionalElementFactory<A extends FunctionalElementEventMap
 	return (agumentations?: ElementAugmentations<A, B>, ...children: Children) => {
 		let element = document.createElementNS(namespace, tag) as FunctionalElement<A, B>;
 		Object.setPrototypeOf(element, prototype);
-		if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+		if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement) {
 			let that = element;
 			that.addEventListener("change", (event) => {
 				that.setAttribute("value", that.value);
