@@ -15,7 +15,7 @@ export type Route = {
 	parameters: QueryParameters;
 };
 
-export type RouteFactory<A extends RecordValue> = (options: State<A>, title: State<string>, router: Router<any>) => Element;
+export type RouteFactory<A extends RecordValue> = (options: State<A>, title: State<string>, router: Router<any>) => Element | Promise<Element>;
 
 export type PageFactory<A extends RecordValue> = {
 	codec: RouteCodec<A>;
@@ -67,7 +67,7 @@ export type HistoryState = {
 };
 
 export type CacheEntry = {
-	element?: Element;
+	element?: Element | Promise<Element>;
 	route?: Route;
 	title: string;
 };
@@ -155,7 +155,7 @@ export class Router<A extends PageOptions<any> = {}> {
 	protected cache: State<Array<CacheEntry>>;
 	protected state: State<HistoryState>;
 
-	readonly element = make_state(undefined as Element | undefined);
+	readonly element = make_state(undefined as Element | Promise<Element> | undefined);
 	readonly url = make_state(undefined as string | undefined);
 
 	constructor(factories: PageFactories<A>, defaultPage?: EmptyPageOptions<A>) {
