@@ -25,11 +25,12 @@ function createNode(value) {
         return value;
     }
     else if (value instanceof Promise) {
-        let placeholder = document.createTextNode("");
+        let container = document.createElement("div");
+        container.style.display = "contents";
         value
             .catch(() => undefined)
-            .then((value) => placeholder.replaceWith(createNode(value)));
-        return placeholder;
+            .then((value) => container.appendChild(createNode(value)));
+        return container;
     }
     else {
         return document.createTextNode(serializeValue(value));
