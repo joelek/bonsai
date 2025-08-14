@@ -727,7 +727,6 @@ NB: This project targets TypeScript 4 in strict mode.
 * Investigate value caching.
 * Rename `value()` to `serialize()` if not implementing value caching.
 * Decide on behaviour for `merge()` regarding nulls.
-* Consider removing proxies and index signatures.
 * Fix issue with states retrieved through `element()` or `member()` only being updated through `update` events.
 * Document behaviour of applying spread operator to proxy-wrapped states compare to states.
 * Implement `sort()` for array states.
@@ -738,3 +737,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Add option to limit the number of cached pages.
 * Fix issue with `.shadow().compute()` being reclaimed by the garbage collector.
 * Add support for `Promise<Array<Value>>` to elements.
+* Fix issue with router not updating history for `""` routes.
