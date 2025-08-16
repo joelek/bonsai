@@ -12,7 +12,7 @@ export type Route = {
     paths: Array<string>;
     parameters: QueryParameters;
 };
-export type RouteFactory<A extends RecordValue> = (options: State<A>, title: State<string>, router: Router<any>) => Element | Promise<Element>;
+export type RouteFactory<A extends RecordValue> = (options: State<A>, title: State<string>, router: Router<any>, active: State<boolean>) => Element | Promise<Element>;
 export type PageFactory<A extends RecordValue> = {
     codec: RouteCodec<A>;
     factory: RouteFactory<A>;

@@ -173,7 +173,11 @@ class Router {
                 if (entryElement.value() == null) {
                     let factory = this.factories.value()[parsedRoute.page];
                     let options = (0, state_1.make_state)(parsedRoute.options);
-                    entryElement.update(factory.factory(options, entryTitle, this));
+                    let active = (0, state_1.make_state)(false);
+                    entryElement.update(factory.factory(options, entryTitle, this, active));
+                    (0, state_1.computed)([this.element, entryElement], (element, entryElement) => {
+                        active.update(element === entryElement);
+                    });
                     options.compute((options) => {
                         entryRoute.update(factory.codec.encode(options));
                     });
