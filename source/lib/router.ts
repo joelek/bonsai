@@ -15,7 +15,7 @@ export type Route = {
 	parameters: QueryParameters;
 };
 
-export type RouteFactory<A extends RecordValue> = (options: State<A>, title: State<string>, router: Router<any>) => Element | Promise<Element>;
+export type RouteFactory<A extends RecordValue> = (options: State<A>, title: State<string>, router: Router<any>, active: State<boolean>) => Element | Promise<Element>;
 
 export type PageFactory<A extends RecordValue> = {
 	codec: RouteCodec<A>;
@@ -216,7 +216,11 @@ export class Router<A extends PageOptions<any> = {}> {
 				if (entryElement.value() == null) {
 					let factory = this.factories.value()[parsedRoute.page as keyof A];
 					let options = make_state(parsedRoute.options as A[keyof A]);
-					entryElement.update(factory.factory(options, entryTitle, this));
+					let active = make_state<boolean>(false);
+					entryElement.update(factory.factory(options, entryTitle, this, active));
+					computed([this.element, entryElement], (element, entryElement) => {
+						active.update(element === entryElement);
+					});
 					options.compute((options) => {
 						entryRoute.update(factory.codec.encode(options));
 					});
