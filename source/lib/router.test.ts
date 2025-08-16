@@ -577,8 +577,8 @@ wtf.test(`A router should be initialized properly when there is a matching route
 	let instance = new router.Router({
 		route: {
 			codec: router.route("<id:integer>"),
-			factory: (options, title, router) => {
-				return new RouteElement(options, title, router) as any as Element;
+			factory: (...args) => {
+				return new RouteElement(...args) as any as Element;
 			}
 		}
 	});
@@ -591,8 +591,8 @@ wtf.test(`A router should be initialized properly when there is no matching rout
 	let instance = new router.Router({
 		default: {
 			codec: router.route("default"),
-			factory: (options, title, router) => {
-				return new DefaultElement(options, title, router) as any as Element;
+			factory: (...args) => {
+				return new DefaultElement(...args) as any as Element;
 			}
 		}
 	}, "default");
@@ -606,14 +606,14 @@ wtf.test(`A router should be initialized properly when there is a matching route
 	let instance = new router.Router({
 		default: {
 			codec: router.route("default"),
-			factory: (options, title, router) => {
-				return new DefaultElement(options, title, router) as any as Element;
+			factory: (...args) => {
+				return new DefaultElement(...args) as any as Element;
 			}
 		},
 		route: {
 			codec: router.route("<id:integer>"),
-			factory: (options, title, router) => {
-				return new RouteElement(options, title, router) as any as Element;
+			factory: (...args) => {
+				return new RouteElement(...args) as any as Element;
 			}
 		}
 	}, "default");
@@ -626,8 +626,8 @@ wtf.test(`A router should update itself properly after navigation.`, async (asse
 	let instance = new router.Router({
 		route: {
 			codec: router.route("<id:integer>"),
-			factory: (options, title, router) => {
-				return new RouteElement(options, title, router) as any as Element;
+			factory: (...args) => {
+				return new RouteElement(...args) as any as Element;
 			}
 		}
 	});
@@ -649,8 +649,8 @@ wtf.test(`A router should update itself properly when the current entry updates 
 	let instance = new router.Router({
 		route: {
 			codec: router.route("<id:integer>"),
-			factory: (options, title, router) => {
-				return new RouteElement(options, title, router) as any as Element;
+			factory: (...args) => {
+				return new RouteElement(...args) as any as Element;
 			}
 		}
 	});
@@ -670,8 +670,8 @@ wtf.test(`A router should only update itself when the current entry updates itse
 	let instance = new router.Router({
 		route: {
 			codec: router.route("<id:integer>"),
-			factory: (options, title, router) => {
-				return new RouteElement(options, title, router) as any as Element;
+			factory: (...args) => {
+				return new RouteElement(...args) as any as Element;
 			}
 		}
 	});
@@ -694,8 +694,8 @@ wtf.test(`A router should update itself properly after dynamically setting and u
 	let instance = new router.Router({
 		default: {
 			codec: router.route("default"),
-			factory: (options, title, router) => {
-				return new DefaultElement(options, title, router) as any as Element;
+			factory: (...args) => {
+				return new DefaultElement(...args) as any as Element;
 			}
 		}
 	});
@@ -716,8 +716,8 @@ wtf.test(`A router should update itself properly after dynamically adding and re
 	assert.equals(instance0.element.value() == null, true);
 	let instance1 = instance0.add("route", {
 		codec: router.route("<id:integer>"),
-		factory: (options, title, router) => {
-			return new RouteElement(options, title, router) as any as Element;
+		factory: (...args) => {
+			return new RouteElement(...args) as any as Element;
 		}
 	});
 	assert.equals(instance1.url.value(), "0");
