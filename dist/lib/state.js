@@ -1070,11 +1070,17 @@ function merge(...states) {
 exports.merge = merge;
 ;
 function flatten(states) {
+    let indexStates = [];
     let offsets = [];
     let lengths = [];
     let subscriptions_from_state = new Map();
     let flattened_states = make_state([]);
     function insert(state, index) {
+        let indexState = make_state(index);
+        indexStates.splice(index, 0, indexState);
+        for (let i = index + 1; i < indexStates.length; i++) {
+            indexStates[i].update(i);
+        }
         let offset = (offsets[index - 1] ?? 0) + (lengths[index - 1] ?? 0);
         let length = 0;
         if (state instanceof ArrayState) {
@@ -1086,6 +1092,7 @@ function flatten(states) {
             }
             let subscriptions = [];
             subscriptions.push(flattened.observe("insert", (substate, subindex) => {
+                let index = indexState.value();
                 offset = offsets[index];
                 flattened_states.insert(offset + subindex, substate);
                 lengths[index] += 1;
@@ -1094,6 +1101,7 @@ function flatten(states) {
                 }
             }));
             subscriptions.push(flattened.observe("remove", (substate, subindex) => {
+                let index = indexState.value();
                 offset = offsets[index];
                 flattened_states.remove(offset + subindex);
                 lengths[index] -= 1;
@@ -1116,6 +1124,10 @@ function flatten(states) {
     }
     ;
     function remove(state, index) {
+        indexStates.splice(index, 1);
+        for (let i = index; i < indexStates.length; i++) {
+            indexStates[i].update(i);
+        }
         let offset = offsets[index];
         let length = 0;
         if (state instanceof ArrayState) {
