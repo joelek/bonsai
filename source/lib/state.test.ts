@@ -2226,6 +2226,40 @@ wtf.test(`Flattened arrays should not contain arrays removed from the original a
 	asserts.equals(flattened.value(), ["a", "c", "g", "i"]);
 });
 
+wtf.test(`Flattened arrays should work when elements are removed from mapped array states.`, (assert) => {
+	let data = stateify<Array<string>>([]);
+	let mapped = data.mapStates((data_state, data_index) => data_state.compute((data) => [
+		data
+	]));
+	let flattened = flatten(mapped);
+	data.append("a");
+	data.append("b");
+	data.append("c");
+	data.remove(1);
+	data[1].update("c2");
+	assert.equals(flattened.value(), [
+		"a",
+		"c2"
+	]);
+});
+
+wtf.test(`Flattened arrays should work when elements are inserted into mapped array states.`, (assert) => {
+	let data = stateify<Array<string>>([]);
+	let mapped = data.mapStates((data_state, data_index) => data_state.compute((data) => [
+		data
+	]));
+	let flattened = flatten(mapped);
+	data.append("a");
+	data.append("c");
+	data.insert(1, "b");
+	data[2].update("c2");
+	assert.equals(flattened.value(), [
+		"a",
+		"b",
+		"c2"
+	]);
+});
+
 wtf.test(`Dynamic members should be updated when the dynamic key is updated.`, (asserts) => {
 	let state = make_state({ one: "one", two: "two" });
 	let key = make_state("one" as "one" | "two");

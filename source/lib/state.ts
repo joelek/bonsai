@@ -1212,11 +1212,17 @@ export function merge<A extends RecordValue[]>(...states: StateTupleFromValueTup
 };
 
 export function flatten<A extends PrimitiveValue | ReferenceValue>(states: State<Array<A | RecursiveArray<A>>>): State<Array<A>> {
+	let indexStates = [] as Array<State<number>>;
 	let offsets = [] as Array<number>;
 	let lengths = [] as Array<number>;
 	let subscriptions_from_state = new Map<State<Array<A> | RecursiveArray<A>>, Array<CancellationToken>>();
 	let flattened_states = make_state([] as Array<A>);
 	function insert(state: State<A | RecursiveArray<A>>, index: number): void {
+		let indexState = make_state(index);
+		indexStates.splice(index, 0, indexState);
+		for (let i = index + 1; i < indexStates.length; i++) {
+			indexStates[i].update(i);
+		}
 		let offset = (offsets[index - 1] ?? 0) + (lengths[index-1] ?? 0);
 		let length = 0;
 		if (state instanceof ArrayState) {
@@ -1228,6 +1234,7 @@ export function flatten<A extends PrimitiveValue | ReferenceValue>(states: State
 			}
 			let subscriptions = [] as Array<CancellationToken>;
 			subscriptions.push(flattened.observe("insert", (substate, subindex) => {
+				let index = indexState.value();
 				offset = offsets[index];
 				flattened_states.insert(offset + subindex, substate);
 				lengths[index] += 1;
@@ -1236,6 +1243,7 @@ export function flatten<A extends PrimitiveValue | ReferenceValue>(states: State
 				}
 			}));
 			subscriptions.push(flattened.observe("remove", (substate, subindex) => {
+				let index = indexState.value();
 				offset = offsets[index];
 				flattened_states.remove(offset + subindex);
 				lengths[index] -= 1;
@@ -1256,6 +1264,10 @@ export function flatten<A extends PrimitiveValue | ReferenceValue>(states: State
 		}
 	};
 	function remove(state: State<A | RecursiveArray<A>>, index: number): void {
+		indexStates.splice(index, 1);
+		for (let i = index; i < indexStates.length; i++) {
+			indexStates[i].update(i);
+		}
 		let offset = offsets[index];
 		let length = 0;
 		if (state instanceof ArrayState) {
