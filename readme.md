@@ -738,3 +738,4 @@ NB: This project targets TypeScript 4 in strict mode.
 * Fix issue with `.shadow().compute()` being reclaimed by the garbage collector.
 * Add support for `Promise<Array<Value>>` to elements.
 * Fix issue with router not updating history for `""` routes.
+* Fix issue with `{ object: {} | null }` not updating object when initialized as an object and updated to null.
