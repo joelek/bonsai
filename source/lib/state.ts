@@ -628,7 +628,7 @@ export class ArrayStateImplementation<A extends Value> extends ArrayState<A> {
 	update(value: Array<A>): boolean {
 		let updated = false;
 		this.operate(() => {
-			let isUndefined = typeof value === "undefined";
+			let isUndefined = value == null;
 			updated = (this.isUndefined && !isUndefined) || (!this.isUndefined && isUndefined);
 			this.isUndefined = isUndefined;
 			if (this.elements.length !== value?.length) {
@@ -837,11 +837,11 @@ export class ObjectStateImplementation<A extends RecordValue> extends ObjectStat
 	update(value: A): boolean {
 		let updated = false;
 		this.operate(() => {
-			let isUndefined = typeof value === "undefined";
+			let isUndefined = value == null;
 			updated = (this.isUndefined && !isUndefined) || (!this.isUndefined && isUndefined);
 			this.isUndefined = isUndefined;
 			for (let key in this.members) {
-				if (typeof value === "undefined" || !(key in value)) {
+				if (value == null || !(key in value)) {
 					this.remove(key);
 					updated = true;
 				}
