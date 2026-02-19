@@ -2404,3 +2404,21 @@ wtf.test(`Array states should update properly when observers are attached as a r
     });
     state.update(["two"]);
 });
+wtf.test(`Object states with members having type {} | undefined initialized as {} should emit update events when updated to undefined.`, (assert) => {
+    let state = (0, state_1.make_state)({ key: {} });
+    let updated = false;
+    state.observe("update", (state) => {
+        updated = true;
+    });
+    state.update({ key: undefined });
+    assert.equals(updated, true);
+});
+wtf.test(`Object states with members having type {} | null initialized as {} should emit update events when updated to null.`, (assert) => {
+    let state = (0, state_1.make_state)({ key: {} });
+    let updated = false;
+    state.observe("update", (state) => {
+        updated = true;
+    });
+    state.update({ key: null });
+    assert.equals(updated, true);
+});

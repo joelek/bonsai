@@ -505,7 +505,7 @@ class ArrayStateImplementation extends ArrayState {
     update(value) {
         let updated = false;
         this.operate(() => {
-            let isUndefined = typeof value === "undefined";
+            let isUndefined = value == null;
             updated = (this.isUndefined && !isUndefined) || (!this.isUndefined && isUndefined);
             this.isUndefined = isUndefined;
             if (this.elements.length !== value?.length) {
@@ -701,11 +701,11 @@ class ObjectStateImplementation extends ObjectState {
     update(value) {
         let updated = false;
         this.operate(() => {
-            let isUndefined = typeof value === "undefined";
+            let isUndefined = value == null;
             updated = (this.isUndefined && !isUndefined) || (!this.isUndefined && isUndefined);
             this.isUndefined = isUndefined;
             for (let key in this.members) {
-                if (typeof value === "undefined" || !(key in value)) {
+                if (value == null || !(key in value)) {
                     this.remove(key);
                     updated = true;
                 }
