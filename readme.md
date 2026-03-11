@@ -230,7 +230,7 @@ export type StartPageOptions = {};
 
 export const StartPage = {
 	codec: route("start"),
-	factory(model: State<StartPageOptions>, title: State<string>, router: Router<any>) {
+	factory(model: State<StartPageOptions>, title: State<string>, router: Router<any>, active: State<boolean>) {
 		return html.h1({}, "Start Page");
 	}
 };
@@ -245,7 +245,7 @@ export type ContactPageOptions = {};
 
 export const ContactPage = {
 	codec: route("contact"),
-	factory(model: State<ContactPageOptions>, title: State<string>, router: Router<any>) {
+	factory(model: State<ContactPageOptions>, title: State<string>, router: Router<any>, active: State<boolean>) {
 		return html.h1({}, "Contact Page");
 	}
 };
